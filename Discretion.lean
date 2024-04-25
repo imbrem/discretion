@@ -1,8 +1,11 @@
 import Discretion.Basic
 import Discretion.OrderSupport
 import Discretion.Discrete
-import Discretion.FinsuppBot
-import Discretion.FinsuppDefault
-import Discretion.FinsuppTop
+import Discretion.FinsuppBot.Defs
+import Discretion.FinsuppBot.Order
+import Discretion.FinsuppDefault.Defs
+import Discretion.FinsuppDefault.Order
+import Discretion.FinsuppTop.Defs
+import Discretion.FinsuppTop.Order
 import Discretion.Indiscrete
 import Discretion.WithDefault

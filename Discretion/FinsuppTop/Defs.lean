@@ -1,5 +1,7 @@
 /- Adapted from https://github.com/leanprover-community/mathlib4/blob/b856377d9cf6945a16d9abeaf713bcd10ea0d2db/Mathlib/Data/Finsupp/Defs.lean -/
 
+-- TODO: might generalize to not support iff ⊤ ≤ f x, but might make life harder
+
 import Discretion.OrderSupport
 
 import Mathlib.Data.Set.Finite
@@ -686,9 +688,5 @@ theorem zipWith_single_single (f : M → N → P) (hf : f ⊤ ⊤ = ⊤) (a : α
   · rw [single_eq_of_ne ha', single_eq_of_ne ha', single_eq_of_ne ha', hf]
 
 end ZipWith
-
--- TODO: lattice lore
-
--- TODO: discrete lattice lore
 
 end FinsuppTop
