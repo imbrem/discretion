@@ -1,3 +1,8 @@
--- This module serves as the root of the `Discretion` library.
--- Import modules here that should be built as part of the library.
-import «Discretion».Basic
+import Discretion.Basic
+import Discretion.OrderSupport
+import Discretion.Discrete
+import Discretion.FinsuppBot
+import Discretion.FinsuppDefault
+import Discretion.FinsuppTop
+import Discretion.Indiscrete
+import Discretion.WithDefault

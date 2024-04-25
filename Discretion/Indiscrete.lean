@@ -61,7 +61,6 @@ instance Indiscrete.fintype {α} [h : Fintype α] : Fintype (Indiscrete α) := h
 
 instance Indiscrete.finite {α} [h : Finite α] : Finite (Indiscrete α) := h
 
--- TODO: should we just make this a complete lattice?
 instance Indiscrete.instBoundedOrder {α} [Inhabited α] : BoundedOrder (Indiscrete α) where
   top := default
   le_top _ := True.intro
