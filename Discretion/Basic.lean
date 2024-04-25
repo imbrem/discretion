@@ -1,76 +1,296 @@
-import Mathlib.Order.Basic
+import Discretion.Discrete
+import Discretion.WithDefault
 
-/-- The empty order on a type `α` -/
-def EmptyLE (α : Type u) : LE α where
-  le _ _ := False
+import Mathlib.Order.WithBot
+import Mathlib.Order.Bounds.Basic
 
-/-- The discrete order on a type `α` -/
-def DiscreteLE (α : Type u) : LE α where
-  le := Eq
+/-- A type `α` is equipped with a discrete order, i.e. `a ≤ b → a = b` -/
+class DiscreteOrder (α : Type u) [LE α] : Prop where
+  le_eq (a b : α) : a ≤ b → a = b
 
-/-- The discrete preorder on a type `α` -/
-def DiscretePreorder (α : Type u) : Preorder α where
-  toLE := DiscreteLE α
-  le_refl _ := rfl
-  le_trans _ _ _ := Eq.trans
+theorem BddAbove.subsingleton_of_discrete {α} [Preorder α] [DiscreteOrder α]
+  (s : Set α) : BddAbove s → s.Subsingleton := by
+    intro ⟨a, ha⟩
+    intro x hx y hy
+    simp only [upperBounds, Set.mem_setOf_eq] at ha
+    cases DiscreteOrder.le_eq _ _ (ha hx); cases DiscreteOrder.le_eq _ _ (ha hy); rfl
 
-/-- The discrete partial order on a type `α` -/
-def DiscretePartialOrder (α : Type u) : PartialOrder α where
-  toPreorder := DiscretePreorder α
-  le_antisymm _ _ _ := Eq.symm
+theorem bddAbove_subsingleton {α} [Preorder α] [Nonempty α]
+  (s : Set α) (h : s.Subsingleton) : BddAbove s := by
+    classical
+      if hs : Nonempty s then
+        have ⟨x, hx⟩ := hs;
+        exact ⟨x, λ_ hy => h hx hy ▸ le_refl x⟩
+      else
+        exact ⟨Classical.ofNonempty, λx hx => (hs ⟨x, hx⟩).elim⟩
 
-/-- The indiscrete order on a type `α` -/
-def IndiscreteLE (α : Type u) : LE α where
-  le _ _ := True
+theorem DiscreteOrder.bddAbove_iff {α} [Preorder α] [Nonempty α] [DiscreteOrder α]
+  (s : Set α) : BddAbove s ↔ s.Subsingleton := ⟨
+    BddAbove.subsingleton_of_discrete s,
+    bddAbove_subsingleton s⟩
 
-/-- The indiscrete preorder on a type `α` -/
-def IndiscretePreorder (α : Type u) : Preorder α where
-  toLE := IndiscreteLE α
-  le_refl _ := True.intro
-  le_trans _ _ _ _ _ := True.intro
+theorem BddBelow.subsingleton_of_discrete {α} [Preorder α] [DiscreteOrder α]
+  (s : Set α) : BddBelow s → s.Subsingleton := by
+    intro ⟨a, ha⟩
+    intro x hx y hy
+    simp only [lowerBounds, Set.mem_setOf_eq] at ha
+    cases DiscreteOrder.le_eq _ _ (ha hx); cases DiscreteOrder.le_eq _ _ (ha hy); rfl
 
-instance LE.instLE {α : Type u} : LE (LE α) where
-  le h1 h2 := h1.le ≤ h2.le
+theorem bddBelow_subsingleton {α} [Preorder α] [Nonempty α]
+  (s : Set α) (h : s.Subsingleton) : BddBelow s := by
+    classical
+      if hs : Nonempty s then
+        have ⟨x, hx⟩ := hs;
+        exact ⟨x, λ_ hy => h hx hy ▸ le_refl x⟩
+      else
+        exact ⟨Classical.ofNonempty, λx hx => (hs ⟨x, hx⟩).elim⟩
 
-theorem LE.le_of_le_le {α : Type u} {h1 h2 : LE α} (h : h1.le ≤ h2.le) : h1 ≤ h2 := h
-theorem LE.le_le_of_le {α : Type u} {h1 h2 : LE α} (h : h1 ≤ h2) : h1.le ≤ h2.le := h
+theorem DiscreteOrder.bddBelow_iff {α} [Preorder α] [Nonempty α] [DiscreteOrder α]
+  (s : Set α) : BddBelow s ↔ s.Subsingleton := ⟨
+    BddBelow.subsingleton_of_discrete s,
+    bddBelow_subsingleton s⟩
 
-instance LE.instPartialOrder {α : Type u} : PartialOrder (LE α) where
-  le_refl _ := @le_refl (α → α → Prop) _ _
-  le_trans _ _ _ := @le_trans (α → α → Prop) _ _ _ _
-  le_antisymm _ _ h h' := LE.ext _ _ (le_antisymm h h')
+instance Disc.instDiscreteOrder {α} : DiscreteOrder (Disc α) where
+  le_eq _ _ h := h
 
--- TODO: `LE` is a distributive, complete semilattice, with empty as ⊥ and indiscrete as ⊤
+instance OrderDual.instDiscreteOrder {α} [LE α] [DiscreteOrder α]
+  : DiscreteOrder (OrderDual α) where
+  le_eq a b h := (DiscreteOrder.le_eq (OrderDual.ofDual b) (OrderDual.ofDual a) h).symm
 
-instance Preorder.instLE {α : Type u} : LE (Preorder α) where
-  le h1 h2 := h1.le ≤ h2.le
+/-- A type `α` is discrete except for a bottom element, i.e., for `a ≠ ⊥`, `a ≤ b → a = b` -/
+class DiscreteBotOrder (α : Type u) [LE α] [Bot α] : Prop where
+  le_bot_or_eq (a b : α) : a ≤ b → a = ⊥ ∨ a = b
 
-theorem Preorder.le_of_le_le {α : Type u} {h1 h2 : LE α} (h : h1.le ≤ h2.le) : h1 ≤ h2 := h
-theorem Preorder.le_le_of_le {α : Type u} {h1 h2 : LE α} (h : h1 ≤ h2) : h1.le ≤ h2.le := h
+instance {α} [LE α] [Bot α] [DiscreteOrder α] : DiscreteBotOrder α where
+  le_bot_or_eq a b h := Or.inr (DiscreteOrder.le_eq a b h)
 
-instance Preorder.instPartialOrder {α : Type u} : PartialOrder (Preorder α) where
-  le_refl _ := @le_refl (α → α → Prop) _ _
-  le_trans _ _ _ := @le_trans (α → α → Prop) _ _ _ _
-  le_antisymm _ _ h h'
-    := Preorder.ext (λ_ _ => le_antisymm (le_le_of_le h) (le_le_of_le h') ▸ Iff.rfl)
+theorem DiscreteOrder.bot_coe_le_coe {α} {a b : α} [LE α] [DiscreteOrder α]
+  : (a : WithBot α) ≤ (b : WithBot α) → a = b
+  := by simp only [WithBot.coe_le_coe]; exact le_eq a b
 
--- TODO: `Preorder` is a complete semilattice, with discrete as ⊥ and indiscrete as ⊤
+instance WithBot.instDiscreteBotOrder {α} [LE α] [DiscreteOrder α]
+  : DiscreteBotOrder (WithBot α) where
+  le_bot_or_eq
+    | ⊥, b, _ => Or.inl rfl
+    | some a, ⊥, h => by simp at h
+    | some a, some b, h => Or.inr (by cases DiscreteOrder.bot_coe_le_coe h; rfl)
 
--- TODO: `toLE` is order-preserving and inf-preserving but *not* sup-preserving
+/-- A type `α` is discrete except for a top element, i.e., for `a ≠ ⊤`, `a ≤ b → a = b` -/
+class DiscreteTopOrder (α : Type u) [LE α] [Top α] : Prop where
+  le_top_or_eq (a b : α) : a ≤ b → b = ⊤ ∨ a = b
 
-instance PartialOrder.instLE {α : Type u} : LE (PartialOrder α) where
-  le h1 h2 := h1.le ≤ h2.le
+instance {α} [LE α] [Top α] [DiscreteOrder α] : DiscreteTopOrder α where
+  le_top_or_eq a b h := Or.inr (DiscreteOrder.le_eq a b h)
 
-theorem PartialOrder.le_of_le_le {α : Type u} {h1 h2 : LE α} (h : h1.le ≤ h2.le) : h1 ≤ h2 := h
-theorem PartialOrder.le_le_of_le {α : Type u} {h1 h2 : LE α} (h : h1 ≤ h2) : h1.le ≤ h2.le := h
+theorem DiscreteOrder.top_coe_le_coe {α} {a b : α} [LE α] [DiscreteOrder α]
+  : (a : WithTop α) ≤ (b : WithTop α) → a = b
+  := by simp only [WithTop.coe_le_coe]; exact le_eq a b
 
--- TODO: `PartialOrder` is a `SemilatticeInf` and `OrderBot`, with discrete as ⊥
--- It has no ⊤ if nontrivial.
+instance WithTop.instDiscreteTopOrder {α} [LE α] [DiscreteOrder α]
+  : DiscreteTopOrder (WithTop α) where
+  le_top_or_eq
+    | a, ⊤, _ => Or.inl rfl
+    | ⊤, some b, h => by simp at h
+    | some a, some b, h => Or.inr (by cases DiscreteOrder.top_coe_le_coe h; rfl)
 
--- TODO: `toPreorder` is order-preserving and inf-preserving
+class DiscreteBoundedOrder (α : Type u) [LE α] [Bot α] [Top α] : Prop where
+  le_bot_or_top_or_eq (a b : α) : a ≤ b → a = ⊥ ∨ b = ⊤ ∨ a = b
 
--- TODO: `toLE` is order-preserving and inf-preserving
+instance {α} [LE α] [Bot α] [Top α] [DiscreteTopOrder α] : DiscreteBoundedOrder α where
+  le_bot_or_top_or_eq a b h := Or.inr (DiscreteTopOrder.le_top_or_eq a b h)
 
--- TODO: A `LinearOrder`'s corresponding `PartialOrder` is maximal
+instance {α} [LE α] [Bot α] [Top α] [DiscreteBotOrder α] : DiscreteBoundedOrder α where
+  le_bot_or_top_or_eq a b h := (DiscreteBotOrder.le_bot_or_eq a b h).elim Or.inl (Or.inr ∘ Or.inr)
 
--- TODO: `LinearOrder` has the discrete order, and other facts about this
+instance WithBot.instTop {α} [t : Top α] : Top (WithBot α) where
+  top := t.top
+
+-- TODO: equality lemmas
+
+instance WithBot.instOrderTop {α} [LE α] [OrderTop α] : OrderTop (WithBot α) where
+  le_top | ⊥ => by simp | some a => by simp [instTop, coe_le_coe]
+
+instance WithTop.instBot {α} [b : Bot α] : Bot (WithTop α) where
+  bot := b.bot
+
+-- TODO: equality lemmas
+
+instance WithTop.instOrderBot {α} [LE α] [OrderBot α] : OrderBot (WithTop α) where
+  bot_le | ⊤ => by simp | some a => by simp [instBot, coe_le_coe]
+
+theorem DiscreteBotOrder.withTop_le {α} [LE α] [αb : Bot α] [DiscreteBotOrder α]
+  : {a b : WithTop α} → a ≤ b → a = ⊥ ∨ b = ⊤ ∨ a = b
+  | ⊤, _ => by aesop
+  | _, ⊤ => by simp
+  | some a, some b => by
+    simp only [WithTop.some_le_some, WithTop.instBot, false_or]
+    intro h
+    cases DiscreteBotOrder.le_bot_or_eq a b h <;> simp [WithTop.some, *]
+
+theorem DiscreteTopOrder.withBot_le {α} [LE α] [αt : Top α] [DiscreteTopOrder α]
+  : {a b : WithBot α} → a ≤ b → a = ⊥ ∨ b = ⊤ ∨ a = b
+  | ⊥, _ => by simp
+  | _, ⊥ => by aesop
+  | some a, some b => by
+    simp only [WithBot.some_le_some, WithBot.instTop, false_or]
+    intro h
+    cases DiscreteTopOrder.le_top_or_eq a b h <;> simp [WithBot.some, *]
+
+instance WithBot.instDiscreteBoundedOrder {α} [LE α] [Top α] [DiscreteTopOrder α]
+  : DiscreteBoundedOrder (WithBot α) where
+  le_bot_or_top_or_eq _ _ := DiscreteTopOrder.withBot_le
+
+instance WithTop.instDiscreteBoundedOrder {α} [LE α] [Bot α] [DiscreteBotOrder α]
+  : DiscreteBoundedOrder (WithTop α) where
+  le_bot_or_top_or_eq _ _ := DiscreteBotOrder.withTop_le
+
+-- TODO: is it a problem that this might cause cycles?
+instance DiscreteOrder.isPartialOrder {α} [o : Preorder α] [DiscreteOrder α] : PartialOrder α where
+  toPreorder := o
+  le_antisymm _ _ h _ := le_eq _ _ h
+
+-- TODO: in a discrete preorder, a ≤ b ↔ a = b
+
+-- TODO: port to discrete (preorder)
+
+instance WithBot.Disc.instSemilatticeInf {α} [DecidableEq α]
+    : SemilatticeInf (WithBot (Disc α)) where
+  inf
+    | ⊥, _ => ⊥
+    | _, ⊥ => ⊥
+    | some a, some b => if a = b then some a else ⊥
+  inf_le_left a b := by
+    cases a <;> cases b
+    case some.some =>
+      simp only; split;
+      case inl h => cases h; rfl
+      case inr => simp
+    all_goals simp
+  inf_le_right a b := by
+    cases a <;> cases b
+    case some.some =>
+      simp only; split;
+      case inl h => cases h; rfl
+      case inr => simp
+    all_goals simp
+  le_inf
+    | ⊥, _, _ => by simp
+    | _, ⊥, _ => λh => by simp only [le_bot_iff] at h; cases h; simp
+    | _, _, ⊥ => λ_ h => by simp only [le_bot_iff] at h; cases h; simp
+    | some a, some b, some c => λh h' => by
+      cases WithBot.coe_le_coe.mp h
+      cases WithBot.coe_le_coe.mp h'
+      simp
+
+-- TODO: port to discrete (preorder)
+
+instance WithTop.Disc.instSemilatticeSup {α} [DecidableEq α]
+    : SemilatticeSup (WithTop (Disc α)) where
+  sup
+    | ⊤, _ => ⊤
+    | _, ⊤ => ⊤
+    | some a, some b => if a = b then some a else ⊤
+  le_sup_left a b := by
+    cases a <;> cases b
+    case some.some =>
+      simp only; split;
+      case inl h => cases h; rfl
+      case inr => simp
+    all_goals simp
+  le_sup_right a b := by
+    cases a <;> cases b
+    case some.some =>
+      simp only; split;
+      case inl h => cases h; rfl
+      case inr => simp
+    all_goals simp
+  sup_le
+    | _, _, ⊤ => by simp
+    | ⊤, _, _ => λh _ => by simp only [top_le_iff] at h; cases h; simp
+    | _, ⊤, _ => λ_ h => by simp only [top_le_iff] at h; cases h; simp
+    | some a, some b, some c => λh h' => by
+      cases WithTop.coe_le_coe.mp h
+      cases WithTop.coe_le_coe.mp h'
+      simp
+
+-- TODO: port to discrete (preorder)
+
+instance WithTop.WithBot.Disc.instLattice {α} [DecidableEq α]
+  : Lattice (WithTop (WithBot (Disc α))) where
+  sup
+    | ⊤, _ => ⊤
+    | _, ⊤ => ⊤
+    | ⊥, a => a
+    | a, ⊥ => a
+    | some (some a), some (some b) => if a = b then some (some a) else ⊤
+  le_sup_left
+    | ⊤, a => by aesop
+    | some a, ⊤ => by aesop
+    | ⊥, some a => by simp
+    | some (some a), ⊥ => le_refl _
+    | some (some a), some (some b) => by aesop
+  le_sup_right
+    | ⊤, a => by aesop
+    | some a, ⊤ => by aesop
+    | ⊥, some (some a) => le_refl _
+    | some a, ⊥ => by simp
+    | some (some a), some (some b) => by aesop
+  sup_le
+    | _, _, ⊤ => by simp
+    | _, ⊤, _ => by aesop
+    | ⊤, _, _ => by aesop
+    | ⊥, some (some a), some (some b) => λ_ => id
+    | some (some a), ⊥, some b => λh _ => h
+    | ⊥, ⊥, some b => λh _ => h
+    | a, b, ⊥ => by simp only [le_bot_iff]; intro h h'; cases h; cases h'; rfl
+    | some (some a), some (some b), some (some c) => by
+      simp only [coe_le_coe]
+      intro h h'
+      cases WithBot.coe_le_coe.mp h
+      cases WithBot.coe_le_coe.mp h'
+      simp
+  inf_le_left := by aesop
+  inf_le_right := by aesop
+  le_inf := by aesop
+
+-- TODO: port to discrete (preorder)
+
+instance WithBot.WithTop.Disc.instLattice {α} [DecidableEq α]
+  : Lattice (WithBot (WithTop (Disc α))) where
+  inf
+    | ⊥, _ => ⊥
+    | _, ⊥ => ⊥
+    | ⊤, a => a
+    | a, ⊤ => a
+    | some (some a), some (some b) => if a = b then some (some a) else ⊥
+  le_sup_left := by aesop
+  le_sup_right := by aesop
+  sup_le := by aesop
+  inf_le_left
+    | ⊥, a => by aesop
+    | some a, ⊥ => by aesop
+    | ⊤, ⊤ => le_refl _
+    | ⊤, some (some a) => by simp
+    | some (some a), ⊤ => le_refl _
+    | some (some a), some (some b) => by aesop
+  inf_le_right
+    | ⊥, a => by aesop
+    | some a, ⊥ => by aesop
+    | ⊤, ⊤ => le_refl _
+    | ⊤, some (some a) => le_refl _
+    | some (some a), ⊤ => by aesop
+    | some (some a), some (some b) => by aesop
+  le_inf
+    | ⊥, _, _ => by simp
+    | _, ⊥, _ => λh => by simp only [le_bot_iff] at h; cases h; simp
+    | _, _, ⊥ => λ_ h => by simp only [le_bot_iff] at h; cases h; simp
+    | some (some a), some (some b), ⊤ => λh _ => h
+    | some a, ⊤, some (some b) => λ_ h => h
+    | some a, ⊤, ⊤ => λ_ _ => le_top
+    | ⊤, a, b => by simp only [top_le_iff]; intro h h'; cases h; cases h'; rfl
+    | some (some a), some (some b), some (some c) => by
+      simp only [coe_le_coe]
+      intro h h'
+      cases WithTop.coe_le_coe.mp h
+      cases WithTop.coe_le_coe.mp h'
+      simp
