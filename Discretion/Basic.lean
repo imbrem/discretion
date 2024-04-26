@@ -96,10 +96,12 @@ instance WithTop.instDiscreteTopOrder {α} [LE α] [DiscreteOrder α]
 class DiscreteBoundedOrder (α : Type u) [LE α] [Bot α] [Top α] : Prop where
   le_bot_or_top_or_eq (a b : α) : a ≤ b → a = ⊥ ∨ b = ⊤ ∨ a = b
 
-instance {α} [LE α] [Bot α] [Top α] [DiscreteTopOrder α] : DiscreteBoundedOrder α where
+def DiscreteOrder.toDiscreteTopOrder {α} [LE α] [Bot α] [Top α] [DiscreteTopOrder α]
+  : DiscreteBoundedOrder α where
   le_bot_or_top_or_eq a b h := Or.inr (DiscreteTopOrder.le_top_or_eq a b h)
 
-instance {α} [LE α] [Bot α] [Top α] [DiscreteBotOrder α] : DiscreteBoundedOrder α where
+def DiscreteOrder.toDiscreteBotOrder {α} [LE α] [Bot α] [Top α] [DiscreteBotOrder α]
+  : DiscreteBoundedOrder α where
   le_bot_or_top_or_eq a b h := (DiscreteBotOrder.le_bot_or_eq a b h).elim Or.inl (Or.inr ∘ Or.inr)
 
 instance WithBot.instTop {α} [t : Top α] : Top (WithBot α) where
@@ -149,12 +151,9 @@ instance DiscreteOrder.isPartialOrder {α} [o : Preorder α] [DiscreteOrder α] 
   toPreorder := o
   le_antisymm _ _ h _ := le_eq _ _ h
 
--- TODO: in a discrete preorder, a ≤ b ↔ a = b
-
--- TODO: port to discrete (preorder)
-
-instance WithBot.Disc.instSemilatticeInf {α} [DecidableEq α]
-    : SemilatticeInf (WithBot (Disc α)) where
+instance WithBot.instDiscreteOrderSemilatticeInf
+  {α} [DecidableEq α] [PartialOrder α] [DiscreteOrder α]
+  : SemilatticeInf (WithBot α) where
   inf
     | ⊥, _ => ⊥
     | _, ⊥ => ⊥
@@ -177,15 +176,60 @@ instance WithBot.Disc.instSemilatticeInf {α} [DecidableEq α]
     | ⊥, _, _ => by simp
     | _, ⊥, _ => λh => by simp only [le_bot_iff] at h; cases h; simp
     | _, _, ⊥ => λ_ h => by simp only [le_bot_iff] at h; cases h; simp
-    | some a, some b, some c => λh h' => by
-      cases WithBot.coe_le_coe.mp h
-      cases WithBot.coe_le_coe.mp h'
+    | some a, some b, some c => by
+      simp only [coe_le_coe]
+      intro h h'
+      cases DiscreteOrder.le_eq _ _ h
+      cases DiscreteOrder.le_eq _ _ h'
       simp
 
--- TODO: port to discrete (preorder)
+instance WithBot.instDiscreteTopOrderSemilatticeInf
+  {α} [DecidableEq α] [PartialOrder α] [OrderTop α] [DiscreteTopOrder α]
+  : SemilatticeInf (WithBot α) where
+  inf
+    | ⊥, _ => ⊥
+    | _, ⊥ => ⊥
+    | some a, some b => if a = b
+      then some a
+      else if a = ⊤
+      then some b
+      else if b = ⊤
+      then some a
+      else ⊥
+  inf_le_left a b := by
+    cases a <;> cases b
+    case some.some =>
+      simp only; split_ifs;
+      case neg => simp
+      all_goals rename_i h; cases h; apply WithBot.coe_le_coe.mpr; simp
+    all_goals simp
+  inf_le_right a b := by
+    cases a <;> cases b
+    case some.some =>
+      simp only; split_ifs;
+      case neg => simp
+      all_goals rename_i h; cases h; apply WithBot.coe_le_coe.mpr; simp
+    all_goals simp
+  le_inf
+    | ⊥, _, _ => by simp
+    | _, ⊥, _ => λh => by simp only [le_bot_iff] at h; cases h; simp
+    | _, _, ⊥ => λ_ h => by simp only [le_bot_iff] at h; cases h; simp
+    | some a, some b, some c => by
+      simp only [coe_le_coe]
+      intro h h'
+      cases DiscreteTopOrder.le_top_or_eq _ _ h with
+      | inl h => cases DiscreteTopOrder.le_top_or_eq _ _ h' with
+        | inl h' => simp [h, h']
+        | inr h' => split <;> simp [*]
+      | inr h => cases DiscreteTopOrder.le_top_or_eq _ _ h' with
+        | inl h' =>
+          cases h'; cases h
+          split_ifs <;> simp at *
+        | inr h' => rw [<-h, <-h']; simp
 
-instance WithTop.Disc.instSemilatticeSup {α} [DecidableEq α]
-    : SemilatticeSup (WithTop (Disc α)) where
+instance WithTop.instDiscreteOrderSemilatticeInf
+  {α} [DecidableEq α] [PartialOrder α] [DiscreteOrder α]
+  : SemilatticeSup (WithTop α) where
   sup
     | ⊤, _ => ⊤
     | _, ⊤ => ⊤
@@ -205,92 +249,200 @@ instance WithTop.Disc.instSemilatticeSup {α} [DecidableEq α]
       case inr => simp
     all_goals simp
   sup_le
-    | _, _, ⊤ => by simp
-    | ⊤, _, _ => λh _ => by simp only [top_le_iff] at h; cases h; simp
+    | ⊤, _, _ => λh => by simp only [top_le_iff] at h; cases h; simp
     | _, ⊤, _ => λ_ h => by simp only [top_le_iff] at h; cases h; simp
-    | some a, some b, some c => λh h' => by
-      cases WithTop.coe_le_coe.mp h
-      cases WithTop.coe_le_coe.mp h'
+    | _, _, ⊤ => by simp
+    | some a, some b, some c => by
+      simp only [coe_le_coe]
+      intro h h'
+      cases DiscreteOrder.le_eq _ _ h
+      cases DiscreteOrder.le_eq _ _ h'
       simp
 
--- TODO: port to discrete (preorder)
-
-instance WithTop.WithBot.Disc.instLattice {α} [DecidableEq α]
-  : Lattice (WithTop (WithBot (Disc α))) where
+instance WithTop.instDiscreteTopOrderSemilatticeInf
+  {α} [DecidableEq α] [PartialOrder α] [OrderBot α] [DiscreteBotOrder α]
+  : SemilatticeSup (WithTop α) where
   sup
     | ⊤, _ => ⊤
     | _, ⊤ => ⊤
-    | ⊥, a => a
-    | a, ⊥ => a
-    | some (some a), some (some b) => if a = b then some (some a) else ⊤
-  le_sup_left
-    | ⊤, a => by aesop
-    | some a, ⊤ => by aesop
-    | ⊥, some a => by simp
-    | some (some a), ⊥ => le_refl _
-    | some (some a), some (some b) => by aesop
-  le_sup_right
-    | ⊤, a => by aesop
-    | some a, ⊤ => by aesop
-    | ⊥, some (some a) => le_refl _
-    | some a, ⊥ => by simp
-    | some (some a), some (some b) => by aesop
+    | some a, some b => if a = b
+      then some a
+      else if a = ⊥
+      then some b
+      else if b = ⊥
+      then some a
+      else ⊤
+  le_sup_left a b := by
+    cases a <;> cases b
+    case some.some =>
+      simp only; split_ifs;
+      case neg => simp
+      all_goals rename_i h; cases h; apply WithTop.coe_le_coe.mpr; simp
+    all_goals simp
+  le_sup_right a b := by
+    cases a <;> cases b
+    case some.some =>
+      simp only; split_ifs;
+      case neg => simp
+      all_goals rename_i h; cases h; apply WithTop.coe_le_coe.mpr; simp
+    all_goals simp
   sup_le
+    | ⊤, _, _ => λh => by simp only [top_le_iff] at h; cases h; simp
+    | _, ⊤, _ => λ_ h => by simp only [top_le_iff] at h; cases h; simp
     | _, _, ⊤ => by simp
-    | _, ⊤, _ => by aesop
-    | ⊤, _, _ => by aesop
-    | ⊥, some (some a), some (some b) => λ_ => id
-    | some (some a), ⊥, some b => λh _ => h
-    | ⊥, ⊥, some b => λh _ => h
-    | a, b, ⊥ => by simp only [le_bot_iff]; intro h h'; cases h; cases h'; rfl
-    | some (some a), some (some b), some (some c) => by
+    | some a, some b, some c => by
       simp only [coe_le_coe]
       intro h h'
-      cases WithBot.coe_le_coe.mp h
-      cases WithBot.coe_le_coe.mp h'
-      simp
-  inf_le_left := by aesop
-  inf_le_right := by aesop
-  le_inf := by aesop
+      cases DiscreteBotOrder.le_bot_or_eq _ _ h with
+      | inl h => cases DiscreteBotOrder.le_bot_or_eq _ _ h' with
+        | inl h' => simp [h, h']
+        | inr h' => split <;> simp [*]
+      | inr h => cases DiscreteBotOrder.le_bot_or_eq _ _ h' with
+        | inl h' =>
+          cases h'; cases h
+          split_ifs <;> simp at *
+        | inr h' => rw [h, h']; simp
 
--- TODO: port to discrete (preorder)
+-- TODO: lattice instances? Or should we do some hax here?
 
-instance WithBot.WithTop.Disc.instLattice {α} [DecidableEq α]
-  : Lattice (WithBot (WithTop (Disc α))) where
-  inf
-    | ⊥, _ => ⊥
-    | _, ⊥ => ⊥
-    | ⊤, a => a
-    | a, ⊤ => a
-    | some (some a), some (some b) => if a = b then some (some a) else ⊥
-  le_sup_left := by aesop
-  le_sup_right := by aesop
-  sup_le := by aesop
-  inf_le_left
-    | ⊥, a => by aesop
-    | some a, ⊥ => by aesop
-    | ⊤, ⊤ => le_refl _
-    | ⊤, some (some a) => by simp
-    | some (some a), ⊤ => le_refl _
-    | some (some a), some (some b) => by aesop
-  inf_le_right
-    | ⊥, a => by aesop
-    | some a, ⊥ => by aesop
-    | ⊤, ⊤ => le_refl _
-    | ⊤, some (some a) => le_refl _
-    | some (some a), ⊤ => by aesop
-    | some (some a), some (some b) => by aesop
-  le_inf
-    | ⊥, _, _ => by simp
-    | _, ⊥, _ => λh => by simp only [le_bot_iff] at h; cases h; simp
-    | _, _, ⊥ => λ_ h => by simp only [le_bot_iff] at h; cases h; simp
-    | some (some a), some (some b), ⊤ => λh _ => h
-    | some a, ⊤, some (some b) => λ_ h => h
-    | some a, ⊤, ⊤ => λ_ _ => le_top
-    | ⊤, a, b => by simp only [top_le_iff]; intro h h'; cases h; cases h'; rfl
-    | some (some a), some (some b), some (some c) => by
-      simp only [coe_le_coe]
-      intro h h'
-      cases WithTop.coe_le_coe.mp h
-      cases WithTop.coe_le_coe.mp h'
-      simp
+-- instance WithBot.Disc.instSemilatticeInf {α} [DecidableEq α]
+--     : SemilatticeInf (WithBot (Disc α)) where
+--   inf
+--     | ⊥, _ => ⊥
+--     | _, ⊥ => ⊥
+--     | some a, some b => if a = b then some a else ⊥
+--   inf_le_left a b := by
+--     cases a <;> cases b
+--     case some.some =>
+--       simp only; split;
+--       case inl h => cases h; rfl
+--       case inr => simp
+--     all_goals simp
+--   inf_le_right a b := by
+--     cases a <;> cases b
+--     case some.some =>
+--       simp only; split;
+--       case inl h => cases h; rfl
+--       case inr => simp
+--     all_goals simp
+--   le_inf
+--     | ⊥, _, _ => by simp
+--     | _, ⊥, _ => λh => by simp only [le_bot_iff] at h; cases h; simp
+--     | _, _, ⊥ => λ_ h => by simp only [le_bot_iff] at h; cases h; simp
+--     | some a, some b, some c => λh h' => by
+--       cases WithBot.coe_le_coe.mp h
+--       cases WithBot.coe_le_coe.mp h'
+--       simp
+
+-- -- TODO: port to discrete (preorder)
+
+-- instance WithTop.Disc.instSemilatticeSup {α} [DecidableEq α]
+--     : SemilatticeSup (WithTop (Disc α)) where
+--   sup
+--     | ⊤, _ => ⊤
+--     | _, ⊤ => ⊤
+--     | some a, some b => if a = b then some a else ⊤
+--   le_sup_left a b := by
+--     cases a <;> cases b
+--     case some.some =>
+--       simp only; split;
+--       case inl h => cases h; rfl
+--       case inr => simp
+--     all_goals simp
+--   le_sup_right a b := by
+--     cases a <;> cases b
+--     case some.some =>
+--       simp only; split;
+--       case inl h => cases h; rfl
+--       case inr => simp
+--     all_goals simp
+--   sup_le
+--     | _, _, ⊤ => by simp
+--     | ⊤, _, _ => λh _ => by simp only [top_le_iff] at h; cases h; simp
+--     | _, ⊤, _ => λ_ h => by simp only [top_le_iff] at h; cases h; simp
+--     | some a, some b, some c => λh h' => by
+--       cases WithTop.coe_le_coe.mp h
+--       cases WithTop.coe_le_coe.mp h'
+--       simp
+
+-- -- TODO: port to discrete (preorder)
+
+-- instance WithTop.WithBot.Disc.instLattice {α} [DecidableEq α]
+--   : Lattice (WithTop (WithBot (Disc α))) where
+--   sup
+--     | ⊤, _ => ⊤
+--     | _, ⊤ => ⊤
+--     | ⊥, a => a
+--     | a, ⊥ => a
+--     | some (some a), some (some b) => if a = b then some (some a) else ⊤
+--   le_sup_left
+--     | ⊤, a => by aesop
+--     | some a, ⊤ => by aesop
+--     | ⊥, some a => by simp
+--     | some (some a), ⊥ => le_refl _
+--     | some (some a), some (some b) => by aesop
+--   le_sup_right
+--     | ⊤, a => by aesop
+--     | some a, ⊤ => by aesop
+--     | ⊥, some (some a) => le_refl _
+--     | some a, ⊥ => by simp
+--     | some (some a), some (some b) => by aesop
+--   sup_le
+--     | _, _, ⊤ => by simp
+--     | _, ⊤, _ => by aesop
+--     | ⊤, _, _ => by aesop
+--     | ⊥, some (some a), some (some b) => λ_ => id
+--     | some (some a), ⊥, some b => λh _ => h
+--     | ⊥, ⊥, some b => λh _ => h
+--     | a, b, ⊥ => by simp only [le_bot_iff]; intro h h'; cases h; cases h'; rfl
+--     | some (some a), some (some b), some (some c) => by
+--       simp only [coe_le_coe]
+--       intro h h'
+--       cases WithBot.coe_le_coe.mp h
+--       cases WithBot.coe_le_coe.mp h'
+--       simp
+--   inf_le_left := by aesop
+--   inf_le_right := by aesop
+--   le_inf := by aesop
+
+-- -- TODO: port to discrete (preorder)
+
+-- instance WithBot.WithTop.Disc.instLattice {α} [DecidableEq α]
+--   : Lattice (WithBot (WithTop (Disc α))) where
+--   inf
+--     | ⊥, _ => ⊥
+--     | _, ⊥ => ⊥
+--     | ⊤, a => a
+--     | a, ⊤ => a
+--     | some (some a), some (some b) => if a = b then some (some a) else ⊥
+--   le_sup_left := by aesop
+--   le_sup_right := by aesop
+--   sup_le := by aesop
+--   inf_le_left
+--     | ⊥, a => by aesop
+--     | some a, ⊥ => by aesop
+--     | ⊤, ⊤ => le_refl _
+--     | ⊤, some (some a) => by simp
+--     | some (some a), ⊤ => le_refl _
+--     | some (some a), some (some b) => by aesop
+--   inf_le_right
+--     | ⊥, a => by aesop
+--     | some a, ⊥ => by aesop
+--     | ⊤, ⊤ => le_refl _
+--     | ⊤, some (some a) => le_refl _
+--     | some (some a), ⊤ => by aesop
+--     | some (some a), some (some b) => by aesop
+--   le_inf
+--     | ⊥, _, _ => by simp
+--     | _, ⊥, _ => λh => by simp only [le_bot_iff] at h; cases h; simp
+--     | _, _, ⊥ => λ_ h => by simp only [le_bot_iff] at h; cases h; simp
+--     | some (some a), some (some b), ⊤ => λh _ => h
+--     | some a, ⊤, some (some b) => λ_ h => h
+--     | some a, ⊤, ⊤ => λ_ _ => le_top
+--     | ⊤, a, b => by simp only [top_le_iff]; intro h h'; cases h; cases h'; rfl
+--     | some (some a), some (some b), some (some c) => by
+--       simp only [coe_le_coe]
+--       intro h h'
+--       cases WithTop.coe_le_coe.mp h
+--       cases WithTop.coe_le_coe.mp h'
+--       simp

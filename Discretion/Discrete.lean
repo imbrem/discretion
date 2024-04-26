@@ -93,3 +93,5 @@ instance Disc.instNoTopOrder {α} [h : Nontrivial α] : NoTopOrder (Disc α) whe
 instance Disc.fintype {α} [h : Fintype α] : Fintype (Disc α) := h
 
 instance Disc.finite {α} [h : Finite α] : Finite (Disc α) := h
+
+instance Disc.instDecidableEq {α} [h : DecidableEq α] : DecidableEq (Disc α) := h
