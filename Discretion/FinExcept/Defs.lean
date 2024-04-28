@@ -21,6 +21,8 @@ namespace FinExcept
 
 section Basic
 
+variable {α : Type u} {M : Type v} {Z Z' : Set M}
+
 instance instFunLike : FunLike (FinExcept α M Z) α M :=
   ⟨toFun, by
     rintro ⟨s, f, hf⟩ ⟨t, g, hg⟩ (rfl : f = g)
@@ -46,17 +48,16 @@ theorem coe_mk (f : α → M) (s : Finset α) (h : ∀ a, a ∈ s ↔ f a ∉ Z)
 -- theorem support_top : (⊤ : α →ᵀ M).support = ∅ :=
 --   rfl
 
-/-- `always z hz` is the function with value `z` everywhere -/
-def always {Z : Set M} (z : Z) : FinExcept α M Z where
+/-- `always z` is the function with value `z` everywhere -/
+def always (z : Z) : FinExcept α M Z where
   support := ∅
   toFun := fun _ => z
   mem_support_toFun := by simp
 
-theorem always_apply {Z : Set M} {z : Z} {a : α} : (always z) a = z :=
+theorem always_apply {z : Z} {a : α} : (always z) a = z :=
   rfl
 
-instance instInhabited {Z : Set M} [hz : Inhabited Z]
-  : Inhabited (FinExcept α M Z) := ⟨always hz.default⟩
+instance instInhabited [hz : Inhabited Z] : Inhabited (FinExcept α M Z) := ⟨always hz.default⟩
 
 -- TODO: in particular, the set of stuff with empty support is Inhabited if Z is
 
@@ -152,7 +153,78 @@ theorem unique_ext [Unique α] {f g : FinExcept α M Z} (h : f default = g defau
 theorem unique_ext_iff [Unique α] {f g : FinExcept α M Z} : f = g ↔ f default = g default :=
   ⟨fun h => h ▸ rfl, unique_ext⟩
 
--- TODO: Propositional cast lemmas
+def cast (hZ : Z = Z') (f : FinExcept α M Z) : FinExcept α M Z' where
+  support := f.support
+  toFun := f.toFun
+  mem_support_toFun := hZ ▸ f.mem_support_toFun
+
+def cast' (hZ : ∀x, x ∈ Z ↔ x ∈ Z') (f : FinExcept α M Z) : FinExcept α M Z' := cast (Set.ext hZ) f
+
+theorem cast'_eq_cast (hZ : ∀x, x ∈ Z ↔ x ∈ Z') (f : FinExcept α M Z)
+  : cast' hZ f = cast (Set.ext hZ) f := rfl
+
+@[simp]
+theorem toFun_cast {hZ : Z = Z'} {f : FinExcept α M Z} : (cast hZ f).toFun = f.toFun :=
+  by rfl
+
+@[simp]
+theorem toFun_cast' {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : FinExcept α M Z}
+  : (cast' hZ f).toFun = f.toFun :=
+  by rfl
+
+@[simp]
+theorem coe_cast {hZ : Z = Z'} {f : FinExcept α M Z} : ((cast hZ f) : α → M) = (f : α → M) :=
+  by rfl
+
+@[simp]
+theorem coe_cast' {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : FinExcept α M Z}
+  : ((cast' hZ f) : α → M) = (f : α → M) :=
+  by rfl
+
+@[simp]
+theorem support_cast {hZ : Z = Z'} {f : FinExcept α M Z} : (cast hZ f).support = f.support :=
+  by rfl
+
+@[simp]
+theorem support_cast' {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : FinExcept α M Z}
+  : (cast' hZ f).support = f.support :=
+  by rfl
+
+@[simp]
+theorem cast_apply {hZ : Z = Z'} {f : FinExcept α M Z} {a : α} : (cast hZ f) a = f a :=
+  by rfl
+
+@[simp]
+theorem cast'_apply {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : FinExcept α M Z} {a : α}
+  : (cast' hZ f) a = f a :=
+  by rfl
+
+def of_subset [DecidablePred (· ∈ Z')] (hZ : Z ⊆ Z') (f : FinExcept α M Z) : FinExcept α M Z'
+    where
+  support := f.support.filter (f · ∉ Z')
+  toFun := f
+  mem_support_toFun a := by
+    simp only [mem_filter, mem_support_iff, and_iff_right_iff_imp, not_imp_not]
+    exact @hZ (f a)
+
+@[simp]
+theorem toFun_of_subset [DecidablePred (· ∈ Z')] {hZ : Z ⊆ Z'} {f : FinExcept α M Z}
+  : (of_subset hZ f).toFun = f.toFun :=
+  by rfl
+
+@[simp]
+theorem coe_of_subset [DecidablePred (· ∈ Z')] {hZ : Z ⊆ Z'} {f : FinExcept α M Z}
+  : ((of_subset hZ f) : α → M) = (f : α → M) :=
+  by rfl
+
+@[simp]
+theorem of_subset_apply [DecidablePred (· ∈ Z')] {hZ : Z ⊆ Z'} {f : FinExcept α M Z} {a : α}
+  : (of_subset hZ f) a = f a :=
+  by rfl
+
+theorem support_of_subset [DecidablePred (· ∈ Z')] {hZ : Z ⊆ Z'} {f : FinExcept α M Z}
+  : (of_subset hZ f).support = f.support.filter (f · ∉ Z') :=
+  by rfl
 
 end Basic
 
