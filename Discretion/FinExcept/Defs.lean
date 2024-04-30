@@ -592,58 +592,58 @@ theorem erase_idem (f : α →ᶠ[{z}] M) (a : α) :
 
 end Erase
 
--- /-! ### Declarations about `onFinset` -/
+/-! ### Declarations about `onFinset` -/
 
--- section OnFinset
+section OnFinset
 
--- variable [DecidableEq α] [DecidableEq M] [Top M]
+variable {Z : Set M} [DecidablePred (· ∈ Z)] [DecidableEq α] [DecidableEq M] [Top M]
 
--- /-- `FinsuppTop.onFinset s f hf` is the finsupp function representing `f` restricted to the finset
--- `s`. The function must be in `Z` outside of `s`. Use this when the set needs to be filtered anyways,
--- otherwise a better set representation is often available. -/
--- def onFinset (s : Finset α) (f : α → M) (hf : ∀ a, f a ≠ ⊤ → a ∈ s) : α →ᵀ M where
---   support := s.filter (f · ≠ ⊤)
---   toFun := f
---   mem_support_toFun := by simpa
+/-- `FinsuppTop.onFinset s f hf` is the finsupp function representing `f` restricted to the finset
+`s`. The function must be in `Z` outside of `s`. Use this when the set needs to be filtered anyways,
+otherwise a better set representation is often available. -/
+def onFinset (Z : Set M) [DecidablePred (· ∈ Z)]
+  (s : Finset α) (f : α → M) (hf : ∀ a, f a ∉ Z → a ∈ s) : α →ᶠ[Z] M where
+  support := s.filter (f · ∉ Z)
+  toFun := f
+  mem_support_toFun := by simpa
 
--- @[simp]
--- theorem onFinset_apply {s : Finset α} {f : α → M} {hf a} : (onFinset s f hf : α →ᵀ M) a = f a :=
---   rfl
+@[simp]
+theorem onFinset_apply {s : Finset α} {f : α → M} {hf a}
+  : (onFinset Z s f hf : α →ᶠ[Z] M) a = f a :=
+  rfl
 
--- @[simp]
--- theorem support_onFinset_subset {s : Finset α} {f : α → M} {hf} :
---     (onFinset s f hf).support ⊆ s := by
---   classical convert filter_subset (f · ≠ ⊤) s
+@[simp]
+theorem support_onFinset_subset {s : Finset α} {f : α →ᶠ[Z] M} {hf} :
+    (onFinset Z s f hf).support ⊆ s := by
+  classical convert filter_subset (f · ∉ Z) s
 
--- -- @[simp] -- Porting note (#10618): simp can prove this
--- theorem mem_support_onFinset {s : Finset α} {f : α → M} (hf : ∀ a : α, f a ≠ ⊤ → a ∈ s) {a : α} :
---     a ∈ (onFinset s f hf).support ↔ f a ≠ ⊤ := by
---   rw [mem_support_iff, onFinset_apply]
+-- @[simp] -- Porting note (#10618): simp can prove this
+theorem mem_support_onFinset {s : Finset α} {f : α → M} (hf : ∀ a : α, f a ∉ Z → a ∈ s) {a : α} :
+    a ∈ (onFinset Z s f hf).support ↔ f a ∉ Z := by
+  rw [mem_support_iff, onFinset_apply]
 
--- theorem support_onFinset {s : Finset α} {f : α → M}
---     (hf : ∀ a : α, f a ≠ ⊤ → a ∈ s) :
---     (onFinset s f hf).support = s.filter fun a => f a ≠ ⊤ := rfl
+theorem support_onFinset {s : Finset α} {f : α → M}
+    (hf : ∀ a : α, f a ∉ Z → a ∈ s) :
+    (onFinset Z s f hf).support = s.filter (f · ∉ Z) := rfl
 
--- end OnFinset
+end OnFinset
 
--- section OfSupportFinite
+section OfSupportFinite
 
--- variable [Top M]
+/-- The natural `Finsupp` induced by the function `f` given that it has finite support. -/
+noncomputable def ofSupportFinite (Z : Set M) (f : α → M) (hf : (f ⁻¹' Zᶜ).Finite) : α →ᶠ[Z] M where
+  support := hf.toFinset
+  toFun := f
+  mem_support_toFun _ := hf.mem_toFinset
 
--- /-- The natural `Finsupp` induced by the function `f` given that it has finite support. -/
--- noncomputable def ofSupportFinite (f : α → M) (hf : (Function.infSupport f).Finite) : α →ᵀ M where
---   support := hf.toFinset
---   toFun := f
---   mem_support_toFun _ := hf.mem_toFinset
+theorem ofSupportFinite_coe {Z} {f : α → M} {hf : (f ⁻¹' Zᶜ).Finite} :
+    (ofSupportFinite Z f hf : α → M) = f :=
+  rfl
 
--- theorem ofSupportFinite_coe {f : α → M} {hf : (Function.infSupport f).Finite} :
---     (ofSupportFinite f hf : α → M) = f :=
---   rfl
+instance instCanLift : CanLift (α → M) (α →ᶠ[Z] M) (⇑) fun f => (f ⁻¹' Zᶜ).Finite where
+  prf f hf := ⟨ofSupportFinite Z f hf, rfl⟩
 
--- instance instCanLift : CanLift (α → M) (α →ᵀ M) (⇑) fun f => (Function.infSupport f).Finite where
---   prf f hf := ⟨ofSupportFinite f hf, rfl⟩
-
--- end OfSupportFinite
+end OfSupportFinite
 
 -- /-! ### Declarations about `mapRange` -/
 
@@ -790,46 +790,71 @@ theorem single_of_embDomain_single (l : α →ᶠ[{z}] M) (f : α ↪ β) (a : �
 
 end EmbDomain
 
--- /-! ### Declarations about `zipWith` -/
+/-! ### Declarations about `zipWith` -/
 
 
--- section ZipWith
+section ZipWith
 
--- variable [Dα : DecidableEq α] [DecidableEq M]
---   [DecidableEq N] [DecidableEq P] [Top M] [Top N] [Top P]
+variable {ZM : Set M} {ZN : Set N} {ZP : Set P} [DecidablePred (· ∈ ZP)]
+  [Dα : DecidableEq α] [DecidableEq M]
+  [DecidableEq N] [DecidableEq P] [Top M] [Top N] [Top P]
 
--- /-- Given finitely supported functions `g₁ : α →ᵀ M` and `g₂ : α →ᵀ N` and function `f : M → N → P`,
--- `Finsupp.zipWith f hf g₁ g₂` is the finitely supported function `α →ᵀ P` satisfying
--- `zipWith f hf g₁ g₂ a = f (g₁ a) (g₂ a)`, which is well-defined when `f ⊤ ⊤ = ⊤`. -/
--- def zipWith (f : M → N → P) (hf : f ⊤ ⊤ = ⊤) (g₁ : α →ᵀ M) (g₂ : α →ᵀ N) : α →ᵀ P :=
---   onFinset
---     (g₁.support ∪ g₂.support)
---     (fun a => f (g₁ a) (g₂ a))
---     fun a (H : f _ _ ≠ ⊤) => by
---       classical
---       rw [mem_union, mem_support_iff, mem_support_iff, ← not_and_or]
---       rintro ⟨h₁, h₂⟩; rw [h₁, h₂] at H; exact H hf
+/-- Given finitely supported functions `g₁ : α →ᶠ[ZM] M` and `g₂ : α →ᶠ[ZN] N` and
+function `f : M → N → P`, `Finsupp.zipWith f hf g₁ g₂` is the finitely supported function
+`α →ᵀ P` satisfying `zipWith' f hf g₁ g₂ a = f (g₁ a) (g₂ a)`, which is well-defined when
+`∀m ∈ ZM, ∀n ∈ ZN, f m n ∈ ZP`. -/
+def zipWith' (ZP : Set P) [DecidablePred (· ∈ ZP)] (f : M → N → P)
+  (hf : ∀m ∈ ZM, ∀n ∈ ZN, f m n ∈ ZP) (g₁ : α →ᶠ[ZM] M) (g₂ : α →ᶠ[ZN] N) : α →ᶠ[ZP] P :=
+  onFinset ZP
+    (g₁.support ∪ g₂.support)
+    (fun a => f (g₁ a) (g₂ a))
+    fun a (H : f _ _ ∉ ZP) => by
+      classical
+      rw [mem_union, mem_support_iff, mem_support_iff, ← not_and_or]
+      rintro ⟨h₁, h₂⟩; exact H (hf _ h₁ _ h₂)
 
--- @[simp]
--- theorem zipWith_apply {f : M → N → P} {hf : f ⊤ ⊤ = ⊤} {g₁ : α →ᵀ M} {g₂ : α →ᵀ N} {a : α} :
---     zipWith f hf g₁ g₂ a = f (g₁ a) (g₂ a) :=
---   rfl
+@[simp]
+theorem zipWith'_apply {f : M → N → P} {hf} {g₁ : α →ᶠ[ZM] M} {g₂ : α →ᶠ[ZN] N} {a : α} :
+    zipWith' ZP f hf g₁ g₂ a = f (g₁ a) (g₂ a) :=
+  rfl
 
--- theorem support_zipWith {f : M → N → P} {hf : f ⊤ ⊤ = ⊤} {g₁ : α →ᵀ M}
---     {g₂ : α →ᵀ N} : (zipWith f hf g₁ g₂).support ⊆ g₁.support ∪ g₂.support := by simp [zipWith]
+theorem support_zipWith' {f : M → N → P} {hf} {g₁ : α →ᶠ[ZM] M} {g₂ : α →ᶠ[ZN] N}
+  : (zipWith' ZP f hf g₁ g₂).support ⊆ g₁.support ∪ g₂.support := by simp [zipWith', support_onFinset]
 
--- @[simp]
--- theorem zipWith_single_single (f : M → N → P) (hf : f ⊤ ⊤ = ⊤) (a : α) (m : M) (n : N) :
---     zipWith f hf (single a m) (single a n) = single a (f m n) := by
---   ext a'
---   rw [zipWith_apply]
---   obtain rfl | ha' := eq_or_ne a a'
---   · rw [single_eq_same, single_eq_same, single_eq_same]
---   · rw [single_eq_of_ne ha', single_eq_of_ne ha', single_eq_of_ne ha', hf]
+/-- Given finitely supported functions `g₁ : α →ᶠ[{m}] M` and `g₂ : α →ᶠ[{n}] N` and
+function `f : M → N → P`, `Finsupp.zipWith f hf g₁ g₂` is the finitely supported function
+`α →ᵀ P` satisfying `zipWith' f hf g₁ g₂ a = f (g₁ a) (g₂ a)`, which is well-defined when
+`f m n = p`. -/
+def zipWith (f : M → N → P) (hf : f m n = p) (g₁ : α →ᶠ[{m}] M) (g₂ : α →ᶠ[{n}] N) : α →ᶠ[{p}] P :=
+  onFinset {p}
+    (g₁.support ∪ g₂.support)
+    (fun a => f (g₁ a) (g₂ a))
+    fun a (H : f (g₁ a) (g₂ a) ∉ {p}) => by
+      classical
+      rw [mem_union, mem_support_iff, mem_support_iff, ← not_and_or]
+      rintro ⟨h₁, h₂⟩; simp only [Set.mem_singleton_iff] at *; rw [h₁, h₂, hf] at H;
+      exact H (Set.mem_singleton p)
 
--- end ZipWith
+@[simp]
+theorem zipWith_apply {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N} {a : α}
+  : zipWith f hf g₁ g₂ a = f (g₁ a) (g₂ a) :=
+  rfl
 
--- end FinsuppTop
+theorem support_zipWith {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N}
+  : (zipWith f hf g₁ g₂).support ⊆ g₁.support ∪ g₂.support := by simp [zipWith, support_onFinset]
+
+@[simp]
+theorem zipWith_single_single (f : M → N → P) (hf : f zm zn = zp) (a : α) (m : M) (n : N) :
+    zipWith f hf (single zm a m) (single zn a n) = single zp a (f m n) := by
+  ext a'
+  rw [zipWith_apply]
+  obtain rfl | ha' := eq_or_ne a a'
+  · rw [single_eq_same, single_eq_same, single_eq_same]
+  · rw [single_eq_of_ne ha', single_eq_of_ne ha', single_eq_of_ne ha', hf]
+
+end ZipWith
+
+end FinExcept
 
 -- TODO: Top lemmas
 
