@@ -73,6 +73,38 @@ def null (z : M) : α →ᶠ[{z}] M where
 theorem null_apply {z : M} {a : α} : (null z) a = z :=
   rfl
 
+instance instTop [Top M] : Top (α →ᶠ[{⊤}] M) where
+  top := null ⊤
+
+@[simp, norm_cast] lemma coe_top [Top M] : ⇑(⊤ : α →ᶠ[{⊤}] M) = ⊤ := rfl
+
+theorem top_apply [Top M] {a : α} : (⊤ : α →ᶠ[{⊤}] M) a = ⊤ :=
+  rfl
+
+instance instBot [Bot M] : Bot (α →ᶠ[{⊥}] M) where
+  bot := null ⊥
+
+@[simp, norm_cast] lemma coe_bot [Bot M] : ⇑(⊥ : α →ᶠ[{⊥}] M) = ⊥ := rfl
+
+theorem bot_apply [Bot M] {a : α} : (⊥ : α →ᶠ[{⊥}] M) a = ⊥ :=
+  rfl
+
+instance instZero [Zero M] : Zero (α →ᶠ[{0}] M) where
+  zero := null 0
+
+@[simp, norm_cast] lemma coe_zero [Zero M] : ⇑(0 : α →ᶠ[{0}] M) = 0 := rfl
+
+theorem zero_apply [Zero M] {a : α} : (0 : α →ᶠ[{0}] M) a = 0 :=
+  rfl
+
+instance instOne [One M] : One (α →ᶠ[{1}] M) where
+  one := null 1
+
+@[simp, norm_cast] lemma coe_one [One M] : ⇑(1 : α →ᶠ[{1}] M) = 1 := rfl
+
+theorem one_apply [One M] {a : α} : (1 : α →ᶠ[{1}] M) a = 1 :=
+  rfl
+
 @[simp]
 theorem support_null : (null z : α →ᶠ[{z}] M).support = ∅ :=
   rfl
@@ -87,6 +119,8 @@ theorem always_eq_null {z : M} {z' : ({z} : Set M)}
 instance instInhabited [hz : Inhabited Z] : Inhabited (α →ᶠ[Z] M) := ⟨always hz.default⟩
 
 -- TODO: in particular, the set of stuff with empty support is Inhabited if Z is
+
+@[simp, norm_cast] lemma coe_default [Inhabited M] : ⇑(default : α →ᶠ[{default}] M) = default := rfl
 
 theorem default_apply {Z : Set M} [hz : Inhabited Z] {a : α}
   : (default : α →ᶠ[Z] M) a = hz.default :=
