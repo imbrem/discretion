@@ -4,6 +4,8 @@ import Discretion.OrderSupport
 
 import Mathlib.Data.Set.Finite
 
+-- TODO: clean up doc comments...
+
 open Finset Function
 
 /-- `FinExcept α M s`, is the type of functions `f : α → M` such that `f x ∈ Z` for all but
@@ -131,7 +133,7 @@ theorem mem_support_iff {f : α →ᶠ[Z] M} : ∀ {a : α}, a ∈ f.support ↔
   @(f.mem_support_toFun)
 
 @[simp, norm_cast]
-theorem fun_support_eq (f : α →ᶠ[Z] M) : f ⁻¹' Zᶜ = f.support :=
+theorem fun_support_eq (f : α →ᶠ[Z] M) : (f ⁻¹' Z)ᶜ = f.support :=
   Set.ext fun _x => mem_support_iff.symm
 
 theorem not_mem_support_iff {f : α →ᶠ[Z] M} {a} : a ∉ f.support ↔ f a ∈ Z :=
@@ -223,11 +225,17 @@ theorem unique_ext [Unique α] {f g : α →ᶠ[Z] M} (h : f default = g default
 theorem unique_ext_iff [Unique α] {f g : α →ᶠ[Z] M} : f = g ↔ f default = g default :=
   ⟨fun h => h ▸ rfl, unique_ext⟩
 
+/--
+Cast the zero set of a `FinExcept`
+-/
 def cast (hZ : Z = Z') (f : α →ᶠ[Z] M) : α →ᶠ[Z'] M where
   support := f.support
   toFun := f.toFun
   mem_support_toFun := hZ ▸ f.mem_support_toFun
 
+/--
+Cast the zero set of a `FinExcept`, extensionally
+-/
 def cast' (hZ : ∀x, x ∈ Z ↔ x ∈ Z') (f : α →ᶠ[Z] M) : α →ᶠ[Z'] M := cast (Set.ext hZ) f
 
 theorem cast'_eq_cast (hZ : ∀x, x ∈ Z ↔ x ∈ Z') (f : α →ᶠ[Z] M)
@@ -269,6 +277,9 @@ theorem cast'_apply {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : α →ᶠ[Z] M} {a : 
   : (cast' hZ f) a = f a :=
   by rfl
 
+/--
+Cast the zero set of a `FinExcept` to a superset of the zero set
+-/
 def of_subset [DecidablePred (· ∈ Z')] (hZ : Z ⊆ Z') (f : α →ᶠ[Z] M) : α →ᶠ[Z'] M
     where
   support := f.support.filter (f · ∉ Z')
@@ -665,16 +676,16 @@ end OnFinset
 section OfSupportFinite
 
 /-- The natural `Finsupp` induced by the function `f` given that it has finite support. -/
-noncomputable def ofSupportFinite (Z : Set M) (f : α → M) (hf : (f ⁻¹' Zᶜ).Finite) : α →ᶠ[Z] M where
+noncomputable def ofSupportFinite (Z : Set M) (f : α → M) (hf : ((f ⁻¹' Z)ᶜ).Finite) : α →ᶠ[Z] M where
   support := hf.toFinset
   toFun := f
   mem_support_toFun _ := hf.mem_toFinset
 
-theorem ofSupportFinite_coe {Z} {f : α → M} {hf : (f ⁻¹' Zᶜ).Finite} :
+theorem ofSupportFinite_coe {Z} {f : α → M} {hf : ((f ⁻¹' Z)ᶜ).Finite} :
     (ofSupportFinite Z f hf : α → M) = f :=
   rfl
 
-instance instCanLift : CanLift (α → M) (α →ᶠ[Z] M) (⇑) fun f => (f ⁻¹' Zᶜ).Finite where
+instance instCanLift : CanLift (α → M) (α →ᶠ[Z] M) (⇑) fun f => ((f ⁻¹' Z)ᶜ).Finite where
   prf f hf := ⟨ofSupportFinite Z f hf, rfl⟩
 
 end OfSupportFinite
