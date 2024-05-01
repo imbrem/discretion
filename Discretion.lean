@@ -6,3 +6,4 @@ import Discretion.FinExcept.Option
 import Discretion.FinExcept.Order
 import Discretion.Indiscrete
 import Discretion.WithDefault
+import Discretion.Wk.Fun
