@@ -645,57 +645,89 @@ instance instCanLift : CanLift (α → M) (α →ᶠ[Z] M) (⇑) fun f => (f ⁻
 
 end OfSupportFinite
 
--- /-! ### Declarations about `mapRange` -/
+/-! ### Declarations about `mapRange` -/
 
 
--- section MapRange
+section MapRange
 
--- variable
---   [DecidableEq α] [DecidableEq β]
---   [DecidableEq M] [DecidableEq N] [DecidableEq P]
+variable {Z : Set M} {Z' : Set N} {Z'' : Set P}
+  [DecidablePred (· ∈ Z)] [DecidablePred (· ∈ Z')] [DecidablePred (· ∈ Z'')]
+  [DecidableEq α] [DecidableEq β]
+  [DecidableEq M] [DecidableEq N] [DecidableEq P]
 
--- /-- The composition of `f : M → N` and `g : α →ᶠ[{z}] M` is `mapRange f hf g : α →ᶠ[z'] N`,
--- which is well-defined when `f z = z'`.
--- -/
--- def mapRange (f : M → N) (hf : f z = z') (g : α →ᶠ[{z}] M) : α →ᶠ[{z'}] N :=
---   onFinset g.support (f ∘ g) fun a => by
---     rw [mem_support_iff, not_imp_not]; exact fun H => (congr_arg f H).trans hf
+/-- The composition of `f : M → N` and `g : α →ᶠ[Z] M` is `mapRange f hf g : α →ᶠ[Z'] N`,
+which is well-defined when `∀z ∈ Z, f z ∈ Z'`.
+-/
+def mapRange (Z : Set M) (Z' : Set N) [DecidablePred (· ∈ Z')]
+  (f : M → N) (hf : ∀z ∈ Z, f z ∈ Z') (g : α →ᶠ[Z] M) : α →ᶠ[Z'] N :=
+  onFinset Z' g.support (f ∘ g) λ a => by
+    rw [mem_support_iff, not_imp_not, comp_apply]
+    exact λ H => hf _ H
 
--- @[simp]
--- theorem mapRange_apply {f : M → N} {hf : f ⊤ = ⊤} {g : α →ᵀ M} {a : α} :
---     mapRange f hf g a = f (g a) :=
---   rfl
+@[simp]
+theorem mapRange_apply {f : M → N} {hf : ∀z ∈ Z, f z ∈ Z'} {g : α →ᶠ[Z] M} {a : α} :
+    mapRange Z Z' f hf g a = f (g a) :=
+  rfl
 
--- @[simp]
--- theorem mapRange_top {f : M → N} {hf : f ⊤ = ⊤} : mapRange f hf (⊤ : α →ᵀ M) = ⊤ :=
---   ext fun _ => by simp only [hf, top_apply, mapRange_apply]
+@[simp]
+theorem mapRange_null {f : M → N} {hf}
+  : mapRange {z} {z'} f hf (null z : α →ᶠ[{z}] M) = null z' :=
+  ext λ _ => hf _ rfl
 
--- @[simp]
--- theorem mapRange_id (g : α →ᵀ M) : mapRange id rfl g = g :=
---   ext fun _ => rfl
+@[simp]
+theorem mapRange_id (g : α →ᶠ[Z] M) : mapRange Z Z id (λ_ hz => hz) g = g :=
+  ext fun _ => rfl
 
--- theorem mapRange_comp (f : N → P) (hf : f ⊤ = ⊤) (f₂ : M → N) (hf₂ : f₂ ⊤ = ⊤) (h : (f ∘ f₂) ⊤ = ⊤)
---     (g : α →ᵀ M) : mapRange (f ∘ f₂) h g = mapRange f hf (mapRange f₂ hf₂ g) :=
---   ext fun _ => rfl
+theorem mapRange_comp (f : N → P) (hf) (f₂ : M → N) (hf₂) (h)
+    (g : α →ᶠ[Z] M) : mapRange _ _ (f ∘ f₂) h g = mapRange _ Z'' f hf (mapRange _ Z' f₂ hf₂ g) :=
+  ext fun _ => rfl
 
--- theorem support_mapRange {f : M → N} {hf : f ⊤ = ⊤} {g : α →ᵀ M} :
---     (mapRange f hf g).support ⊆ g.support :=
---   support_onFinset_subset
+theorem support_mapRange {f : M → N} {hf} {g : α →ᶠ[Z] M} :
+    (mapRange _ Z' f hf g).support ⊆ g.support :=
+  by simp [mapRange, support_onFinset]
 
--- @[simp]
--- theorem mapRange_single {f : M → N} {hf : f ⊤ = ⊤} {a : α} {b : M} :
---     mapRange f hf (single a b) = single a (f b) := by
---   ext
---   simp only [mapRange_apply, single_apply]
---   split <;> simp [*]
+@[simp]
+theorem mapRange_single {f : M → N} {hf} {a : α} {b : M} :
+    mapRange {z} {z'} f hf (single z a b) = single z' a (f b) := by
+  ext
+  simp only [mapRange_apply, single_apply]
+  split
+  . rfl
+  . exact hf _ rfl
 
--- theorem support_mapRange_of_injective {e : M → N} (he0 : e ⊤ = ⊤) (f : ι →ᵀ M)
---     (he : Function.Injective e) : (mapRange e he0 f).support = f.support := by
---   ext
---   simp only [mem_support_iff, Ne, mapRange_apply]
---   exact he.ne_iff' he0
+theorem support_mapRange_of_injective {e : M → N} (he0) (f : ι →ᶠ[{z}] M)
+    (he : Function.Injective e) : (mapRange _ {z'} e he0 f).support = f.support := by
+  ext
+  simp only [mem_support_iff, Ne, mapRange_apply, Set.mem_singleton_iff]
+  exact he.ne_iff' (he0 _ rfl)
 
--- end MapRange
+/-- The composition of `f : M → N` and `g : α →ᶠ[{z}] M` is `mapRange f hf g : α →ᶠ[{z'}] N`,
+which is well-defined when `f z = z'`.
+-/
+def mapRange' (f : M → N) (hf : f z = z') (g : α →ᶠ[{z}] M) : α →ᶠ[{z'}] N :=
+  mapRange {z} {z'} f (by intro x hx; cases hx; exact hf) g
+
+theorem mapRange'_eq_mapRange {f : M → N} {hf} {g : α →ᶠ[{z}] M} :
+    mapRange' f hf g = mapRange {z} {z'} f (by intro x hx; cases hx; exact hf) g :=
+  rfl
+
+theorem mapRange'_apply {f : M → N} {hf : f z = z'} {g : α →ᶠ[{z}] M} {a : α} :
+    mapRange' f hf g a = f (g a) :=
+  rfl
+
+@[simp]
+theorem mapRange'_id (g : α →ᶠ[{z}] M) : mapRange' id rfl g = g :=
+  ext fun _ => rfl
+
+theorem mapRange'_comp (f : N → P) (hf : f z' = z'') (f₂ : M → N) (hf₂ : f₂ z = z') (h)
+    (g : α →ᶠ[{z}] M) : mapRange' (f ∘ f₂) h g = mapRange' f hf (mapRange' f₂ hf₂ g) :=
+  ext fun _ => rfl
+
+theorem support_mapRange' {f : M → N} {hf : f z = z'} {g : α →ᶠ[{z}] M} :
+    (mapRange' f hf g).support ⊆ g.support :=
+  by simp [mapRange', mapRange, support_onFinset]
+
+end MapRange
 
 /-! ### Declarations about `embDomain` -/
 
@@ -762,13 +794,13 @@ theorem embDomain_inj {f : α ↪ β} {l₁ l₂ : α →ᶠ[{z}] M} : embDomain
 theorem embDomain_eq_null {f : α ↪ β} {l : α →ᶠ[{z}] M} : embDomain f l = null z ↔ l = null z :=
   (embDomain_injective f).eq_iff' <| embDomain_null f
 
--- theorem embDomain_mapRange (f : α ↪ β) (g : M → N) (p : α →ᶠ[{z}] M) (hg : g z = z') :
---     embDomain f (mapRange g hg p) = mapRange g hg (embDomain f p) := by
---   ext a
---   by_cases h : a ∈ Set.range f
---   · rcases h with ⟨a', rfl⟩
---     rw [mapRange_apply, embDomain_apply, embDomain_apply, mapRange_apply]
---   · rw [mapRange_apply, embDomain_notin_range, embDomain_notin_range, ← hg] <;> assumption
+theorem embDomain_mapRange' (f : α ↪ β) (g : M → N) (p : α →ᶠ[{z}] M) (hg : g z = z') :
+    embDomain f (mapRange' g hg p) = mapRange' g hg (embDomain f p) := by
+  ext a
+  by_cases h : a ∈ Set.range f
+  · rcases h with ⟨a', rfl⟩
+    rw [mapRange'_apply, embDomain_apply, embDomain_apply, mapRange'_apply]
+  · rw [mapRange'_apply, embDomain_notin_range, embDomain_notin_range, ← hg] <;> assumption
 
 theorem single_of_embDomain_single (l : α →ᶠ[{z}] M) (f : α ↪ β) (a : β) (b : M) (hb : b ≠ z)
     (h : l.embDomain f = single z a b) : ∃ x, l = single z x b ∧ f x = a := by
@@ -801,9 +833,9 @@ variable {ZM : Set M} {ZN : Set N} {ZP : Set P} [DecidablePred (· ∈ ZP)]
 
 /-- Given finitely supported functions `g₁ : α →ᶠ[ZM] M` and `g₂ : α →ᶠ[ZN] N` and
 function `f : M → N → P`, `Finsupp.zipWith f hf g₁ g₂` is the finitely supported function
-`α →ᵀ P` satisfying `zipWith' f hf g₁ g₂ a = f (g₁ a) (g₂ a)`, which is well-defined when
+`α →ᵀ P` satisfying `zipWith f hf g₁ g₂ a = f (g₁ a) (g₂ a)`, which is well-defined when
 `∀m ∈ ZM, ∀n ∈ ZN, f m n ∈ ZP`. -/
-def zipWith' (ZP : Set P) [DecidablePred (· ∈ ZP)] (f : M → N → P)
+def zipWith (ZP : Set P) [DecidablePred (· ∈ ZP)] (f : M → N → P)
   (hf : ∀m ∈ ZM, ∀n ∈ ZN, f m n ∈ ZP) (g₁ : α →ᶠ[ZM] M) (g₂ : α →ᶠ[ZN] N) : α →ᶠ[ZP] P :=
   onFinset ZP
     (g₁.support ∪ g₂.support)
@@ -814,18 +846,18 @@ def zipWith' (ZP : Set P) [DecidablePred (· ∈ ZP)] (f : M → N → P)
       rintro ⟨h₁, h₂⟩; exact H (hf _ h₁ _ h₂)
 
 @[simp]
-theorem zipWith'_apply {f : M → N → P} {hf} {g₁ : α →ᶠ[ZM] M} {g₂ : α →ᶠ[ZN] N} {a : α} :
-    zipWith' ZP f hf g₁ g₂ a = f (g₁ a) (g₂ a) :=
+theorem zipWith_apply {f : M → N → P} {hf} {g₁ : α →ᶠ[ZM] M} {g₂ : α →ᶠ[ZN] N} {a : α} :
+    zipWith ZP f hf g₁ g₂ a = f (g₁ a) (g₂ a) :=
   rfl
 
-theorem support_zipWith' {f : M → N → P} {hf} {g₁ : α →ᶠ[ZM] M} {g₂ : α →ᶠ[ZN] N}
-  : (zipWith' ZP f hf g₁ g₂).support ⊆ g₁.support ∪ g₂.support := by simp [zipWith', support_onFinset]
+theorem support_zipWith {f : M → N → P} {hf} {g₁ : α →ᶠ[ZM] M} {g₂ : α →ᶠ[ZN] N}
+  : (zipWith ZP f hf g₁ g₂).support ⊆ g₁.support ∪ g₂.support := by simp [zipWith, support_onFinset]
 
 /-- Given finitely supported functions `g₁ : α →ᶠ[{m}] M` and `g₂ : α →ᶠ[{n}] N` and
-function `f : M → N → P`, `Finsupp.zipWith f hf g₁ g₂` is the finitely supported function
+function `f : M → N → P`, `Finsupp.zipWith' f hf g₁ g₂` is the finitely supported function
 `α →ᵀ P` satisfying `zipWith' f hf g₁ g₂ a = f (g₁ a) (g₂ a)`, which is well-defined when
 `f m n = p`. -/
-def zipWith (f : M → N → P) (hf : f m n = p) (g₁ : α →ᶠ[{m}] M) (g₂ : α →ᶠ[{n}] N) : α →ᶠ[{p}] P :=
+def zipWith' (f : M → N → P) (hf : f m n = p) (g₁ : α →ᶠ[{m}] M) (g₂ : α →ᶠ[{n}] N) : α →ᶠ[{p}] P :=
   onFinset {p}
     (g₁.support ∪ g₂.support)
     (fun a => f (g₁ a) (g₂ a))
@@ -836,21 +868,31 @@ def zipWith (f : M → N → P) (hf : f m n = p) (g₁ : α →ᶠ[{m}] M) (g₂
       exact H (Set.mem_singleton p)
 
 @[simp]
-theorem zipWith_apply {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N} {a : α}
-  : zipWith f hf g₁ g₂ a = f (g₁ a) (g₂ a) :=
+theorem zipWith'_apply {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N} {a : α}
+  : zipWith' f hf g₁ g₂ a = f (g₁ a) (g₂ a) :=
   rfl
 
-theorem support_zipWith {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N}
-  : (zipWith f hf g₁ g₂).support ⊆ g₁.support ∪ g₂.support := by simp [zipWith, support_onFinset]
+theorem zipWith'_eq_zipWith {f : M → N → P} {hf} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N} :
+    zipWith' f hf g₁ g₂ = zipWith {p} f (by intro m hm n hn; cases hm; cases hn; exact hf) g₁ g₂
+    := rfl
+
+theorem support_zipWith' {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N}
+  : (zipWith' f hf g₁ g₂).support ⊆ g₁.support ∪ g₂.support := by simp [zipWith', support_onFinset]
 
 @[simp]
-theorem zipWith_single_single (f : M → N → P) (hf : f zm zn = zp) (a : α) (m : M) (n : N) :
-    zipWith f hf (single zm a m) (single zn a n) = single zp a (f m n) := by
+theorem zipWith'_single_single (f : M → N → P) (hf : f zm zn = zp) (a : α) (m : M) (n : N) :
+    zipWith' f hf (single zm a m) (single zn a n) = single zp a (f m n) := by
   ext a'
-  rw [zipWith_apply]
+  rw [zipWith'_apply]
   obtain rfl | ha' := eq_or_ne a a'
   · rw [single_eq_same, single_eq_same, single_eq_same]
   · rw [single_eq_of_ne ha', single_eq_of_ne ha', single_eq_of_ne ha', hf]
+
+@[simp]
+theorem zipWith_single_single (f : M → N → P) (hf) (a : α) (m : M) (n : N) :
+    zipWith {zp} f hf (single zm a m) (single zn a n) = single zp a (f m n) := by
+    rw [← zipWith'_eq_zipWith, zipWith'_single_single]
+    exact hf _ rfl _ rfl
 
 end ZipWith
 
