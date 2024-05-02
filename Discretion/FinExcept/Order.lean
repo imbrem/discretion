@@ -139,7 +139,7 @@ section PartialOrder
 
 variable [DecidableEq α] [PartialOrder α] [OrderTop α]
 
-lemma support_antitone : Antitone (support (α := ι) (M := α) (Z := λ_ => {⊤})) :=
+lemma support_antitone : Antitone (support (α := ι) (M := α) (Zf := λ_ => {⊤})) :=
   fun f g h a ha ↦ by
     rw [mem_support_iff] at ha ⊢
     intro hg
@@ -185,7 +185,7 @@ section PartialOrder
 
 variable [DecidableEq α] [PartialOrder α] [OrderBot α]
 
-lemma support_monotone : Monotone (support (α := ι) (M := α) (Z := λ_ => {⊥})) :=
+lemma support_monotone : Monotone (support (α := ι) (M := α) (Zf := λ_ => {⊥})) :=
   fun f g h a ha ↦ by
     rw [mem_support_iff] at ha ⊢
     intro hg

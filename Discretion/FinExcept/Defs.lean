@@ -8,22 +8,22 @@ import Mathlib.Data.Set.Finite
 
 open Finset Function
 
-/-- `FinExcept α M Z`, is the type of functions `f : α → M` such that `f x ∈ Z` for all but
+/-- `FinExcept α M Z`, is the type of functions `f : α → M` such that `f x ∈ Zf x` for all but
   finitely many `x`. -/
-structure FinExcept (α : Type*) (M : Type*) (Z : α → Set M) where
+structure FinExcept (α : Type*) (M : Type*) (Zf : α → Set M) where
   /-- The support on which this function lies outside of `Z` -/
   support : Finset α
   /-- The underlying function -/
   toFun : α → M
   /-- The witness that the support of a `FinExcept` is indeed the exact locus where its
   underlying function lies outside of `Z`. -/
-  mem_support_toFun : ∀ a, a ∈ support ↔ toFun a ∉ Z a
+  mem_support_toFun : ∀ a, a ∈ support ↔ toFun a ∉ Zf a
 
 @[inherit_doc]
 notation:25 α " →ᶠ[" Z "]" M => FinExcept α M (λ_ => Z)
 
 @[inherit_doc]
-notation:25 α " →ᶠ[[" Z "]]" M => FinExcept α M Z
+notation:25 α " →ᶠ[[" Zf "]]" M => FinExcept α M Zf
 
 namespace FinExcept
 
@@ -666,35 +666,37 @@ section OnFinset
 
 -- TODO: add restriction
 
-variable {Z : Set M} [DecidablePred (· ∈ Z)] [DecidableEq α] [DecidableEq M] [Top M]
+variable
+  {Zf : α → Set M} [∀a, DecidablePred (· ∈ Zf a)]
+  [DecidableEq α] [DecidableEq M] [Top M]
 
 /-- `FinsuppTop.onFinset s f hf` is the finsupp function representing `f` restricted to the finset
-`s`. The function must be in `Z` outside of `s`. Use this when the set needs to be filtered anyways,
-otherwise a better set representation is often available. -/
-def onFinset (Z : Set M) [DecidablePred (· ∈ Z)]
-  (s : Finset α) (f : α → M) (hf : ∀ a, f a ∉ Z → a ∈ s) : α →ᶠ[Z] M where
-  support := s.filter (f · ∉ Z)
+`s`. The function must satisfy `∀x ∉ s, f s ∈ Zf x`. Use this when the set needs to be filtered
+anyways, otherwise a better set representation is often available. -/
+def onFinset (Zf : α → Set M) [∀a, DecidablePred (· ∈ Zf a)]
+  (s : Finset α) (f : α → M) (hf : ∀ a, f a ∉ Zf a → a ∈ s) : α →ᶠ[[Zf]] M where
+  support := s.filter (λx => f x ∉ Zf x)
   toFun := f
   mem_support_toFun := by simpa
 
 @[simp]
 theorem onFinset_apply {s : Finset α} {f : α → M} {hf a}
-  : (onFinset Z s f hf : α →ᶠ[Z] M) a = f a :=
+  : (onFinset Zf s f hf : α →ᶠ[[Zf]] M) a = f a :=
   rfl
 
 @[simp]
-theorem support_onFinset_subset {s : Finset α} {f : α →ᶠ[Z] M} {hf} :
-    (onFinset Z s f hf).support ⊆ s := by
-  classical convert filter_subset (f · ∉ Z) s
+theorem support_onFinset_subset {s : Finset α} {f : α →ᶠ[[Zf]] M} {hf} :
+    (onFinset Zf s f hf).support ⊆ s := by
+  classical convert filter_subset (λx => f x ∉ Zf x) s
 
 -- @[simp] -- Porting note (#10618): simp can prove this
-theorem mem_support_onFinset {s : Finset α} {f : α → M} (hf : ∀ a : α, f a ∉ Z → a ∈ s) {a : α} :
-    a ∈ (onFinset Z s f hf).support ↔ f a ∉ Z := by
+theorem mem_support_onFinset {s : Finset α} {f : α → M} (hf : ∀ a : α, f a ∉ Zf a → a ∈ s) {a : α} :
+    a ∈ (onFinset Zf s f hf).support ↔ f a ∉ Zf a := by
   rw [mem_support_iff, onFinset_apply]
 
 theorem support_onFinset {s : Finset α} {f : α → M}
-    (hf : ∀ a : α, f a ∉ Z → a ∈ s) :
-    (onFinset Z s f hf).support = s.filter (f · ∉ Z) := rfl
+    (hf : ∀ a : α, f a ∉ Zf a → a ∈ s) :
+    (onFinset Zf s f hf).support = s.filter (λx => f x ∉ Zf x) := rfl
 
 end OnFinset
 
@@ -734,7 +736,7 @@ which is well-defined when `∀z ∈ Z, f z ∈ Z'`.
 -/
 def mapRange (Z : Set M) (Z' : Set N) [DecidablePred (· ∈ Z')]
   (f : M → N) (hf : ∀z ∈ Z, f z ∈ Z') (g : α →ᶠ[Z] M) : α →ᶠ[Z'] N :=
-  onFinset Z' g.support (f ∘ g) λ a => by
+  onFinset _ g.support (f ∘ g) λ a => by
     rw [mem_support_iff, not_imp_not, comp_apply]
     exact λ H => hf _ H
 
@@ -911,7 +913,7 @@ function `f : M → N → P`, `Finsupp.zipWith f hf g₁ g₂` is the finitely s
 `∀m ∈ ZM, ∀n ∈ ZN, f m n ∈ ZP`. -/
 def zipWith (ZP : Set P) [DecidablePred (· ∈ ZP)] (f : M → N → P)
   (hf : ∀m ∈ ZM, ∀n ∈ ZN, f m n ∈ ZP) (g₁ : α →ᶠ[ZM] M) (g₂ : α →ᶠ[ZN] N) : α →ᶠ[ZP] P :=
-  onFinset ZP
+  onFinset _
     (g₁.support ∪ g₂.support)
     (fun a => f (g₁ a) (g₂ a))
     fun a (H : f _ _ ∉ ZP) => by
@@ -932,7 +934,7 @@ function `f : M → N → P`, `Finsupp.zipWith' f hf g₁ g₂` is the finitely 
 `α →ᵀ P` satisfying `zipWith' f hf g₁ g₂ a = f (g₁ a) (g₂ a)`, which is well-defined when
 `f m n = p`. -/
 def zipWith' (f : M → N → P) (hf : f m n = p) (g₁ : α →ᶠ[{m}] M) (g₂ : α →ᶠ[{n}] N) : α →ᶠ[{p}] P :=
-  onFinset {p}
+  onFinset _
     (g₁.support ∪ g₂.support)
     (fun a => f (g₁ a) (g₂ a))
     fun a (H : f (g₁ a) (g₂ a) ∉ {p}) => by
