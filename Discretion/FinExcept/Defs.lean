@@ -903,7 +903,7 @@ end EmbDomain
 
 section ZipWith
 
-variable {ZM : Set M} {ZN : Set N} {ZP : Set P} [DecidablePred (· ∈ ZP)]
+variable {ZM : α → Set M} {ZN : α → Set N} {ZP : α → Set P} [∀a, DecidablePred (· ∈ ZP a)]
   [Dα : DecidableEq α] [DecidableEq M]
   [DecidableEq N] [DecidableEq P] [Top M] [Top N] [Top P]
 
@@ -911,22 +911,23 @@ variable {ZM : Set M} {ZN : Set N} {ZP : Set P} [DecidablePred (· ∈ ZP)]
 function `f : M → N → P`, `Finsupp.zipWith f hf g₁ g₂` is the finitely supported function
 `α →ᵀ P` satisfying `zipWith f hf g₁ g₂ a = f (g₁ a) (g₂ a)`, which is well-defined when
 `∀m ∈ ZM, ∀n ∈ ZN, f m n ∈ ZP`. -/
-def zipWith (ZP : Set P) [DecidablePred (· ∈ ZP)] (f : M → N → P)
-  (hf : ∀m ∈ ZM, ∀n ∈ ZN, f m n ∈ ZP) (g₁ : α →ᶠ[ZM] M) (g₂ : α →ᶠ[ZN] N) : α →ᶠ[ZP] P :=
+def zipWith (ZP : α → Set P) [∀a, DecidablePred (· ∈ ZP a)] (f : M → N → P)
+  (hf : ∀a, ∀m ∈ ZM a, ∀n ∈ ZN a, f m n ∈ ZP a) (g₁ : α →ᶠ[[ZM]] M) (g₂ : α →ᶠ[[ZN]] N)
+  : α →ᶠ[[ZP]] P :=
   onFinset _
     (g₁.support ∪ g₂.support)
     (fun a => f (g₁ a) (g₂ a))
-    fun a (H : f _ _ ∉ ZP) => by
+    fun a (H : f _ _ ∉ ZP a) => by
       classical
       rw [mem_union, mem_support_iff, mem_support_iff, ← not_and_or]
-      rintro ⟨h₁, h₂⟩; exact H (hf _ h₁ _ h₂)
+      rintro ⟨h₁, h₂⟩; exact H (hf _ _ h₁ _ h₂)
 
 @[simp]
-theorem zipWith_apply {f : M → N → P} {hf} {g₁ : α →ᶠ[ZM] M} {g₂ : α →ᶠ[ZN] N} {a : α} :
+theorem zipWith_apply {f : M → N → P} {hf} {g₁ : α →ᶠ[[ZM]] M} {g₂ : α →ᶠ[[ZN]] N} {a : α} :
     zipWith ZP f hf g₁ g₂ a = f (g₁ a) (g₂ a) :=
   rfl
 
-theorem support_zipWith {f : M → N → P} {hf} {g₁ : α →ᶠ[ZM] M} {g₂ : α →ᶠ[ZN] N}
+theorem support_zipWith {f : M → N → P} {hf} {g₁ : α →ᶠ[[ZM]] M} {g₂ : α →ᶠ[[ZN]] N}
   : (zipWith ZP f hf g₁ g₂).support ⊆ g₁.support ∪ g₂.support := by simp [zipWith, support_onFinset]
 
 /-- Given finitely supported functions `g₁ : α →ᶠ[{m}] M` and `g₂ : α →ᶠ[{n}] N` and
@@ -948,8 +949,8 @@ theorem zipWith'_apply {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m
   : zipWith' f hf g₁ g₂ a = f (g₁ a) (g₂ a) :=
   rfl
 
-theorem zipWith'_eq_zipWith {f : M → N → P} {hf} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N} :
-    zipWith' f hf g₁ g₂ = zipWith {p} f (by intro m hm n hn; cases hm; cases hn; exact hf) g₁ g₂
+theorem zipWith'_eq_zipWith {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N} :
+    zipWith' f hf g₁ g₂ = zipWith _ f (by intro _ m hm n hn; cases hm; cases hn; exact hf) g₁ g₂
     := rfl
 
 theorem support_zipWith' {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N}
@@ -966,9 +967,9 @@ theorem zipWith'_single_single (f : M → N → P) (hf : f zm zn = zp) (a : α) 
 
 @[simp]
 theorem zipWith_single_single (f : M → N → P) (hf) (a : α) (m : M) (n : N) :
-    zipWith {zp} f hf (single zm a m) (single zn a n) = single zp a (f m n) := by
+    zipWith _ f hf (single zm a m) (single zn a n) = single zp a (f m n) := by
     rw [← zipWith'_eq_zipWith, zipWith'_single_single]
-    exact hf _ rfl _ rfl
+    exact hf a _ rfl _ rfl
 
 end ZipWith
 
