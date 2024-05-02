@@ -152,6 +152,58 @@ theorem Nat.stepWk_image_eq_liftWk_image_succ (ρ) : stepWk ρ '' s = liftWk ρ 
 
 -- TODO: liftWk and stepWk EqOn lore
 
+def Nat.liftnWk (n: Nat) (ρ: Nat -> Nat): Nat -> Nat := λm => if m < n then m else (ρ (m - n)) + n
+
+theorem Nat.liftnWk_zero: liftnWk 0 = id := by
+  funext ρ m
+  simp only [liftnWk, Nat.sub_zero, Nat.add_zero, id_eq, ite_eq_right_iff]
+  intro H
+  cases H
+
+theorem Nat.liftnWk_succ' (n): liftnWk (n.succ) = liftWk ∘ liftnWk n := by
+  induction n with
+  | zero => funext ρ m; cases m <;> rfl
+  | succ n I =>
+    rw [I]
+    funext ρ m
+    cases m with
+    | zero => rfl
+    | succ m =>
+      cases m with
+      | zero => simp only [liftnWk, Nat.succ_lt_succ_iff, Nat.zero_lt_succ]; rfl
+      | succ m =>
+        simp only [liftnWk, Nat.succ_lt_succ_iff, Function.comp_apply, liftWk]
+        split <;> simp_arith
+
+theorem Nat.liftnWk_eq_iterate_liftWk: liftnWk = Nat.iterate liftWk := by
+  funext n
+  induction n with
+  | zero => rfl
+  | succ n I => rw [liftnWk_succ', I, Function.iterate_succ']
+
+theorem Nat.liftnWk_succ (n): liftnWk (n.succ) = liftnWk n ∘ liftWk := by
+  rw [liftnWk_eq_iterate_liftWk, Function.iterate_succ]
+
+theorem Nat.liftnWk_add (m n: ℕ): liftnWk (m + n) = liftnWk m ∘ liftnWk n
+  := by rw [liftnWk_eq_iterate_liftWk, Function.iterate_add]
+theorem Nat.liftnWk_add_apply (m n: ℕ) (ρ): liftnWk (m + n) ρ = liftnWk m (liftnWk n ρ)
+  := by rw [liftnWk_eq_iterate_liftWk, Function.iterate_add_apply]
+
+theorem Nat.iterate_liftWk_id: (n: ℕ) -> liftWk^[n] id = id
+  | 0 => rfl
+  | n + 1 => by simp [liftWk_id, iterate_liftWk_id n]
+theorem Nat.iterate_liftWk_comp: (n: ℕ)
+  -> ∀ρ σ, liftWk^[n] (ρ ∘ σ) = liftWk^[n] ρ ∘ liftWk^[n] σ
+  | 0, _, _ => rfl
+  | n + 1, _, _ => by simp [liftWk_comp, iterate_liftWk_comp n]
+
+theorem Nat.liftnWk_id (n): liftnWk n id = id := by
+  rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_id]
+theorem Nat.liftnWk_comp (n ρ σ): liftnWk n (ρ ∘ σ) = liftnWk n ρ ∘ liftnWk n σ := by
+  rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_comp]
+
+-- EqOn lore
+
 -- TODO: liftnWk and stepnWk, equalities
 
 -- TODO: liftnWk and stepnWk lore (injectivity, (strict) monotonicity, surjectivity, EqOn, etc)
