@@ -4,11 +4,11 @@ import Discretion.OrderSupport
 
 import Mathlib.Data.Set.Finite
 
--- TODO: clean up doc comments...
+-- TODO: clean up doc comments... we need a better name than "zero set"
 
 open Finset Function
 
-/-- `FinExcept α M s`, is the type of functions `f : α → M` such that `f x ∈ Z` for all but
+/-- `FinExcept α M Z`, is the type of functions `f : α → M` such that `f x ∈ Z` for all but
   finitely many `x`. -/
 structure FinExcept (α : Type*) (M : Type*) (Z : α → Set M) where
   /-- The support on which this function lies outside of `Z` -/
@@ -121,8 +121,11 @@ theorem always_eq_null {z : M} {z' : ({z} : Set M)}
     cases p
     simp [always_apply, null_apply]
 
--- TODO: generalize to families
-instance instInhabited [hz : Inhabited Z] : Inhabited (α →ᶠ[Z] M) := ⟨always hz.default⟩
+instance instInhabited [hz : ∀a, Inhabited (Zf a)] : Inhabited (α →ᶠ[[Zf]] M) := ⟨{
+  support := ∅,
+  toFun := fun a => (hz a).default,
+  mem_support_toFun := by simp
+}⟩
 
 -- TODO: in particular, the set of stuff with empty support is Inhabited if Z is
 
@@ -150,15 +153,15 @@ theorem mem_support_iff_ne {f : α →ᶠ[{z}] M} {a} : a ∈ f.support ↔ f a 
 theorem not_mem_support_iff_eq {f : α →ᶠ[{z}] M} {a} : a ∉ f.support ↔ f a = z :=
   by simp
 
-theorem ext_iff' {f g : α →ᶠ[Z] M} [hZ : Subsingleton Z]
+theorem ext_iff' {f g : α →ᶠ[[Zf]] M} [hZ : ∀a, Subsingleton (Zf a)]
   : f = g ↔ f.support = g.support ∧ ∀ x ∈ f.support, f x = g x :=
   ⟨fun h => h ▸ ⟨rfl, fun _ _ => rfl⟩, fun ⟨h₁, h₂⟩ =>
     ext fun a => by
       classical
       exact if h : a ∈ f.support then h₂ a h else by
-        have hf : f a ∈ Z := not_mem_support_iff.mp h
-        have hg : g a ∈ Z := by rwa [h₁, not_mem_support_iff] at h
-        exact Z.subsingleton_coe.mp hZ hf hg⟩
+        have hf : f a ∈ Zf a := not_mem_support_iff.mp h
+        have hg : g a ∈ Zf a := by rwa [h₁, not_mem_support_iff] at h
+        exact (Zf a).subsingleton_coe.mp (hZ a) hf hg⟩
 
 -- TODO: Subsingleton Z -> f.support = ∅ -> g.support = ∅ -> f = g
 
@@ -189,12 +192,12 @@ theorem support_nonempty_iff {f : α →ᶠ[{z}] M} : f.support.Nonempty ↔ f �
 theorem card_support_eq_zero {f : α →ᶠ[{z}] M} : card f.support = 0 ↔ f = null z
   := by simp [support_eq_empty]
 
-instance instDecidableEq {Z : Set M} [DecidableEq α] [DecidableEq M] [Subsingleton Z]
-  : DecidableEq (α →ᶠ[Z] M)
+instance instDecidableEq [DecidableEq α] [DecidableEq M] [∀a, Subsingleton (Zf a)]
+  : DecidableEq (α →ᶠ[[Zf]] M)
   := fun f g => decidable_of_iff (f.support = g.support ∧ ∀ a ∈ f.support, f a = g a) ext_iff'.symm
 
-theorem support_subset_iff {s : Set α} {f : α →ᶠ[Z] M} :
-    ↑f.support ⊆ s ↔ ∀ a ∉ s, f a ∈ Z := by
+theorem support_subset_iff {s : Set α} {f : α →ᶠ[[Zf]] M} :
+    ↑f.support ⊆ s ↔ ∀ a ∉ s, f a ∈ Zf a := by
   simp only [Set.subset_def, mem_coe, mem_support_iff]; exact forall_congr' fun a => not_imp_comm
 
 theorem support_subset_iff_eq {s : Set α} {f : α →ᶠ[{z}] M} :
@@ -225,63 +228,65 @@ noncomputable def _root_.Equiv.finExceptUnique {ι : Type*} [Unique ι]
   FinExcept.equivFunOnFinite.trans (Equiv.funUnique ι M)
 
 @[ext]
-theorem unique_ext [Unique α] {f g : α →ᶠ[Z] M} (h : f default = g default) : f = g :=
+theorem unique_ext [Unique α] {f g : α →ᶠ[[Zf]] M} (h : f default = g default) : f = g :=
   ext fun a => by rwa [Unique.eq_default a]
 
-theorem unique_ext_iff [Unique α] {f g : α →ᶠ[Z] M} : f = g ↔ f default = g default :=
+theorem unique_ext_iff [Unique α] {f g : α →ᶠ[[Zf]] M} : f = g ↔ f default = g default :=
   ⟨fun h => h ▸ rfl, unique_ext⟩
 
 /--
-Cast the zero set of a `FinExcept`
+Cast the zero set family of a `FinExcept`
 -/
-def cast (hZ : Z = Z') (f : α →ᶠ[Z] M) : α →ᶠ[Z'] M where
+def cast (hZ : Zf = Zf') (f : α →ᶠ[[Zf]] M) : α →ᶠ[[Zf']] M where
   support := f.support
   toFun := f.toFun
   mem_support_toFun := hZ ▸ f.mem_support_toFun
 
 /--
-Cast the zero set of a `FinExcept`, extensionally
+Cast the zero set of a `FinExcept`
 -/
-def cast' (hZ : ∀x, x ∈ Z ↔ x ∈ Z') (f : α →ᶠ[Z] M) : α →ᶠ[Z'] M := cast (Set.ext hZ) f
+def cast_set (hZ : ∀x, x ∈ Z ↔ x ∈ Z') (f : α →ᶠ[Z] M) : α →ᶠ[Z'] M := cast (by ext; apply hZ) f
 
-theorem cast'_eq_cast (hZ : ∀x, x ∈ Z ↔ x ∈ Z') (f : α →ᶠ[Z] M)
-  : cast' hZ f = cast (Set.ext hZ) f := rfl
+theorem cast_set_eq_cast (hZ : ∀x, x ∈ Z ↔ x ∈ Z') (f : α →ᶠ[Z] M)
+  : cast_set hZ f = cast (by ext; apply hZ) f := rfl
 
 @[simp]
-theorem toFun_cast {hZ : Z = Z'} {f : α →ᶠ[Z] M} : (cast hZ f).toFun = f.toFun :=
+theorem toFun_cast {hZ : Zf = Zf'} {f : α →ᶠ[[Zf]] M} : (cast hZ f).toFun = f.toFun :=
   by rfl
 
 @[simp]
-theorem toFun_cast' {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : α →ᶠ[Z] M}
-  : (cast' hZ f).toFun = f.toFun :=
+theorem toFun_cast_set {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : α →ᶠ[Z] M}
+  : (cast_set hZ f).toFun = f.toFun :=
   by rfl
 
 @[simp]
-theorem coe_cast {hZ : Z = Z'} {f : α →ᶠ[Z] M} : ((cast hZ f) : α → M) = (f : α → M) :=
+theorem coe_cast {hZ : Zf = Zf'} {f : α →ᶠ[[Zf]] M} : ((cast hZ f) : α → M) = (f : α → M) :=
   by rfl
 
 @[simp]
-theorem coe_cast' {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : α →ᶠ[Z] M}
-  : ((cast' hZ f) : α → M) = (f : α → M) :=
+theorem coe_cast_set {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : α →ᶠ[Z] M}
+  : ((cast_set hZ f) : α → M) = (f : α → M) :=
   by rfl
 
 @[simp]
-theorem support_cast {hZ : Z = Z'} {f : α →ᶠ[Z] M} : (cast hZ f).support = f.support :=
+theorem support_cast {hZ : Zf = Zf'} {f : α →ᶠ[[Zf]] M} : (cast hZ f).support = f.support :=
   by rfl
 
 @[simp]
-theorem support_cast' {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : α →ᶠ[Z] M}
-  : (cast' hZ f).support = f.support :=
+theorem support_cast_set {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : α →ᶠ[Z] M}
+  : (cast_set hZ f).support = f.support :=
   by rfl
 
 @[simp]
-theorem cast_apply {hZ : Z = Z'} {f : α →ᶠ[Z] M} {a : α} : (cast hZ f) a = f a :=
+theorem cast_apply {hZ : Zf = Zf'} {f : α →ᶠ[[Zf]] M} {a : α} : (cast hZ f) a = f a :=
   by rfl
 
 @[simp]
-theorem cast'_apply {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : α →ᶠ[Z] M} {a : α}
-  : (cast' hZ f) a = f a :=
+theorem cast_set_apply {hZ : ∀x, x ∈ Z ↔ x ∈ Z'} {f : α →ᶠ[Z] M} {a : α}
+  : (cast_set hZ f) a = f a :=
   by rfl
+
+-- TODO: of_subfamily variant
 
 /--
 Cast the zero set of a `FinExcept` to a superset of the zero set
@@ -491,16 +496,17 @@ section Update
 
 variable
   {Z : Set M} [DecidablePred (· ∈ Z)] {z : M}
+  {Zf : α → Set M} [∀a, DecidablePred (· ∈ Zf a)]
   [DecidableEq α] [DecidableEq β] [DecidableEq M]
-  (f : α →ᶠ[Z] M) (fz : α →ᶠ[{z}] M) (a : α) (b : M) (i : α)
+  (f : α →ᶠ[[Zf]] M) (fz : α →ᶠ[{z}] M) (a : α) (b : M) (i : α)
 
 /-- Replace the value of a `α →ᶠ[Z] M` at a given point `a : α` by a given value `b : M`.
 If `b ∈ Z`, this amounts to removing `a` from the `Finsupp.support`.
 Otherwise, if `a` was not in the `Finsupp.support`, it is added to it.
 
 This is the finitely-supported version of `Function.update`. -/
-def update (f : α →ᶠ[Z] M) (a : α) (b : M) : α →ᶠ[Z] M where
-  support := if b ∈ Z then f.support.erase a else insert a f.support
+def update (f : α →ᶠ[[Zf]] M) (a : α) (b : M) : α →ᶠ[[Zf]] M where
+  support := if b ∈ Zf a then f.support.erase a else insert a f.support
   toFun := Function.update f a b
   mem_support_toFun i := by
     classical
@@ -530,7 +536,7 @@ theorem null_update : update (null z) a b = single z a b := by
   rfl
 
 theorem support_update :
-    support (f.update a b) = if b ∈ Z then f.support.erase a else insert a f.support := rfl
+    support (f.update a b) = if b ∈ Zf a then f.support.erase a else insert a f.support := rfl
 
 @[simp]
 theorem support_update_null : support (fz.update a z) = fz.support.erase a := by
@@ -538,7 +544,7 @@ theorem support_update_null : support (fz.update a z) = fz.support.erase a := by
 
 variable {b}
 
-theorem support_update_not_mem (h : b ∉ Z) :
+theorem support_update_not_mem (h : b ∉ Zf a) :
     support (f.update a b) = insert a f.support := by simp [update, h]
 
 theorem support_update_ne_null (h : b ≠ z) :
@@ -551,11 +557,11 @@ theorem support_update_subset :
   · exact (erase_subset _ _).trans (subset_insert _ _)
   · rfl
 
-theorem update_comm (f : α →ᶠ[Z] M) {a₁ a₂ : α} (h : a₁ ≠ a₂) (m₁ m₂ : M) :
+theorem update_comm (f : α →ᶠ[[Zf]] M) {a₁ a₂ : α} (h : a₁ ≠ a₂) (m₁ m₂ : M) :
     update (update f a₁ m₁) a₂ m₂ = update (update f a₂ m₂) a₁ m₁ :=
   DFunLike.coe_injective <| Function.update_comm h _ _ _
 
-@[simp] theorem update_idem (f : α →ᶠ[Z] M) (a : α) (b c : M) :
+@[simp] theorem update_idem (f : α →ᶠ[[Zf]] M) (a : α) (b c : M) :
     update (update f a b) a c = update f a c :=
   DFunLike.coe_injective <| Function.update_idem _ _ _
 
@@ -565,19 +571,20 @@ end Update
 
 section Erase
 
-variable {z : M} [DecidableEq α] [DecidableEq M]
+variable {Zf : α → Set M} [hZ : ∀a, Inhabited (Zf a)] [∀a, DecidablePred (· ∈ Zf a)]
+  {z : M} [DecidableEq α] [DecidableEq M]
 
 /--
-`erase a f` is the finitely supported function equal to `f` except at `a` where it is equal to `z`.
-If `a` is not in the support of `f` then `erase a f = f`.
+`erase a f` is the finitely supported function equal to `f` except at `a` where it is equal to
+`default`. If `a` is not in the support of `f` then `erase a f = f`.
 -/
-def erase (a : α) (f : α →ᶠ[{z}] M) : α →ᶠ[{z}] M where
+def erase (a : α) (f : α →ᶠ[[Zf]] M) : α →ᶠ[[Zf]] M where
   support := f.support.erase a
-  toFun a' := if a' = a then z else f a'
+  toFun a' := if a' = a then (hZ a).default else f a'
   mem_support_toFun a' := by
     rw [mem_erase, mem_support_iff]; dsimp
     split_ifs with h
-    exact ⟨fun H _ => H.1 h, fun H => (H rfl).elim⟩
+    exact ⟨fun H _ => H.1 h, fun H => (H (h ▸ (hZ a).default.property)).elim⟩
     exact and_iff_right h
 
 @[simp]
@@ -585,16 +592,20 @@ theorem support_erase [DecidableEq α] {a : α} {f : α →ᶠ[{z}] M} :
   (f.erase a).support = f.support.erase a := rfl
 
 @[simp]
-theorem erase_same {a : α} {f : α →ᶠ[{z}] M} : (f.erase a) a = z := by
+theorem erase_same {a : α} {f : α →ᶠ[[Zf]] M} : (f.erase a) a = (hZ a).default := by
   simp only [erase, coe_mk, ite_true]
+
+theorem erase_same_eq {a : α} {f : α →ᶠ[{z}] M} : (f.erase a) a = z := erase_same
 
 @[simp]
 theorem erase_ne {a a' : α} {f : α →ᶠ[{z}] M} (h : a' ≠ a) : (f.erase a) a' = f a' := by
   simp only [erase, coe_mk, h, ite_false]
 
-theorem erase_apply {a a' : α} {f : α →ᶠ[{z}] M} :
-    f.erase a a' = if a' = a then z else f a' := by
-  rw [erase, coe_mk]
+theorem erase_apply {a a' : α} {f : α →ᶠ[[Zf]] M} :
+  f.erase a a' = if a' = a then ↑(hZ a).default else f a' := by rw [erase, coe_mk]
+
+theorem erase_apply_eq {a a' : α} {f : α →ᶠ[{z}] M} : f.erase a a' = if a' = a then z else f a'
+  := erase_apply
 
 @[simp]
 theorem erase_single {a : α} {b : M} : erase a (single z a b) = null z := by
@@ -607,13 +618,14 @@ theorem erase_single {a : α} {b : M} : erase a (single z a b) = null z := by
 theorem erase_single_ne {a a' : α} {b : M} (h : a ≠ a') : erase a (single z a' b) = single z a' b
   := by
   ext s; by_cases hs : s = a
-  · rw [hs, erase_same, single_eq_of_ne h.symm]
+  · rw [hs, erase_same_eq, single_eq_of_ne h.symm]
   · rw [erase_ne hs]
 
+-- TODO: all this requires is that Zf a is always a subsingleton
 @[simp]
 theorem erase_of_not_mem_support {f : α →ᶠ[{z}] M} {a} (haf : a ∉ f.support) : erase a f = f := by
   ext b; by_cases hab : b = a
-  · rwa [hab, erase_same, eq_comm, ← not_mem_support_iff_eq]
+  · rwa [hab, erase_same_eq, eq_comm, ← not_mem_support_iff_eq]
   · rw [erase_ne hab]
 
 @[simp, nolint simpNF] -- Porting note: simpNF linter claims simp can prove this, it can not
@@ -623,10 +635,13 @@ theorem erase_null (a : α) : erase a (null z : α →ᶠ[{z}] M) = null z := by
 theorem erase_eq_update_null (f : α →ᶠ[{z}] M) (a : α) : f.erase a = update f a z := by
   ext; simp [erase_apply, update_apply]
 
+theorem erase_eq_update_default (f : α →ᶠ[[Zf]] M) (a : α) : f.erase a = update f a (hZ a).default
+  := by ext; simp [erase_apply, update_apply]
+
 -- The name matches `Finset.erase_insert_of_ne`
-theorem erase_update_of_ne (f : α →ᶠ[{z}] M) {a a' : α} (ha : a ≠ a') (b : M) :
+theorem erase_update_of_ne (f : α →ᶠ[[Zf]] M) {a a' : α} (ha : a ≠ a') (b : M) :
     erase a (update f a' b) = update (erase a f) a' b := by
-  rw [erase_eq_update_null, erase_eq_update_null, update_comm _ ha]
+  rw [erase_eq_update_default, erase_eq_update_default, update_comm _ ha]
 
 -- not `simp` as `erase_of_not_mem_support` can prove this
 theorem erase_idem (f : α →ᶠ[{z}] M) (a : α) :
@@ -646,6 +661,10 @@ end Erase
 /-! ### Declarations about `onFinset` -/
 
 section OnFinset
+
+-- TODO: generalize to families
+
+-- TODO: add restriction
 
 variable {Z : Set M} [DecidablePred (· ∈ Z)] [DecidableEq α] [DecidableEq M] [Top M]
 
@@ -700,6 +719,10 @@ end OfSupportFinite
 
 
 section MapRange
+
+-- TODO: generalize to families
+
+-- TODO: standardize notation
 
 variable {Z : Set M} {Z' : Set N} {Z'' : Set P}
   [DecidablePred (· ∈ Z)] [DecidablePred (· ∈ Z')] [DecidablePred (· ∈ Z'')]

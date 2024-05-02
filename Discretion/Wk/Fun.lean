@@ -175,6 +175,8 @@ theorem Nat.liftnWk_succ' (n): liftnWk (n.succ) = liftWk ∘ liftnWk n := by
         simp only [liftnWk, Nat.succ_lt_succ_iff, Function.comp_apply, liftWk]
         split <;> simp_arith
 
+theorem Nat.liftnWk_one : liftnWk 1 = liftWk := by simp [liftnWk_succ', liftnWk_zero]
+
 theorem Nat.liftnWk_eq_iterate_liftWk: liftnWk = Nat.iterate liftWk := by
   funext n
   induction n with
@@ -189,16 +191,20 @@ theorem Nat.liftnWk_add (m n: ℕ): liftnWk (m + n) = liftnWk m ∘ liftnWk n
 theorem Nat.liftnWk_add_apply (m n: ℕ) (ρ): liftnWk (m + n) ρ = liftnWk m (liftnWk n ρ)
   := by rw [liftnWk_eq_iterate_liftWk, Function.iterate_add_apply]
 
+@[simp]
 theorem Nat.iterate_liftWk_id: (n: ℕ) -> liftWk^[n] id = id
   | 0 => rfl
   | n + 1 => by simp [liftWk_id, iterate_liftWk_id n]
+
 theorem Nat.iterate_liftWk_comp: (n: ℕ)
   -> ∀ρ σ, liftWk^[n] (ρ ∘ σ) = liftWk^[n] ρ ∘ liftWk^[n] σ
   | 0, _, _ => rfl
   | n + 1, _, _ => by simp [liftWk_comp, iterate_liftWk_comp n]
 
+@[simp]
 theorem Nat.liftnWk_id (n): liftnWk n id = id := by
   rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_id]
+
 theorem Nat.liftnWk_comp (n ρ σ): liftnWk n (ρ ∘ σ) = liftnWk n ρ ∘ liftnWk n σ := by
   rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_comp]
 
