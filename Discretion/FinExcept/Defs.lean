@@ -10,25 +10,28 @@ open Finset Function
 
 /-- `FinExcept α M s`, is the type of functions `f : α → M` such that `f x ∈ Z` for all but
   finitely many `x`. -/
-structure FinExcept (α : Type*) (M : Type*) (Z : Set M) where
+structure FinExcept (α : Type*) (M : Type*) (Z : α → Set M) where
   /-- The support on which this function lies outside of `Z` -/
   support : Finset α
   /-- The underlying function -/
   toFun : α → M
   /-- The witness that the support of a `FinExcept` is indeed the exact locus where its
   underlying function lies outside of `Z`. -/
-  mem_support_toFun : ∀ a, a ∈ support ↔ toFun a ∉ Z
+  mem_support_toFun : ∀ a, a ∈ support ↔ toFun a ∉ Z a
 
 @[inherit_doc]
-notation:25 α " →ᶠ[" Z "]" M => FinExcept α M Z
+notation:25 α " →ᶠ[" Z "]" M => FinExcept α M (λ_ => Z)
+
+@[inherit_doc]
+notation:25 α " →ᶠ[[" Z "]]" M => FinExcept α M Z
 
 namespace FinExcept
 
 section Basic
 
-variable {α : Type u} {M : Type v} {Z Z' : Set M}
+variable {α : Type u} {M : Type v} {Z Z' : Set M} {Zf Zf' : α → Set M}
 
-instance instFunLike : FunLike (α →ᶠ[Z] M) α M :=
+instance instFunLike : FunLike (α →ᶠ[[Zf]] M) α M :=
   ⟨toFun, by
     rintro ⟨s, f, hf⟩ ⟨t, g, hg⟩ (rfl : f = g)
     congr
@@ -37,16 +40,16 @@ instance instFunLike : FunLike (α →ᶠ[Z] M) α M :=
 
 /-- Helper instance for when there are too many metavariables to apply the `DFunLike` instance
 directly. -/
-instance instCoeFun : CoeFun (α →ᶠ[Z] M) fun _ => α → M :=
+instance instCoeFun : CoeFun (α →ᶠ[[Zf]] M) fun _ => α → M :=
   inferInstance
 
 @[ext]
-theorem ext {f g : α →ᶠ[Z] M} (h : ∀ a, f a = g a) : f = g :=
+theorem ext {f g : α →ᶠ[[Zf]] M} (h : ∀ a, f a = g a) : f = g :=
   DFunLike.ext _ _ h
 
 @[simp, norm_cast]
-theorem coe_mk (f : α → M) (s : Finset α) (h : ∀ a, a ∈ s ↔ f a ∉ Z)
-  : ⇑(⟨s, f, h⟩ : α →ᶠ[Z] M) = f :=
+theorem coe_mk (f : α → M) (s : Finset α) (h : ∀ a, a ∈ s ↔ f a ∉ Zf a)
+  : ⇑(⟨s, f, h⟩ : α →ᶠ[[Zf]] M) = f :=
   rfl
 
 -- @[simp]
@@ -118,6 +121,7 @@ theorem always_eq_null {z : M} {z' : ({z} : Set M)}
     cases p
     simp [always_apply, null_apply]
 
+-- TODO: generalize to families
 instance instInhabited [hz : Inhabited Z] : Inhabited (α →ᶠ[Z] M) := ⟨always hz.default⟩
 
 -- TODO: in particular, the set of stuff with empty support is Inhabited if Z is
@@ -129,14 +133,15 @@ theorem default_apply {Z : Set M} [hz : Inhabited Z] {a : α}
   rfl
 
 @[simp]
-theorem mem_support_iff {f : α →ᶠ[Z] M} : ∀ {a : α}, a ∈ f.support ↔ f a ∉ Z :=
+theorem mem_support_iff {f : α →ᶠ[[Zf]] M} : ∀ {a : α}, a ∈ f.support ↔ f a ∉ Zf a :=
   @(f.mem_support_toFun)
 
+-- TODO: generalize to families
 @[simp, norm_cast]
 theorem fun_support_eq (f : α →ᶠ[Z] M) : (f ⁻¹' Z)ᶜ = f.support :=
   Set.ext fun _x => mem_support_iff.symm
 
-theorem not_mem_support_iff {f : α →ᶠ[Z] M} {a} : a ∉ f.support ↔ f a ∈ Z :=
+theorem not_mem_support_iff {f : α →ᶠ[[Zf]] M} {a} : a ∉ f.support ↔ f a ∈ Zf a :=
   by simp
 
 theorem mem_support_iff_ne {f : α →ᶠ[{z}] M} {a} : a ∈ f.support ↔ f a ≠ z :=
@@ -215,7 +220,8 @@ theorem equivFunOnFinite_symm_coe {α} [Finite α] (f : α →ᶠ[Z] M)
 If `α` has a unique term, `FinExcept α β Z` is equivalent to `β`.
 -/
 @[simps!]
-noncomputable def _root_.Equiv.finExceptUnique {ι : Type*} [Unique ι] : (FinExcept ι M Z) ≃ M :=
+noncomputable def _root_.Equiv.finExceptUnique {ι : Type*} [Unique ι]
+  : (FinExcept ι M (λ_ => Z)) ≃ M :=
   FinExcept.equivFunOnFinite.trans (Equiv.funUnique ι M)
 
 @[ext]
@@ -361,7 +367,7 @@ theorem support_single_subset : (single z a b).support ⊆ {a} := by
   classical show ite _ _ _ ⊆ _; split_ifs <;> [exact empty_subset _; exact Subset.refl _]
 
 theorem single_apply_mem (x) : single z a b x ∈ ({z, b} : Set M) := by
-  rcases em (a = x) with (rfl | hx) <;> [simp; simp [single_eq_of_ne hx]]
+  rcases em (a = x) with (rfl | hx) <;> simp; simp [single_eq_of_ne hx]
 
 theorem range_single_subset : Set.range (single z a b) ⊆ {z, b} :=
   Set.range_subset_iff.2 single_apply_mem

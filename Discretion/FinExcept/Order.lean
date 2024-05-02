@@ -11,9 +11,9 @@ section DecEq
 variable [DecidableEq ι] [DecidableEq α]
 
 section LE
-variable [LE α] {f g : ι →ᶠ[Z] α}
+variable [LE α] {f g : ι →ᶠ[[Z]] α}
 
-instance instLEFinExcept : LE (ι →ᶠ[Z] α) :=
+instance instLEFinExcept : LE (ι →ᶠ[[Z]] α) :=
   ⟨fun f g => ∀ i, f i ≤ g i⟩
 
 lemma le_def : f ≤ g ↔ ∀ i, f i ≤ g i := Iff.rfl
@@ -21,7 +21,7 @@ lemma le_def : f ≤ g ↔ ∀ i, f i ≤ g i := Iff.rfl
 @[simp, norm_cast] lemma coe_le_coe : ⇑f ≤ g ↔ f ≤ g := Iff.rfl
 
 /-- The order on `FinExcept`s over a partial order embeds into the order on functions -/
-def orderEmbeddingToFun : (ι →ᶠ[Z] α) ↪o (ι → α) where
+def orderEmbeddingToFun : (ι →ᶠ[[Z]] α) ↪o (ι → α) where
   toFun f := f
   inj' f g h :=
     FinExcept.ext fun i => by
@@ -30,15 +30,15 @@ def orderEmbeddingToFun : (ι →ᶠ[Z] α) ↪o (ι → α) where
   map_rel_iff' := coe_le_coe
 
 @[simp]
-theorem orderEmbeddingToFun_apply {f : ι →ᶠ[Z] α} {i : ι} : orderEmbeddingToFun f i = f i :=
+theorem orderEmbeddingToFun_apply {f : ι →ᶠ[[Z]] α} {i : ι} : orderEmbeddingToFun f i = f i :=
   rfl
 
 end LE
 
 section Preorder
-variable [Preorder α] {f g : ι →ᶠ[Z] α}
+variable [Preorder α] {f g : ι →ᶠ[[Z]] α}
 
-instance preorder : Preorder (ι →ᶠ[Z] α) :=
+instance preorder : Preorder (ι →ᶠ[[Z]] α) :=
   { instLEFinExcept with
     le_refl := fun f i => le_rfl
     le_trans := fun f g h hfg hgh i => (hfg i).trans (hgh i) }
@@ -46,14 +46,14 @@ instance preorder : Preorder (ι →ᶠ[Z] α) :=
 lemma lt_def : f < g ↔ f ≤ g ∧ ∃ i, f i < g i := Pi.lt_def
 @[simp, norm_cast] lemma coe_lt_coe : ⇑f < g ↔ f < g := Iff.rfl
 
-lemma coe_mono : Monotone (toFun : (ι →ᶠ[Z] α) → ι → α) := fun _ _ ↦ id
+lemma coe_mono : Monotone (toFun : (ι →ᶠ[[Z]] α) → ι → α) := fun _ _ ↦ id
 #align finsupp.monotone_to_fun FinExcept.coe_mono
 
-lemma coe_strictMono : Monotone (FinExcept.toFun : (ι →ᶠ[Z] α) → ι → α) := fun _ _ ↦ id
+lemma coe_strictMono : Monotone (FinExcept.toFun : (ι →ᶠ[[Z]] α) → ι → α) := fun _ _ ↦ id
 
 end Preorder
 
-instance partialorder [PartialOrder α] : PartialOrder (ι →ᶠ[Z] α) :=
+instance partialorder [PartialOrder α] : PartialOrder (ι →ᶠ[[Z]] α) :=
   { FinExcept.preorder with le_antisymm :=
       fun _f _g hfg hgf => ext fun i => (hfg i).antisymm (hgf i) }
 
@@ -139,7 +139,7 @@ section PartialOrder
 
 variable [DecidableEq α] [PartialOrder α] [OrderTop α]
 
-lemma support_antitone : Antitone (support (α := ι) (M := α) (Z := {⊤})) :=
+lemma support_antitone : Antitone (support (α := ι) (M := α) (Z := λ_ => {⊤})) :=
   fun f g h a ha ↦ by
     rw [mem_support_iff] at ha ⊢
     intro hg
@@ -185,7 +185,7 @@ section PartialOrder
 
 variable [DecidableEq α] [PartialOrder α] [OrderBot α]
 
-lemma support_monotone : Monotone (support (α := ι) (M := α) (Z := {⊥})) :=
+lemma support_monotone : Monotone (support (α := ι) (M := α) (Z := λ_ => {⊥})) :=
   fun f g h a ha ↦ by
     rw [mem_support_iff] at ha ⊢
     intro hg
