@@ -11,9 +11,9 @@ section DecEq
 variable [DecidableEq ι] [DecidableEq α]
 
 section LE
-variable [LE α] {f g : ι →ᶠ[[Z]] α}
+variable [LE α] {f g : ι →ᶠ[[Zf]] α}
 
-instance instLEFinExcept : LE (ι →ᶠ[[Z]] α) :=
+instance instLEFinExcept : LE (ι →ᶠ[[Zf]] α) :=
   ⟨fun f g => ∀ i, f i ≤ g i⟩
 
 lemma le_def : f ≤ g ↔ ∀ i, f i ≤ g i := Iff.rfl
@@ -21,7 +21,7 @@ lemma le_def : f ≤ g ↔ ∀ i, f i ≤ g i := Iff.rfl
 @[simp, norm_cast] lemma coe_le_coe : ⇑f ≤ g ↔ f ≤ g := Iff.rfl
 
 /-- The order on `FinExcept`s over a partial order embeds into the order on functions -/
-def orderEmbeddingToFun : (ι →ᶠ[[Z]] α) ↪o (ι → α) where
+def orderEmbeddingToFun : (ι →ᶠ[[Zf]] α) ↪o (ι → α) where
   toFun f := f
   inj' f g h :=
     FinExcept.ext fun i => by
@@ -30,15 +30,15 @@ def orderEmbeddingToFun : (ι →ᶠ[[Z]] α) ↪o (ι → α) where
   map_rel_iff' := coe_le_coe
 
 @[simp]
-theorem orderEmbeddingToFun_apply {f : ι →ᶠ[[Z]] α} {i : ι} : orderEmbeddingToFun f i = f i :=
+theorem orderEmbeddingToFun_apply {f : ι →ᶠ[[Zf]] α} {i : ι} : orderEmbeddingToFun f i = f i :=
   rfl
 
 end LE
 
 section Preorder
-variable [Preorder α] {f g : ι →ᶠ[[Z]] α}
+variable {Zf : ι → Set α} [Preorder α] {f g : ι →ᶠ[[Zf]] α}
 
-instance preorder : Preorder (ι →ᶠ[[Z]] α) :=
+instance preorder : Preorder (ι →ᶠ[[Zf]] α) :=
   { instLEFinExcept with
     le_refl := fun f i => le_rfl
     le_trans := fun f g h hfg hgh i => (hfg i).trans (hgh i) }
@@ -46,22 +46,27 @@ instance preorder : Preorder (ι →ᶠ[[Z]] α) :=
 lemma lt_def : f < g ↔ f ≤ g ∧ ∃ i, f i < g i := Pi.lt_def
 @[simp, norm_cast] lemma coe_lt_coe : ⇑f < g ↔ f < g := Iff.rfl
 
-lemma coe_mono : Monotone (toFun : (ι →ᶠ[[Z]] α) → ι → α) := fun _ _ ↦ id
+lemma coe_mono : Monotone (toFun : (ι →ᶠ[[Zf]] α) → ι → α) := fun _ _ ↦ id
 #align finsupp.monotone_to_fun FinExcept.coe_mono
 
-lemma coe_strictMono : Monotone (FinExcept.toFun : (ι →ᶠ[[Z]] α) → ι → α) := fun _ _ ↦ id
+lemma coe_strictMono : Monotone (FinExcept.toFun : (ι →ᶠ[[Zf]] α) → ι → α) := fun _ _ ↦ id
 
 end Preorder
 
-instance partialorder [PartialOrder α] : PartialOrder (ι →ᶠ[[Z]] α) :=
+instance partialorder [PartialOrder α] : PartialOrder (ι →ᶠ[[Zf]] α) :=
   { FinExcept.preorder with le_antisymm :=
       fun _f _g hfg hgf => ext fun i => (hfg i).antisymm (hgf i) }
 
--- TODO: these can be generalized to nonsingletons, but stuff doesn't infer nicely then...
+-- TODO: these can be generalized to nonsingletons if the zero sets themselves are semilattices
 
-instance semilatticeInf [SemilatticeInf α] : SemilatticeInf (ι →ᶠ[{z}] α) :=
+instance semilatticeInf
+  {Zf : ι → Set α} [hZ: ∀a, Subsingleton (Zf a)] [∀a, DecidablePred (· ∈ Zf a)] [SemilatticeInf α]
+  : SemilatticeInf (ι →ᶠ[[Zf]] α) :=
   { partialorder with
-    inf := zipWith' (· ⊓ ·) (inf_idem _)
+    inf := zipWith Zf (· ⊓ ·) (λa m hm n hn => by
+      simp only
+      rw [(Zf a).subsingleton_coe.mp (hZ a) hm hn, inf_idem]
+      exact hn)
     inf_le_left := fun _f _g _i => inf_le_left
     inf_le_right := fun _f _g _i => inf_le_right
     le_inf := fun _f _g _i h1 h2 s => le_inf (h1 s) (h2 s) }
@@ -70,9 +75,14 @@ instance semilatticeInf [SemilatticeInf α] : SemilatticeInf (ι →ᶠ[{z}] α)
 theorem inf_apply [SemilatticeInf α] {i : ι} {f g : ι →ᶠ[{z}] α} : (f ⊓ g) i = f i ⊓ g i :=
   rfl
 
-instance semilatticeSup [SemilatticeSup α] : SemilatticeSup (ι →ᶠ[{z}] α) :=
+instance semilatticeSup
+  {Zf : ι → Set α} [hZ: ∀a, Subsingleton (Zf a)] [∀a, DecidablePred (· ∈ Zf a)] [SemilatticeSup α]
+  : SemilatticeSup (ι →ᶠ[[Zf]] α) :=
   { partialorder with
-    sup := zipWith' (· ⊔ ·) (sup_idem _)
+    sup := zipWith Zf (· ⊔ ·) (λa m hm n hn => by
+      simp only
+      rw [(Zf a).subsingleton_coe.mp (hZ a) hm hn, sup_idem]
+      exact hn)
     le_sup_left := fun _f _g _i => le_sup_left
     le_sup_right := fun _f _g _i => le_sup_right
     sup_le := fun _f _g _h hf hg i => sup_le (hf i) (hg i) }
@@ -81,7 +91,9 @@ instance semilatticeSup [SemilatticeSup α] : SemilatticeSup (ι →ᶠ[{z}] α)
 theorem sup_apply [SemilatticeSup α] {i : ι} {f g : ι →ᶠ[{z}] α} : (f ⊔ g) i = f i ⊔ g i :=
   rfl
 
-instance lattice [Lattice α] : Lattice (ι →ᶠ[{z}] α) :=
+instance lattice
+  {Zf : ι → Set α} [∀a, Subsingleton (Zf a)] [∀a, DecidablePred (· ∈ Zf a)] [Lattice α]
+  : Lattice (ι →ᶠ[[Zf]] α) :=
   { semilatticeInf, semilatticeSup with }
 
 -- TODO: distributivity lore? completion lore?
