@@ -58,6 +58,10 @@ instance partialorder [PartialOrder α] : PartialOrder (ι →ᶠ[[Zf]] α) :=
       fun _f _g hfg hgf => ext fun i => (hfg i).antisymm (hgf i) }
 
 -- TODO: these can be generalized to nonsingletons if the zero sets themselves are semilattices
+-- TODO: need to add an instance that says partially ordered subsingletons are complete lattices
+-- TODO: should every subsingleton be equipped with a partial order, for that matter? linear?
+--       this would have to be a low-priority instance to avoid conflict... as should the above,
+--       for that matter
 
 instance semilatticeInf
   {Zf : ι → Set α} [hZ: ∀a, Subsingleton (Zf a)] [∀a, DecidablePred (· ∈ Zf a)] [SemilatticeInf α]
