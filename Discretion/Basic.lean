@@ -4,6 +4,9 @@ import Discretion.WithDefault
 import Mathlib.Order.WithBot
 import Mathlib.Order.Bounds.Basic
 
+-- TODO: can generalize this to a "no nontrivial sup/inf" property
+-- TODO: join-complete and meet-complete; this needs to be added to mathlib Someday (TM)
+
 /-- A type `α` is equipped with a discrete order, i.e. `a ≤ b → a = b` -/
 class DiscreteOrder (α : Type u) [LE α] : Prop where
   le_eq (a b : α) : a ≤ b → a = b
