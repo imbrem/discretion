@@ -4,6 +4,8 @@ import Mathlib.Data.Fin.Basic
 import Mathlib.Order.Interval.Set.Basic
 import Mathlib.Order.Monotone.Basic
 
+import Discretion.Utils
+
 -- TODO: lore: a strictly monotone function ℕ → ℕ is increasing (i.e. ≥ id)
 -- (this is StrictMono.id_le)
 
@@ -142,8 +144,6 @@ theorem Nat.stepWk_image (ρ) : stepWk ρ '' s = Nat.succ '' (ρ '' s) := by
   simp only [Set.mem_image, exists_exists_and_eq_and]
   exact exists_congr (by simp)
 
-theorem Nat.pred_comp_succ : Nat.pred ∘ Nat.succ = id := funext Nat.pred_succ
-
 theorem Nat.pred_stepWk_image (ρ) : Nat.pred '' (stepWk ρ '' s) = ρ '' s := by
   rw [stepWk_image, <-Set.image_comp, Nat.pred_comp_succ, Set.image_id]
 
@@ -207,6 +207,44 @@ theorem Nat.liftnWk_id (n): liftnWk n id = id := by
 
 theorem Nat.liftnWk_comp (n ρ σ): liftnWk n (ρ ∘ σ) = liftnWk n ρ ∘ liftnWk n σ := by
   rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_comp]
+
+theorem Nat.liftWk_eqOn_zero (ρ σ) : ({0} : Set ℕ).EqOn (liftWk ρ) (liftWk σ) := by simp
+
+theorem Nat.liftWk_eqOn_succ_of_eqOn {s : Set ℕ} (hs : s.EqOn ρ σ)
+    : (succ '' s).EqOn (liftWk ρ) (liftWk σ) := by
+  intro x hx
+  have ⟨y, hy, hy'⟩ := hx
+  cases x <;> cases hy'
+  simp only [liftWk_succ, hs hy]
+
+theorem Nat.eqOn_of_liftWk_eqOn_succ {s : Set ℕ} (hs : (succ '' s).EqOn (liftWk ρ) (liftWk σ))
+    : s.EqOn ρ σ := by
+  intro x hx
+  have hs' := @hs (x + 1) (by simp [hx])
+  simp only [liftWk_succ, add_left_inj] at hs'
+  exact hs'
+
+theorem Nat.liftWk_eqOn_succ_iff {s : Set ℕ} : (succ '' s).EqOn (liftWk ρ) (liftWk σ) ↔ s.EqOn ρ σ
+  := ⟨eqOn_of_liftWk_eqOn_succ, liftWk_eqOn_succ_of_eqOn⟩
+
+theorem Nat.liftWk_eqOn_iff {s : Set ℕ}
+  : (insert 0 (succ '' s)).EqOn (liftWk ρ) (liftWk σ) ↔ s.EqOn ρ σ := by
+  rw [<-@liftWk_eqOn_succ_iff _ _ s]
+  simp
+
+theorem Nat.liftWk_eqOn_Iio_iff {M : ℕ}
+  : (Set.Iio (M + 1)).EqOn (liftWk ρ) (liftWk σ) ↔ (Set.Iio M).EqOn ρ σ := by
+  rw [<-@liftWk_eqOn_iff _ _ (Set.Iio M), iff_iff_eq]
+  congr
+  ext x
+  cases x <;> simp [Nat.succ_lt_succ_iff]
+
+theorem Nat.liftWk_eqOn_Ioo_iff {m M : ℕ}
+  : (Set.Ioo (m + 1) (M + 1)).EqOn (liftWk ρ) (liftWk σ) ↔ (Set.Ioo m M).EqOn ρ σ := by
+  rw [<-@liftWk_eqOn_succ_iff _ _ (Set.Ioo m M), iff_iff_eq]
+  congr
+  ext x
+  cases x <;> simp [Nat.succ_lt_succ_iff]
 
 -- EqOn lore
 
