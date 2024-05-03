@@ -147,12 +147,14 @@ end GetSet
 
 section WithTop
 
+theorem not_mem_support_iff_top [Top M] {f : α →ᶠ[{⊤}] M}
+  : x ∉ f.support ↔ f x = ⊤ := not_mem_support_iff
+
+theorem mem_support_iff_ne_top [Top M] {f : α →ᶠ[{⊤}] M}
+  : x ∈ f.support ↔ f x ≠ ⊤ := by simp [not_mem_support_iff_top]
+
 variable [DecidableEq α] [DecidableEq M]
   {f g : α →ᶠ[{⊤}] (WithTop M)} {x y : α} {a : M}
-
-theorem not_mem_support_iff_top : x ∉ f.support ↔ f x = ⊤ := not_mem_support_iff
-
-theorem mem_support_iff_ne_top : x ∈ f.support ↔ f x ≠ ⊤ := by simp [not_mem_support_iff_top]
 
 theorem mem_support_of_eq_coe_top : f x = ↑a → x ∈ f.support := mem_support_of_eq_coe
 
@@ -262,7 +264,7 @@ theorem mem_support_of_eq_cons_top : g = cons_top x a f → x ∈ g.support
 
 theorem cons_top_eq_iff : cons_top x a f = g ↔ g x = a ∧ ∀y, y ≠ x -> f y = g y := cons_eq_iff
 
-theorem eq_cons_top_iff : g = cons x a f ↔ a = g x ∧ ∀y, y ≠ x -> g y = f y := eq_cons_iff
+theorem eq_cons_top_iff : g = cons_top x a f ↔ a = g x ∧ ∀y, y ≠ x -> g y = f y := eq_cons_iff
 
 @[simp]
 theorem untop_cons_head : (cons_top x a f).untop x (mem_support_cons) = a := by simp [untop]
@@ -275,12 +277,14 @@ end WithTop
 
 section WithBot
 
+theorem not_mem_support_iff_bot [Bot M] {f : α →ᶠ[{⊥}] M}
+  : x ∉ f.support ↔ f x = ⊥ := not_mem_support_iff
+
+theorem mem_support_iff_ne_bot [Bot M] {f : α →ᶠ[{⊥}] M}
+  : x ∈ f.support ↔ f x ≠ ⊥ := by simp [not_mem_support_iff_bot]
+
 variable [DecidableEq α] [DecidableEq M]
   {f g : α →ᶠ[{⊥}] (WithBot M)} {x y : α} {a : M}
-
-theorem not_mem_support_iff_bot : x ∉ f.support ↔ f x = ⊥ := not_mem_support_iff
-
-theorem mem_support_iff_ne_bot : x ∈ f.support ↔ f x ≠ ⊥ := by simp [not_mem_support_iff_bot]
 
 theorem mem_support_of_eq_coe_bot : f x = ↑a → x ∈ f.support := mem_support_of_eq_coe
 
@@ -369,7 +373,7 @@ theorem mem_support_of_eq_cons_bot : g = cons_bot x a f → x ∈ g.support
 
 theorem cons_bot_eq_iff : cons_bot x a f = g ↔ g x = a ∧ ∀y, y ≠ x -> f y = g y := cons_eq_iff
 
-theorem eq_cons_bot_iff : g = cons x a f ↔ a = g x ∧ ∀y, y ≠ x -> g y = f y := eq_cons_iff
+theorem eq_cons_bot_iff : g = cons_bot x a f ↔ a = g x ∧ ∀y, y ≠ x -> g y = f y := eq_cons_iff
 
 @[simp]
 theorem unbot_cons_head : (cons_bot x a f).unbot x (mem_support_cons) = a := by simp [unbot]
@@ -380,7 +384,120 @@ theorem unbot_cons_tail (h : y ≠ x) (hy : y ∈ f.support)
 
 end WithBot
 
--- TODO: default theorems
+section WithDefault
+
+theorem not_mem_support_iff_default [Inhabited M] {f : α →ᶠ[{default}] M}
+  : x ∉ f.support ↔ f x = default := not_mem_support_iff
+
+theorem mem_support_iff_ne_default [Inhabited M] {f : α →ᶠ[{default}] M}
+  : x ∈ f.support ↔ f x ≠ default := mem_support_iff_ne
+
+variable [DecidableEq α] [DecidableEq M]
+  {f g : α →ᶠ[{default}] (WithDefault M)} {x y : α} {a : M}
+
+theorem mem_support_of_eq_coe_default : f x = ↑a → x ∈ f.support := mem_support_of_eq_coe
+
+theorem mem_support_of_coe_eq_default : ↑a = f x → x ∈ f.support := mem_support_of_coe_eq
+
+/-- Get an element in the support of `f` -/
+def undefault (f : α →ᶠ[{default}] (WithDefault M)) (x : α) (hx : x ∈ f.support) : M
+  := (f x).undefault (mem_support_iff_ne_default.mp hx)
+
+theorem undefault_eq_get {hx : x ∈ f.support} : f.undefault x hx = f.get x hx := untop_eq_get
+
+@[simp]
+theorem undefault_eq (hx : x ∈ f.support) : ↑(f.undefault x hx) = f x := untop_eq hx
+
+theorem undefault_eq_of_eq_coe (h : f x = ↑a) : f.undefault x (mem_support_of_eq_coe h) = a
+  := untop_eq_of_eq_coe h
+
+theorem undefault_eq_of_coe_eq (h : ↑a = f x) : f.undefault x (mem_support_of_coe_eq h) = a
+  := untop_eq_of_coe_eq h
+
+theorem undefault_eq_iff_eq_at (hx : x ∈ f.support) (hy : y ∈ f.support)
+  : f.undefault x hx = f.undefault y hy ↔ f x = f y
+  := untop_eq_iff_eq_at hx hy
+
+/-- This is the same as `f.update x ↑a`, but with nicer defeqs for the support -/
+def cons_default (x : α) (a : M) (f : α →ᶠ[{default}] (WithDefault M))
+  : α →ᶠ[{default}] (WithDefault M) where
+  support := insert x f.support
+  toFun := Function.update f x a
+  mem_support_toFun y := by simp only [Function.update]; aesop
+
+theorem cons_default_apply : (f.cons_default x a) y = if y = x then ↑a else f y := cons_apply
+
+theorem cons_default_head : (f.cons_default x a) x = ↑a := cons_head
+
+theorem cons_default_tail : y ≠ x → (f.cons_default x a) y = f y := cons_tail
+
+@[simp, norm_cast]
+theorem coe_cons_default : (f.cons_default x a : α → WithDefault M) = Function.update f x a := rfl
+
+@[simp]
+theorem default_cons_default : cons_default x a default = single default x ↑a := bot_cons_bot
+
+theorem support_cons_default :
+    support (f.cons_default x a) = insert x f.support := rfl
+
+theorem cons_default_eq_update (x : α) (a : M) (f : α →ᶠ[{default}] (WithDefault M))
+  : cons_default x a f = f.update x a :=
+  rfl
+
+@[simp]
+theorem cons_default_eq_self (h : x ∈ f.support) : f.cons_default x (f.undefault x h) = f
+  := cons_top_eq_self h
+
+theorem cons_default_comm (f : α →ᶠ[{default}] (WithDefault M)) (h : x ≠ y) (a b : M) :
+  cons_default x a (cons_default y b f) = cons_default y b (cons_default x a f)
+  := cons_top_comm f h a b
+
+@[simp]
+theorem cons_default_idem (x : α) (a : M) (f : α →ᶠ[{default}] (WithDefault M))
+  : cons_default x a (cons_default x a f) = cons_bot x a f := cons_top_idem x a f
+
+theorem eq_at_of_cons_default_eq_self (h : cons_default x a f = f) : a = f x
+  := eq_at_of_cons_top_eq_self h
+
+theorem cons_default_eq_self_of_eq_at (h : a = f x) : cons_default x a f = f
+  := cons_top_eq_self_of_eq_at h
+
+@[simp]
+theorem cons_default_eq_self_iff : cons_default x a f = f ↔ a = f x := cons_eq_self_iff
+
+@[simp]
+theorem eq_self_cons_default_iff : f = cons_default x a f ↔ f x = a := eq_self_cons_iff
+
+theorem ne_cons_default_self_iff : f ≠ cons_default x a f ↔ f x ≠ a := ne_cons_self_iff
+
+theorem cons_default_ne_self_iff : cons_default x a f ≠ f ↔ ↑a ≠ f x := cons_ne_self_iff
+
+theorem mem_support_cons_default : x ∈ (cons_default x a f).support := mem_support_cons
+
+theorem mem_support_cons_default_of_mem_support : y ∈ f.support → y ∈ (cons_default x a f).support
+  := mem_support_cons_of_mem_support
+
+theorem mem_support_of_cons_default_eq (h : cons_default x a f = g) : x ∈ g.support
+  := h ▸ mem_support_cons
+
+theorem mem_support_of_eq_cons_default : g = cons_default x a f → x ∈ g.support
+  := mem_support_of_eq_cons
+
+theorem cons_default_eq_iff : cons_default x a f = g ↔ g x = a ∧ ∀y, y ≠ x -> f y = g y
+  := cons_eq_iff
+
+theorem eq_cons_default_iff : g = cons_default x a f ↔ a = g x ∧ ∀y, y ≠ x -> g y = f y
+  := eq_cons_iff
+
+@[simp]
+theorem undefault_cons_head : (cons_default x a f).undefault x (mem_support_cons) = a
+  := by simp [undefault]
+
+theorem undefault_cons_tail (h : y ≠ x) (hy : y ∈ f.support)
+  : (cons_default x a f).undefault y (mem_support_cons_of_mem_support hy) = f.undefault y hy
+  := by simp [undefault, h]
+
+end WithDefault
 
 -- TODO: injectivity and monotonicity theorems
 
