@@ -110,6 +110,8 @@ theorem Fin.elem_le_max [LinearOrder α] [Bot α] (f : Fin n → α) : ∀(i : F
 theorem Fin.max_le [LinearOrder α] [OrderBot α] (f : Fin n → α) (c : α) (hf : ∀i, f i ≤ c)
   : max f ≤ c := maxD_le f ⊥ hf (by simp)
 
+instance singletonSetInhabited {a : α} : Inhabited ({a} : Set α) := ⟨⟨a, rfl⟩⟩
+
 -- TODO: can do likewise for min, inf, and sup
 
 -- TODO: move to Tuple?

@@ -1,6 +1,7 @@
 /- Adapted from https://github.com/leanprover-community/mathlib4/blob/b856377d9cf6945a16d9abeaf713bcd10ea0d2db/Mathlib/Data/Finsupp/Defs.lean -/
 
 import Discretion.OrderSupport
+import Discretion.Utils
 
 import Mathlib.Data.Set.Finite
 

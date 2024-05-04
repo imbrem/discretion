@@ -279,8 +279,7 @@ instance preorder [Preorder α] : Preorder (WithDefault α) where
     case some.some => simp [lt_iff_le_not_le]
   le_refl o := by cases o <;> trivial
   le_trans o₁ o₂ o₃ := by
-    cases o₁ <;> cases o₂ <;> cases o₃
-      <;> simp only [LE.le, imp_false, IsEmpty.forall_iff, implies_true, forall_true_left]
+    cases o₁ <;> cases o₂ <;> cases o₃ <;> simp [LE.le]
     case some.some.some => apply le_trans
 
 instance partialOrder [PartialOrder α] : PartialOrder (WithDefault α) where

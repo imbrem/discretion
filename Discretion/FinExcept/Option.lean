@@ -114,10 +114,10 @@ theorem eq_self_cons_iff : f = cons x a f ↔ f x = a
   := ⟨Eq.symm ∘ eq_at_of_cons_eq_self ∘ Eq.symm, Eq.symm ∘ cons_eq_self_of_eq_at ∘ Eq.symm⟩
 
 theorem ne_cons_self_iff : f ≠ cons x a f ↔ f x ≠ a
-  := by rw [Ne.def, eq_self_cons_iff]
+  := by rw [Ne, eq_self_cons_iff]
 
 theorem cons_ne_self_iff : cons x a f ≠ f ↔ ↑a ≠ f x
-  := by rw [Ne.def, cons_eq_self_iff]
+  := by rw [Ne, cons_eq_self_iff]
 
 theorem mem_support_cons : x ∈ (cons x a f).support := by simp
 
