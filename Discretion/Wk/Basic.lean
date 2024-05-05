@@ -93,16 +93,66 @@ theorem List.NWkn_iff [PartialOrder α] (Γ Δ : List α) (ρ : ℕ → ℕ)
 theorem List.NWkn.id [PartialOrder α] (Γ : List α) : List.NWkn Γ Γ id
   := λ_ hΓ => ⟨hΓ, le_refl _⟩
 
--- theorem List.NWkn.comp [PartialOrder α] {Γ Δ Ξ : List α}
---   {ρ : ℕ → ℕ} {σ : ℕ → ℕ} (hρ : List.NWkn Γ Δ ρ) (hσ : List.NWkn Δ Ξ σ) : List.NWkn Γ Ξ (ρ ∘ σ)
---   := λn hΞ => sorry
+theorem List.NWkn.comp [PartialOrder α] {Γ Δ Ξ : List α}
+  {ρ : ℕ → ℕ} {σ : ℕ → ℕ} (hρ : List.NWkn Γ Δ ρ) (hσ : List.NWkn Δ Ξ σ) : List.NWkn Γ Ξ (ρ ∘ σ)
+  := λn hΞ =>
+    have ⟨hΔ, hσ⟩ := hσ n hΞ;
+    have ⟨hΓ, hρ⟩ := hρ _ hΔ;
+    ⟨hΓ, le_trans hρ hσ⟩
 
--- theorem List.NWkn.lift [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
---   (hAB : A ≤ B) (hρ : List.NWkn Γ Δ ρ) : List.NWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)
---   := sorry
+theorem List.NWkn.lift [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+  (hAB : A ≤ B) (hρ : List.NWkn Γ Δ ρ) : List.NWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)
+  := λn hΔ => match n with
+  | 0 => ⟨Nat.zero_lt_succ _, hAB⟩
+  | n+1 => have ⟨hΔ, hρ⟩ := hρ n (Nat.lt_of_succ_lt_succ hΔ); ⟨Nat.succ_lt_succ hΔ, hρ⟩
 
--- theorem List.NWkn.step [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
---   (A : α) (hρ : List.NWkn Γ Δ ρ) : List.NWkn (A :: Γ) Δ (Nat.succ ∘ ρ)
---   := sorry
+theorem List.NWkn.of_lift [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+  (h : List.NWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)) : List.NWkn Γ Δ ρ
+  := λi hΔ => have ⟨hΔ, hρ⟩ := h i.succ (Nat.succ_lt_succ hΔ); ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
+
+theorem List.NWkn.le_of_lift [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+  (h : List.NWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)) : A ≤ B
+  := (h 0 (Nat.zero_lt_succ _)).2
+
+theorem List.NWkn.lift_iff [PartialOrder α] (A B) (Γ Δ : List α) (ρ : ℕ → ℕ)
+  : List.NWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ) ↔ A ≤ B ∧ List.NWkn Γ Δ ρ
+  := ⟨
+    λh => ⟨h.le_of_lift, List.NWkn.of_lift h⟩,
+    λ⟨hAB, hρ⟩ => List.NWkn.lift hAB hρ
+  ⟩
+
+theorem List.NWkn.lift₂ [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+  (hAB₁ : A₁ ≤ B₁) (hAB₂ : A₂ ≤ B₂) (hρ : List.NWkn Γ Δ ρ)
+  : List.NWkn (A₁ :: A₂ :: Γ) (B₁ :: B₂ :: Δ) (Nat.liftWk (Nat.liftWk ρ))
+  := (hρ.lift hAB₂).lift hAB₁
+
+theorem List.NWkn.liftn₂ [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+  (hAB₁ : A₁ ≤ B₁) (hAB₂ : A₂ ≤ B₂) (hρ : List.NWkn Γ Δ ρ)
+  : List.NWkn (A₁ :: A₂ :: Γ) (B₁ :: B₂ :: Δ) (Nat.liftnWk 2 ρ)
+  := by rw [Nat.liftnWk_eq_iterate_liftWk]; exact lift₂ hAB₁ hAB₂ hρ
+
+-- TODO: pointwise liftn
+
+theorem List.NWkn.step [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+  (A : α) (hρ : List.NWkn Γ Δ ρ) : List.NWkn (A :: Γ) Δ (Nat.succ ∘ ρ)
+  := λn hΔ => have ⟨hΔ, hρ⟩ := hρ n hΔ; ⟨Nat.succ_lt_succ hΔ, hρ⟩
+
+theorem List.NWkn.of_step [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+  (h : List.NWkn (A :: Γ) Δ (Nat.succ ∘ ρ)) : List.NWkn Γ Δ ρ
+  := λi hΔ => have ⟨hΔ, hρ⟩ := h i hΔ; ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
+
+theorem List.NWkn.step_iff [PartialOrder α] (A) (Γ Δ : List α) (ρ : ℕ → ℕ)
+  : List.NWkn (A :: Γ) Δ (Nat.succ ∘ ρ) ↔ List.NWkn Γ Δ ρ
+  := ⟨
+    List.NWkn.of_step,
+    List.NWkn.step A
+  ⟩
+
+-- TODO: step₂, stepn₂, stepn
+
+-- TODO: if the order is discrete, weakenings are unique iff there are no duplicates in the source
+
+-- TODO: if the order is discrete and there are no duplicates in the source, then the are none
+--       in the target
 
 -- TODO: inductive weakening, associated lore

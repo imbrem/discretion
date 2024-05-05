@@ -396,15 +396,30 @@ theorem Fin.liftWk_comp_succ {n m} (ρ : Fin n -> Fin m) : liftWk ρ ∘ Fin.suc
 def Fin.wkOfBounded {n m} (ρ : Nat -> Nat) (H : ∀k, k < n -> ρ k < m) : Fin n -> Fin m
   := λk => ⟨ρ k, H k (Fin.is_lt k)⟩
 
-/-- Extend a finite weakening to a weakening on `Nat` -/
-def Fin.toNatWk {n m} (ρ : Fin n → Fin m) : Nat → Nat
-  := λk => if h : k < n then ρ ⟨k, h⟩ else (k - n) + m
+@[simp]
+theorem Fin.wkOfBounded_id : @wkOfBounded n n id (λ_ h => h) = id := rfl
 
--- TODO: wkOfBounded ∘ toNatWk = id
+theorem Fin.wkOfBounded_comp {n m k}
+    {ρ : Nat -> Nat} {hρ}
+    {σ : Nat -> Nat} {hσ}
+    : @wkOfBounded m k σ hσ ∘ @wkOfBounded n m ρ hρ = wkOfBounded (σ ∘ ρ) (λk h => hσ _ (hρ k h))
+  := rfl
 
 -- TODO: wkOfBounded is surjective
 
 -- TODO: wkOfBounded is (strict) monotonic if f is (strict) monotonic on
+
+/-- Extend a finite weakening to a weakening on `Nat` -/
+def Fin.toNatWk {n m} (ρ : Fin n → Fin m) : Nat → Nat
+  := λk => if h : k < n then ρ ⟨k, h⟩ else (k - n) + m
+
+@[simp]
+theorem Fin.toNatWk_id (n) : toNatWk (@id (Fin n)) = id := by
+  funext k
+  unfold toNatWk
+  aesop
+
+-- TODO: wkOfBounded ∘ toNatWk = id
 
 -- TODO: toNatWk ∘ extendWk = toNatWk
 
