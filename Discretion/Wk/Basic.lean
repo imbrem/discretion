@@ -1,10 +1,12 @@
 import Discretion.Wk.Fun
 import Mathlib.Data.Fintype.Card
 
+/-- The function `ρ` weakens `Γ` to `Δ` -/
 def Fin.FWkn [PartialOrder α] {n m : Nat}
   (Γ : Fin n → α) (Δ : Fin m → α) (ρ : Fin m → Fin n) : Prop
   := (Γ ∘ ρ) ≤ Δ
 
+/-- The function `ρ` weakens `Γ` to `Δ` -/
 def List.FWkn [PartialOrder α] (Γ Δ : List α) (ρ : Fin Δ.length → Fin Γ.length) : Prop
   := (Γ.get ∘ ρ) ≤ Δ.get
 
@@ -25,6 +27,7 @@ theorem List.FWkn.step [PartialOrder α] {Γ Δ : List α} {ρ : Fin Δ.length �
   (A : α) (hρ : List.FWkn Γ Δ ρ) : List.FWkn (A :: Γ) Δ (Fin.stepWk ρ)
   := λi => hρ i
 
+/-- The `Γ` weakens to `Δ` -/
 def List.FWkns [PartialOrder α] (Γ Δ : List α) : Prop := ∃ρ, List.FWkn Γ Δ ρ ∧ StrictMono ρ
 
 theorem List.FWkns.refl [PartialOrder α] (Γ : List α) : List.FWkns Γ Γ
@@ -54,5 +57,52 @@ theorem List.FWkns.antisymm [PartialOrder α] {Γ Δ : List α}
       cases Fin.strictMono_eq_cast hρ len_eq.symm
       cases Fin.strictMono_eq_cast hσ len_eq
       exact List.ext_get len_eq λi h h' => le_antisymm_iff.mpr ⟨hAB ⟨i, h'⟩, hBA ⟨i, h⟩⟩
+
+/-- The function `ρ` weakens `Γ` to `Δ` -/
+def List.NWkn [PartialOrder α] (Γ Δ : List α) (ρ : ℕ → ℕ) : Prop
+  := ∀n, (hΔ : n < Δ.length) → ∃hΓ : ρ n < Γ.length, Γ.get ⟨ρ n , hΓ⟩ ≤ Δ.get ⟨n, hΔ⟩
+
+theorem List.NWkn.bounded [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+  (h : List.NWkn Γ Δ ρ) (n : ℕ) (hΔ : n < Δ.length) : ρ n < Γ.length
+  := match h n hΔ with | ⟨hΓ, _⟩ => hΓ
+
+/-- Restrict `ρ` from a function on `ℕ` to indices into `Δ` -/
+def List.NWkn.toFinWk [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+  (h : List.NWkn Γ Δ ρ) : Fin (Δ.length) → Fin (Γ.length)
+  := Fin.wkOfBounded ρ h.bounded
+
+theorem List.NWkn.toFWkn [PartialOrder α] (Γ Δ : List α) (ρ : ℕ → ℕ)
+  (h : List.NWkn Γ Δ ρ) : List.FWkn Γ Δ (List.NWkn.toFinWk h)
+  := λ⟨i, hi⟩ => have ⟨_, h⟩ := h i hi; h
+
+theorem List.NWkn_iff [PartialOrder α] (Γ Δ : List α) (ρ : ℕ → ℕ)
+  : List.NWkn Γ Δ ρ ↔ ∃ρ', List.FWkn Γ Δ ρ' ∧ ∀i : Fin Δ.length, ρ i = ρ' i
+  := ⟨
+    λh => ⟨_, h.toFWkn, λ_ => rfl⟩,
+    λ⟨ρ', h, hρ'⟩ n hΔ =>
+      have hρ' : ρ n = ρ' ⟨n, hΔ⟩ := hρ' ⟨n, hΔ⟩;
+      have hΓ' : ρ' ⟨n, hΔ⟩ < Γ.length := by simp;
+      have hΓ : ρ n < Γ.length := hρ' ▸ hΓ';
+      have h' : Γ.get ⟨ρ' ⟨n, hΔ⟩, hΓ'⟩ ≤ Δ.get ⟨n, hΔ⟩ := h ⟨n, hΔ⟩;
+      have hΓn : Γ.get ⟨ρ' ⟨n, hΔ⟩, hΓ'⟩ = Γ.get ⟨ρ n, hΓ⟩ := by
+        congr
+        exact hρ'.symm
+      ⟨hρ' ▸ hΓ, hΓn ▸ h'⟩
+  ⟩
+
+theorem List.NWkn.id [PartialOrder α] (Γ : List α) : List.NWkn Γ Γ id
+  := λ_ hΓ => ⟨hΓ, le_refl _⟩
+
+-- theorem List.NWkn.comp [PartialOrder α] {Γ Δ Ξ : List α}
+--   {ρ : ℕ → ℕ} {σ : ℕ → ℕ} (hρ : List.NWkn Γ Δ ρ) (hσ : List.NWkn Δ Ξ σ) : List.NWkn Γ Ξ (ρ ∘ σ)
+--   := λn hΞ => sorry
+
+-- theorem List.NWkn.lift [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+--   (hAB : A ≤ B) (hρ : List.NWkn Γ Δ ρ) : List.NWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)
+--   := sorry
+
+-- theorem List.NWkn.step [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+--   (A : α) (hρ : List.NWkn Γ Δ ρ) : List.NWkn (A :: Γ) Δ (Nat.succ ∘ ρ)
+--   := sorry
 
 -- TODO: inductive weakening, associated lore

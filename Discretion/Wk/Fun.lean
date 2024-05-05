@@ -191,6 +191,7 @@ theorem Nat.liftWk_eqOn_Ioo_iff {m M : ℕ}
 theorem Nat.stepWk_eqOn_iff {s : Set ℕ} : s.EqOn (stepWk ρ) (stepWk σ) ↔ s.EqOn ρ σ
   := Set.eqOn_comp_left_iff_of_injective (Nat.succ_injective)
 
+/-- Lift a weakening under `n` binders -/
 def Nat.liftnWk (n: Nat) (ρ: Nat -> Nat): Nat -> Nat := λm => if m < n then m else (ρ (m - n)) + n
 
 theorem Nat.liftnWk_zero: liftnWk 0 = id := by
@@ -275,6 +276,78 @@ theorem Nat.liftnWk_comp (n ρ σ): liftnWk n (ρ ∘ σ) = liftnWk n ρ ∘ lif
 -- TODO: bounded weakenings are closed under composition ==> form a _category_
 
 -- TODO: not gaunt, since unrestricted outside interval
+
+/-- "unlift" a map on `ℕ` -/
+def Nat.unliftWk (ρ : Nat → Nat) : Nat → Nat := Nat.pred ∘ ρ ∘ Nat.succ
+
+@[simp]
+theorem Nat.unliftWk_liftWk (ρ) : unliftWk (liftWk ρ) = ρ := by
+  funext n
+  cases n <;> simp [unliftWk, liftWk]
+
+@[simp]
+theorem Nat.unliftWk_comp_liftWk : unliftWk ∘ liftWk = id := by
+  funext ρ; exact unliftWk_liftWk ρ
+
+/-- "unlift" a map on `ℕ`, removing `n` binders -/
+def Nat.unliftnWk (n: Nat) (ρ : Nat → Nat) : Nat → Nat := (λx => x - n) ∘ ρ ∘ (λx => x + n)
+
+theorem Nat.unliftnWk_zero : unliftnWk 0 = id := by
+  funext ρ n
+  simp [unliftnWk]
+
+theorem Nat.unliftnWk_one : unliftnWk 1 = unliftWk := by
+  funext ρ n
+  simp [unliftnWk, unliftWk]
+
+theorem Nat.unliftnWk_succ (n) : unliftnWk (n + 1) = unliftnWk n ∘ unliftWk := by
+  funext ρ m
+  simp only [unliftnWk, Function.comp_apply, unliftWk, succ_eq_add_one, pred_eq_sub_one]
+  rw [Nat.add_assoc, Nat.sub_succ, Nat.pred_eq_sub_one, Nat.sub_sub, Nat.sub_sub]
+  congr 1
+  rw [Nat.add_comm]
+
+theorem Nat.unliftnWk_eq_iterate_unliftWk: unliftnWk = Nat.iterate unliftWk := by
+  funext n
+  induction n with
+  | zero => rfl
+  | succ n I => rw [unliftnWk_succ, I, Function.iterate_succ]
+
+theorem Nat.unliftnWk_succ' (n): unliftnWk (n.succ) = unliftWk ∘ unliftnWk n := by
+  rw [unliftnWk_eq_iterate_unliftWk, Function.iterate_succ']
+
+theorem Nat.unliftnWk_comp_liftnWk : unliftnWk n ∘ liftnWk n = id := by
+  induction n with
+  | zero => simp [unliftnWk_zero, liftnWk_zero]
+  | succ n I =>
+    rw [
+      unliftnWk_succ,
+      liftnWk_succ',
+      Function.comp.assoc,
+      <-Function.comp.assoc unliftWk,
+      unliftWk_comp_liftWk
+      ]
+    simp [I]
+
+/-- A map on `ℕ` may be constructed via `liftWk` -/
+def Nat.isLift (f : Nat → Nat) : Prop := f 0 = 0 ∧ ∀i, f (i + 1) ≠ 0
+
+-- TODO: isLift iff f = liftWk (unliftWk f) iff ∃ρ, f = liftWk ρ
+
+-- TODO: in particular, liftWk isLift
+
+/-- A map on `ℕ` may be constructed via `liftnWk` -/
+def Nat.isLiftn (n : ℕ) (f : Nat → Nat) : Prop := ∀i, (i < n -> f i = i) ∧ (i ≥ n -> f i ≥ n)
+
+-- TODO: isLiftn iff f = liftnWk n (unliftnWk n f) iff ∃ρ, f = liftnWk n ρ
+
+-- TODO: in particular, liftnWk n is isLiftn n and isLiftn n f ==> liftnWk (n + 1) (liftWk f)
+
+-- TODO: isLiftn 0 = True
+
+-- TODO: isLiftn (n + 1) ==> isLiftn n
+
+-- TODO: ∀n, isLiftn n f iff f = id
 
 /-!
 # Finite Weakenings
