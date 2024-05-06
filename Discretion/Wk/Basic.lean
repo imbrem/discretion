@@ -131,6 +131,18 @@ theorem List.NWkn.liftn₂ [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ
   : List.NWkn (A₁ :: A₂ :: Γ) (B₁ :: B₂ :: Δ) (Nat.liftnWk 2 ρ)
   := by rw [Nat.liftnWk_eq_iterate_liftWk]; exact lift₂ hAB₁ hAB₂ hρ
 
+theorem List.NWkn.liftn_append [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
+  (Ξ : List α) (hρ : List.NWkn Γ Δ ρ) : List.NWkn (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk Ξ.length ρ) := by
+  induction Ξ with
+  | nil => exact hρ
+  | cons A Ξ I =>
+    rw [List.length, Nat.liftnWk_succ']
+    exact I.lift (le_refl _)
+
+theorem List.NWkn.liftn_append' [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ} (Ξ : List α)
+  (hΞ : Ξ.length = n) (hρ : List.NWkn Γ Δ ρ) : List.NWkn (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk n ρ)
+  := hΞ ▸ hρ.liftn_append Ξ
+
 -- TODO: pointwise liftn
 
 theorem List.NWkn.step [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ}
