@@ -4,12 +4,25 @@ import Discretion.WithDefault
 import Mathlib.Order.WithBot
 import Mathlib.Order.Bounds.Basic
 
+import Mathlib.Data.Sum.Order
+import Mathlib.Data.Sigma.Order
+
 -- TODO: can generalize this to a "no nontrivial sup/inf" property
 -- TODO: join-complete and meet-complete; this needs to be added to mathlib Someday (TM)
 
 /-- A type `α` is equipped with a discrete order, i.e. `a ≤ b → a = b` -/
 class DiscreteOrder (α : Type u) [LE α] : Prop where
   le_eq (a b : α) : a ≤ b → a = b
+
+theorem discrete_order {α} [LE α] [DiscreteOrder α] {a b : α} (h : a ≤ b) : a = b
+  := DiscreteOrder.le_eq _ _ h
+
+theorem DiscreteOrder.le_symm {α} [Preorder α] [DiscreteOrder α] {a b : α} (h : a ≤ b) : b ≤ a
+  := discrete_order h ▸ le_refl a
+
+@[simp]
+theorem DiscreteOrder.not_lt {α} [Preorder α] [DiscreteOrder α] {a b : α} : ¬a < b
+  := λh => not_le_of_lt h (le_symm (le_of_lt h))
 
 theorem BddAbove.subsingleton_of_discrete {α} [Preorder α] [DiscreteOrder α]
   (s : Set α) : BddAbove s → s.Subsingleton := by
@@ -60,9 +73,59 @@ instance OrderDual.instDiscreteOrder {α} [LE α] [DiscreteOrder α]
   : DiscreteOrder (OrderDual α) where
   le_eq a b h := (DiscreteOrder.le_eq (OrderDual.ofDual b) (OrderDual.ofDual a) h).symm
 
+instance {α} [LE α] [Subsingleton α] : DiscreteOrder α where
+  le_eq a b _ := Subsingleton.elim a b
+
+instance {α} [LE α] [da : DiscreteOrder α] : DiscreteOrder (WithDefault α) where
+  le_eq
+  | none, none, _ => rfl
+  | some a, some b, h => by rw [da.le_eq _ _ h]
+
+instance {α} [LE α] [LE β]
+  [da : DiscreteOrder α] [db : DiscreteOrder β] : DiscreteOrder (α ⊕ β) where
+  le_eq a b h := by cases h with | inl h => rw [da.le_eq _ _ h] | inr h => rw [db.le_eq _ _ h]
+
+instance {α} [LE α] [LE β]
+  [da : DiscreteOrder α] [db : DiscreteOrder β] : DiscreteOrder (α × β) where
+  le_eq | ⟨al, ar⟩, ⟨bl, br⟩, ⟨hl, hr⟩ => by cases da.le_eq _ _ hl; cases db.le_eq _ _ hr; rfl
+
+instance {α} {β : α → Type u} [(a : α) → LE (β a)] [db : (a : α) → DiscreteOrder (β a)]
+  : DiscreteOrder ((a : α) × β a) where
+  le_eq
+  | ⟨al, ar⟩, ⟨bl, br⟩, h =>
+    by cases (Sigma.le_def.mp h).1; cases (db _).le_eq _ _ (Sigma.le_def.mp h).2; rfl
+
+instance {ι} {α : ι → Type _} [(i : ι) → LE (α i)] [da : (i : ι) → DiscreteOrder (α i)]
+  : DiscreteOrder ((i : ι) → (α i)) where
+  le_eq _ _ h := funext (λi => (da i).le_eq _ _ (h i))
+
+instance {α} {p : α → Prop} [LE α] [da : DiscreteOrder α] : DiscreteOrder (Subtype p) where
+  le_eq | ⟨a, _⟩, ⟨b, _⟩, h => by cases da.le_eq _ _ h; rfl
+
 /-- A type `α` is discrete except for a bottom element, i.e., for `a ≠ ⊥`, `a ≤ b → a = b` -/
 class DiscreteBotOrder (α : Type u) [LE α] [Bot α] : Prop where
   le_bot_or_eq (a b : α) : a ≤ b → a = ⊥ ∨ a = b
+
+theorem discrete_bot_order {α} [LE α] [Bot α] [DiscreteBotOrder α] {a b : α} (h : a ≤ b)
+  : a = ⊥ ∨ a = b := DiscreteBotOrder.le_bot_or_eq _ _ h
+
+theorem DiscreteBotOrder.eq_bot_of_ne_of_le
+  {α} [LE α] [Bot α] [DiscreteBotOrder α] {a b : α} (h : a ≤ b) (h' : a ≠ b) : a = ⊥
+  := (or_iff_left h').mp (discrete_bot_order h)
+
+theorem DiscreteBotOrder.eq_bot_of_lt
+  {α} [Preorder α] [Bot α] [DiscreteBotOrder α] {a b : α} (h : a < b) : a = ⊥
+  := eq_bot_of_ne_of_le (le_of_lt h) (ne_of_lt h)
+
+theorem DiscreteBotOrder.eq_of_ne_bot_of_le
+  {α} [LE α] [Bot α] [DiscreteBotOrder α] {a b : α} (h : a ≤ b) (h' : a ≠ ⊥) : a = b
+  := (or_iff_right h').mp (discrete_bot_order h)
+
+theorem DiscreteBotOrder.bot_or_eq
+  {α} [LE α] [Bot α] [DiscreteBotOrder α] {a b c : α} (h : c ≤ a) (h' : c ≤ b) : c = ⊥ ∨ a = b
+  := match discrete_bot_order h with
+  | Or.inl h => Or.inl h
+  | Or.inr rfl => discrete_bot_order h'
 
 instance {α} [LE α] [Bot α] [DiscreteOrder α] : DiscreteBotOrder α where
   le_bot_or_eq a b h := Or.inr (DiscreteOrder.le_eq a b h)
@@ -82,6 +145,28 @@ instance WithBot.instDiscreteBotOrder {α} [LE α] [DiscreteOrder α]
 class DiscreteTopOrder (α : Type u) [LE α] [Top α] : Prop where
   le_top_or_eq (a b : α) : a ≤ b → b = ⊤ ∨ a = b
 
+theorem discrete_top_order {α} [LE α] [Top α] [DiscreteTopOrder α] {a b : α} (h : a ≤ b)
+  : b = ⊤ ∨ a = b := DiscreteTopOrder.le_top_or_eq _ _ h
+
+theorem DiscreteTopOrder.eq_top_of_ne_of_le
+  {α} [LE α] [Top α] [DiscreteTopOrder α] {a b : α} (h : a ≤ b) (h' : a ≠ b) : b = ⊤
+  := (or_iff_left h').mp (discrete_top_order h)
+
+theorem DiscreteTopOrder.eq_top_of_lt
+  {α} [Preorder α] [Top α] [DiscreteTopOrder α] {a b : α} (h : a < b) : b = ⊤
+  := eq_top_of_ne_of_le (le_of_lt h) (ne_of_lt h)
+
+theorem DiscreteTopOrder.eq_of_ne_top_of_le
+  {α} [LE α] [Top α] [DiscreteTopOrder α] {a b : α} (h : a ≤ b) (h' : b ≠ ⊤) : a = b
+  := (or_iff_right h').mp (discrete_top_order h)
+
+theorem DiscreteTopOrder.top_or_eq
+  {α} [LE α] [Top α] [DiscreteTopOrder α] {a b c : α} (h : a ≤ c) (h' : b ≤ c) : c = ⊤ ∨ a = b
+  := match discrete_top_order h, discrete_top_order h' with
+  | Or.inl h, _ => Or.inl h
+  | Or.inr rfl, Or.inl h => Or.inl h
+  | Or.inr rfl, Or.inr h => Or.inr h.symm
+
 instance {α} [LE α] [Top α] [DiscreteOrder α] : DiscreteTopOrder α where
   le_top_or_eq a b h := Or.inr (DiscreteOrder.le_eq a b h)
 
@@ -99,11 +184,27 @@ instance WithTop.instDiscreteTopOrder {α} [LE α] [DiscreteOrder α]
 class DiscreteBoundedOrder (α : Type u) [LE α] [Bot α] [Top α] : Prop where
   le_bot_or_top_or_eq (a b : α) : a ≤ b → a = ⊥ ∨ b = ⊤ ∨ a = b
 
-def DiscreteOrder.toDiscreteTopOrder {α} [LE α] [Bot α] [Top α] [DiscreteTopOrder α]
+theorem discrete_bounded_order {α} [LE α] [Bot α] [Top α] [DiscreteBoundedOrder α]
+  {a b : α} (h : a ≤ b) : a = ⊥ ∨ b = ⊤ ∨ a = b := DiscreteBoundedOrder.le_bot_or_top_or_eq _ _ h
+
+theorem DiscreteBoundedOrder.eq_bounds_of_ne_of_le
+  {α} [LE α] [Bot α] [Top α] [DiscreteBoundedOrder α] {a b : α} (h : a ≤ b) (h' : a ≠ b)
+  : a = ⊥ ∨ b = ⊤ := match discrete_bounded_order h with
+  | Or.inl h => Or.inl h
+  | Or.inr (Or.inl h) => Or.inr h
+  | Or.inr (Or.inr h) => (h' h).elim
+
+theorem DiscreteBoundedOrder.eq_bounds_of_lt
+  {α} [Preorder α] [Bot α] [Top α] [DiscreteBoundedOrder α] {a b : α} (h : a < b) : a = ⊥ ∨ b = ⊤
+  := eq_bounds_of_ne_of_le (le_of_lt h) (ne_of_lt h)
+
+-- TODO: think about this
+instance DiscreteTopOrder.toDiscreteBoundedOrder {α} [LE α] [Bot α] [Top α] [DiscreteTopOrder α]
   : DiscreteBoundedOrder α where
   le_bot_or_top_or_eq a b h := Or.inr (DiscreteTopOrder.le_top_or_eq a b h)
 
-def DiscreteOrder.toDiscreteBotOrder {α} [LE α] [Bot α] [Top α] [DiscreteBotOrder α]
+-- TODO: think about this...
+instance DiscreteBotOrder.toDiscreteBoundedOrder {α} [LE α] [Bot α] [Top α] [DiscreteBotOrder α]
   : DiscreteBoundedOrder α where
   le_bot_or_top_or_eq a b h := (DiscreteBotOrder.le_bot_or_eq a b h).elim Or.inl (Or.inr ∘ Or.inr)
 
@@ -211,3 +312,16 @@ instance instDiscreteBoundedOrderLattice
         | inr ha => cases ha with
           | inl ha => cases ha; simp
           | inr ha => cases ha; simp
+
+-- TODO: decidability for discrete (bounded) orders?
+
+-- TODO: pointwise order on lists; this is a discrete order if the underlying is discrete
+
+-- TODO: a _nontrivial_ order is an order that is not discrete
+
+-- TODO: every linear order on a nontrivial type is nontrivial
+
+-- TODO: WithBot, WithTop on a nontrivial type induce nontrivial orders
+
+-- Some other fun facts:
+-- - Every preorder on a subsingleton is a partial order
