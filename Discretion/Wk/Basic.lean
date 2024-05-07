@@ -93,6 +93,16 @@ theorem List.NWkn_iff [PartialOrder α] (Γ Δ : List α) (ρ : ℕ → ℕ)
 theorem List.NWkn.id [PartialOrder α] (Γ : List α) : List.NWkn Γ Γ id
   := λ_ hΓ => ⟨hΓ, le_refl _⟩
 
+theorem List.NWkn.len_le [PartialOrder α] {Γ Δ : List α} (h : List.NWkn Γ Δ ρ) (hρ : StrictMono ρ)
+  : Δ.length ≤ Γ.length
+  := FWkns.len_le ⟨_, h.toFWkn, Fin.wkOfBounded_strictMono hρ⟩
+
+theorem List.NWkn.id_len_le [PartialOrder α] {Γ Δ : List α} (h : List.NWkn Γ Δ _root_.id)
+  : Δ.length ≤ Γ.length := h.len_le strictMono_id
+
+theorem List.NWkn.drop_all [PartialOrder α] (Γ : List α) (ρ) : List.NWkn Γ [] ρ
+  := λi h => by cases h
+
 theorem List.NWkn.comp [PartialOrder α] {Γ Δ Ξ : List α}
   {ρ : ℕ → ℕ} {σ : ℕ → ℕ} (hρ : List.NWkn Γ Δ ρ) (hσ : List.NWkn Δ Ξ σ) : List.NWkn Γ Ξ (ρ ∘ σ)
   := λn hΞ =>

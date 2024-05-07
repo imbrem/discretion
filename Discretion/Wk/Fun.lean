@@ -405,6 +405,12 @@ theorem Fin.wkOfBounded_comp {n m k}
     : @wkOfBounded m k σ hσ ∘ @wkOfBounded n m ρ hρ = wkOfBounded (σ ∘ ρ) (λk h => hσ _ (hρ k h))
   := rfl
 
+theorem Fin.wkOfBounded_strictMono {n m} {ρ : Nat -> Nat} {hρ}
+  : StrictMono ρ -> StrictMono (@wkOfBounded n m ρ hρ) := by
+  intro hρ' k l h
+  simp only [wkOfBounded]
+  exact hρ' h
+
 -- TODO: wkOfBounded is surjective
 
 -- TODO: wkOfBounded is (strict) monotonic if f is (strict) monotonic on
