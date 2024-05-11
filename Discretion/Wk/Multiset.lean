@@ -23,4 +23,18 @@ theorem Multiset.liftnFv_succ (n) (s : Multiset ℕ) : s.liftnFv n.succ = s.lift
 
 -- TODO: liftnFv_add
 
--- TODO: liftnFv_map
+theorem Multiset.liftnFv_map_liftnWk (n) (s : Multiset ℕ) (ρ)
+  : (s.map (Nat.liftnWk n ρ)).liftnFv n = (s.liftnFv n).map ρ := by
+  ext i
+  simp only [count_map, liftnFv, filter_filter, <-countP_eq_card_filter, countP_map]
+  congr
+  ext a
+  simp only [Nat.liftnWk, ge_iff_le]
+  split
+  . simp_arith [*]
+  . rename_i h
+    simp [le_of_not_lt h]
+
+theorem Multiset.liftFv_map_liftWk (s : Multiset ℕ) (ρ)
+  : (s.map (Nat.liftWk ρ)).liftFv = s.liftFv.map ρ := by
+  rw [<-Nat.liftnWk_one, <-liftnFv_one, liftnFv_map_liftnWk]
