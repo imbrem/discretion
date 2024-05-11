@@ -1,6 +1,9 @@
 import Mathlib.Data.Set.Function
 import Mathlib.Data.Fin.Tuple.Basic
 import Mathlib.Data.List.Basic
+import Mathlib.Data.Multiset.Basic
+import Mathlib.Data.Finset.Basic
+import Mathlib.Algebra.BigOperators.Basic
 
 theorem Nat.pred_comp_succ : Nat.pred ∘ Nat.succ = id := funext Nat.pred_succ
 
@@ -161,3 +164,13 @@ theorem Fin.strictMono_eq_id {n} {f : Fin n → Fin n} (h : StrictMono f) : f = 
 
 theorem Fin.strictMono_eq_cast {n} {f : Fin n → Fin m} (h : StrictMono f) (eq : n = m) : f = cast eq
   := by cases eq; exact Fin.strictMono_eq_id h
+
+theorem Multiset.map_finsum (i : Finset ι) (f : ι → Multiset α) (g : α → β)
+  : (i.sum f).map g = i.sum (Multiset.map g ∘ f)
+  := by
+  open Classical in induction i using Finset.induction with
+  | empty => rfl
+  | insert =>
+    rw [Finset.sum_insert]
+    simp [*]
+    assumption
