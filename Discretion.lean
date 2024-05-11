@@ -7,3 +7,4 @@ import Discretion.FinExcept.Order
 import Discretion.Indiscrete
 import Discretion.WithDefault
 import Discretion.Wk.Fun
+import Discretion.Wk.List
