@@ -170,6 +170,18 @@ theorem List.NWkn.step_iff [PartialOrder α] (A) (Γ Δ : List α) (ρ : ℕ →
     List.NWkn.step A
   ⟩
 
+theorem List.NWkn.stepn_append [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ} (Ξ : List α)
+  (hρ : List.NWkn Γ Δ ρ) : List.NWkn (Ξ ++ Γ) Δ (Nat.stepnWk Ξ.length ρ)
+  := by induction Ξ with
+    | nil => exact hρ
+    | cons A Ξ I =>
+      rw [List.length, Nat.stepnWk_succ']
+      exact I.step _
+
+theorem List.NWkn.stepn_append' [PartialOrder α] {Γ Δ : List α} {ρ : ℕ → ℕ} (Ξ : List α)
+  (hΞ : Ξ.length = n) (hρ : List.NWkn Γ Δ ρ) : List.NWkn (Ξ ++ Γ) Δ (Nat.stepnWk n ρ)
+  := hΞ ▸ hρ.stepn_append Ξ
+
 -- TODO: step₂, stepn₂, stepn
 
 -- TODO: if the order is discrete, weakenings are unique iff there are no duplicates in the source
