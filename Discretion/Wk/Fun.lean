@@ -192,15 +192,21 @@ theorem Nat.stepWk_eqOn_iff {s : Set ℕ} : s.EqOn (stepWk ρ) (stepWk σ) ↔ s
   := Set.eqOn_comp_left_iff_of_injective (Nat.succ_injective)
 
 /-- Lift a weakening under `n` binders -/
-def Nat.liftnWk (n: Nat) (ρ: Nat -> Nat): Nat -> Nat := λm => if m < n then m else (ρ (m - n)) + n
+def Nat.liftnWk (n : Nat) (ρ : Nat -> Nat) : Nat -> Nat
+  := λm => if m < n then m else (ρ (m - n)) + n
 
-theorem Nat.liftnWk_zero: liftnWk 0 = id := by
+/-- Step a weakening to ignore the first `n` variables -/
+def Nat.stepnWk (n : Nat) (ρ : Nat -> Nat) : Nat -> Nat := (· + n) ∘ ρ
+
+theorem Nat.liftnWk_zero : liftnWk 0 = id := by
   funext ρ m
   simp only [liftnWk, Nat.sub_zero, Nat.add_zero, id_eq, ite_eq_right_iff]
   intro H
   cases H
 
-theorem Nat.liftnWk_succ' (n): liftnWk (n.succ) = liftWk ∘ liftnWk n := by
+theorem Nat.stepnWk_zero : stepnWk 0 = id := rfl
+
+theorem Nat.liftnWk_succ' (n) : liftnWk (n.succ) = liftWk ∘ liftnWk n := by
   induction n with
   | zero => funext ρ m; cases m <;> rfl
   | succ n I =>
@@ -215,21 +221,49 @@ theorem Nat.liftnWk_succ' (n): liftnWk (n.succ) = liftWk ∘ liftnWk n := by
         simp only [liftnWk, Nat.succ_lt_succ_iff, Function.comp_apply, liftWk]
         split <;> simp_arith
 
+theorem Nat.stepnWk_succ' (n) : stepnWk (n.succ) = stepWk ∘ stepnWk n := by
+  induction n with
+  | zero => rfl
+  | succ n I =>
+    rw [I]
+    funext ρ m
+    cases m with
+    | zero => rfl
+    | succ m => simp_arith [stepnWk, stepWk]
+
 theorem Nat.liftnWk_one : liftnWk 1 = liftWk := by simp [liftnWk_succ', liftnWk_zero]
 
-theorem Nat.liftnWk_eq_iterate_liftWk: liftnWk = Nat.iterate liftWk := by
+theorem Nat.stepnWk_one : stepnWk 1 = stepWk := rfl
+
+theorem Nat.liftnWk_eq_iterate_liftWk : liftnWk = Nat.iterate liftWk := by
   funext n
   induction n with
   | zero => rfl
   | succ n I => rw [liftnWk_succ', I, Function.iterate_succ']
 
-theorem Nat.liftnWk_succ (n): liftnWk (n.succ) = liftnWk n ∘ liftWk := by
+theorem Nat.stepnWk_eq_iterate_stepWk : stepnWk = Nat.iterate stepWk := by
+  funext n
+  induction n with
+  | zero => rfl
+  | succ n I => rw [stepnWk_succ', I, Function.iterate_succ']
+
+theorem Nat.liftnWk_succ (n) : liftnWk (n.succ) = liftnWk n ∘ liftWk := by
   rw [liftnWk_eq_iterate_liftWk, Function.iterate_succ]
+
+theorem Nat.stepnWk_succ (n) : stepnWk (n.succ) = stepnWk n ∘ stepWk := by
+  rw [stepnWk_eq_iterate_stepWk, Function.iterate_succ]
 
 theorem Nat.liftnWk_add (m n: ℕ): liftnWk (m + n) = liftnWk m ∘ liftnWk n
   := by rw [liftnWk_eq_iterate_liftWk, Function.iterate_add]
+
 theorem Nat.liftnWk_add_apply (m n: ℕ) (ρ): liftnWk (m + n) ρ = liftnWk m (liftnWk n ρ)
   := by rw [liftnWk_eq_iterate_liftWk, Function.iterate_add_apply]
+
+theorem Nat.stepnWk_add (m n: ℕ): stepnWk (m + n) = stepnWk m ∘ stepnWk n
+  := by rw [stepnWk_eq_iterate_stepWk, Function.iterate_add]
+
+theorem Nat.stepnWk_add_apply (m n: ℕ) (ρ): stepnWk (m + n) ρ = stepnWk m (stepnWk n ρ)
+  := by rw [stepnWk_eq_iterate_stepWk, Function.iterate_add_apply]
 
 @[simp]
 theorem Nat.iterate_liftWk_id: (n: ℕ) -> liftWk^[n] id = id
