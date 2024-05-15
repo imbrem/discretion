@@ -37,6 +37,9 @@ def Nat.liftWk (ρ : Nat -> Nat): Nat -> Nat
 theorem Nat.liftWk_id : liftWk id = id := by funext n; cases n <;> simp [liftWk]
 
 @[simp]
+theorem Nat.liftWk_id' : liftWk (λx => x) = id := Nat.liftWk_id
+
+@[simp]
 theorem Nat.liftWk_zero : liftWk ρ 0 = 0 := rfl
 
 @[simp] -- TODO: think about this
@@ -278,6 +281,9 @@ theorem Nat.iterate_liftWk_comp: (n: ℕ)
 @[simp]
 theorem Nat.liftnWk_id (n): liftnWk n id = id := by
   rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_id]
+
+@[simp]
+theorem Nat.liftnWk_id' (n): liftnWk n (λx => x) = id := Nat.liftnWk_id n
 
 theorem Nat.liftnWk_comp (n ρ σ): liftnWk n (ρ ∘ σ) = liftnWk n ρ ∘ liftnWk n σ := by
   rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_comp]
