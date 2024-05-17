@@ -288,6 +288,28 @@ theorem Nat.liftnWk_id' (n): liftnWk n (λx => x) = id := Nat.liftnWk_id n
 theorem Nat.liftnWk_comp (n ρ σ): liftnWk n (ρ ∘ σ) = liftnWk n ρ ∘ liftnWk n σ := by
   rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_comp]
 
+/-- Weaken the `n`th variable of a term -/
+def Nat.wkn (n: ℕ) := λ m => if m < n then m else m + 1
+
+theorem Nat.liftnWk_n_succ (n : ℕ) : liftnWk n succ = wkn n := by
+  funext m
+  simp only [liftnWk, wkn]
+  split
+  case inl _ => rfl
+  case inr h => simp_arith [Nat.le_of_not_lt h]
+
+theorem Nat.wkn_zero : wkn 0 = succ := rfl
+
+theorem Nat.wkn_one : wkn 1 = liftWk succ := by simp [<-liftnWk_n_succ, liftnWk_one]
+
+theorem Nat.wkn_succ : wkn (n + 1) = liftWk (wkn n) := by
+  simp only [<-liftnWk_n_succ, liftnWk_succ']; rfl
+
+theorem Nat.wkn_add : wkn (m + n) = liftnWk m (wkn n) := by
+  simp only [<-liftnWk_n_succ, <-liftnWk_add_apply]
+
+theorem Nat.wkn_add_right : wkn (m + n) = liftnWk n (wkn m) := by rw [add_comm, wkn_add]
+
 -- EqOn lore
 
 -- TODO: liftnWk and stepnWk, equalities
@@ -329,6 +351,8 @@ theorem Nat.unliftWk_liftWk (ρ) : unliftWk (liftWk ρ) = ρ := by
 theorem Nat.unliftWk_comp_liftWk : unliftWk ∘ liftWk = id := by
   funext ρ; exact unliftWk_liftWk ρ
 
+theorem Nat.unliftWk_wkn_succ (n) : unliftWk (wkn (n + 1)) = wkn n := by simp [wkn_succ]
+
 /-- "unlift" a map on `ℕ`, removing `n` binders -/
 def Nat.unliftnWk (n: Nat) (ρ : Nat → Nat) : Nat → Nat := (λx => x - n) ∘ ρ ∘ (λx => x + n)
 
@@ -369,8 +393,23 @@ theorem Nat.unliftnWk_comp_liftnWk : unliftnWk n ∘ liftnWk n = id := by
       ]
     simp [I]
 
+theorem Nat.unliftnWk_liftnWk : unliftnWk n (liftnWk n ρ) = ρ
+  := congrFun unliftnWk_comp_liftnWk ρ
+
+theorem Nat.unliftnWk_wkn_add (m n: ℕ): unliftnWk n (wkn (n + m)) = wkn m := by
+  rw [wkn_add, unliftnWk_liftnWk]
+
+theorem Nat.unliftnWk_wkn_add_right (m n: ℕ): unliftnWk n (wkn (m + n)) = wkn m := by
+  rw [add_comm, unliftnWk_wkn_add]
+
 /-- A map on `ℕ` may be constructed via `liftWk` -/
 def Nat.isLift (f : Nat → Nat) : Prop := f 0 = 0 ∧ ∀i, f (i + 1) ≠ 0
+
+theorem Nat.wkn_isLift_iff (n) : isLift (wkn n) ↔ n ≠ 0 := by
+  simp only [isLift, wkn, zero_add, ite_eq_left_iff, not_lt, nonpos_iff_eq_zero, one_ne_zero,
+    imp_false, ne_eq, and_iff_left_iff_imp]
+  intros
+  split <;> simp
 
 -- TODO: isLift iff f = liftWk (unliftWk f) iff ∃ρ, f = liftWk ρ
 
