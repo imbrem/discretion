@@ -224,6 +224,9 @@ theorem Nat.liftnWk_succ' (n) : liftnWk (n.succ) = liftWk ∘ liftnWk n := by
         simp only [liftnWk, Nat.succ_lt_succ_iff, Function.comp_apply, liftWk]
         split <;> simp_arith
 
+theorem Nat.liftnWk_succ_apply' (n) (ρ) (m) : liftnWk (n.succ) ρ m = liftWk (liftnWk n ρ) m := by
+  rw [liftnWk_succ', Function.comp_apply]
+
 theorem Nat.stepnWk_succ' (n) : stepnWk (n.succ) = stepWk ∘ stepnWk n := by
   induction n with
   | zero => rfl
@@ -252,6 +255,9 @@ theorem Nat.stepnWk_eq_iterate_stepWk : stepnWk = Nat.iterate stepWk := by
 
 theorem Nat.liftnWk_succ (n) : liftnWk (n.succ) = liftnWk n ∘ liftWk := by
   rw [liftnWk_eq_iterate_liftWk, Function.iterate_succ]
+
+theorem Nat.liftnWk_succ_apply (n) (ρ) : liftnWk (n.succ) ρ = liftnWk n (liftWk ρ) := by
+  rw [liftnWk_eq_iterate_liftWk, Function.iterate_succ_apply]
 
 theorem Nat.stepnWk_succ (n) : stepnWk (n.succ) = stepnWk n ∘ stepWk := by
   rw [stepnWk_eq_iterate_stepWk, Function.iterate_succ]
