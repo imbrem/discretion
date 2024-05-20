@@ -294,6 +294,9 @@ theorem Nat.liftnWk_id' (n): liftnWk n (λx => x) = id := Nat.liftnWk_id n
 theorem Nat.liftnWk_comp (n ρ σ): liftnWk n (ρ ∘ σ) = liftnWk n ρ ∘ liftnWk n σ := by
   rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_comp]
 
+theorem Nat.liftnWk_comp_succ (n ρ): liftnWk (n + 1) ρ ∘ Nat.succ = Nat.succ ∘ liftnWk n ρ := by
+  rw [liftnWk_succ_apply', liftWk_comp_succ]
+
 /-- Weaken the `n`th variable of a term -/
 def Nat.wkn (n: ℕ) := λ m => if m < n then m else m + 1
 
