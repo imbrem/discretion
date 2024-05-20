@@ -224,7 +224,7 @@ theorem Nat.liftnWk_succ' (n) : liftnWk (n.succ) = liftWk ∘ liftnWk n := by
         simp only [liftnWk, Nat.succ_lt_succ_iff, Function.comp_apply, liftWk]
         split <;> simp_arith
 
-theorem Nat.liftnWk_succ_apply' (n) (ρ) (m) : liftnWk (n.succ) ρ m = liftWk (liftnWk n ρ) m := by
+theorem Nat.liftnWk_succ_apply' (n) (ρ) : liftnWk (n.succ) ρ = liftWk (liftnWk n ρ) := by
   rw [liftnWk_succ', Function.comp_apply]
 
 theorem Nat.stepnWk_succ' (n) : stepnWk (n.succ) = stepWk ∘ stepnWk n := by
