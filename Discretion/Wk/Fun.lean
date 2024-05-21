@@ -262,40 +262,48 @@ theorem Nat.liftnWk_succ_apply (n) (ρ) : liftnWk (n.succ) ρ = liftnWk n (liftW
 theorem Nat.stepnWk_succ (n) : stepnWk (n.succ) = stepnWk n ∘ stepWk := by
   rw [stepnWk_eq_iterate_stepWk, Function.iterate_succ]
 
-theorem Nat.liftnWk_add (m n: ℕ): liftnWk (m + n) = liftnWk m ∘ liftnWk n
+theorem Nat.liftnWk_add (m n : ℕ) : liftnWk (m + n) = liftnWk m ∘ liftnWk n
   := by rw [liftnWk_eq_iterate_liftWk, Function.iterate_add]
 
-theorem Nat.liftnWk_add_apply (m n: ℕ) (ρ): liftnWk (m + n) ρ = liftnWk m (liftnWk n ρ)
+theorem Nat.liftnWk_add_apply (m n : ℕ) (ρ) : liftnWk (m + n) ρ = liftnWk m (liftnWk n ρ)
   := by rw [liftnWk_eq_iterate_liftWk, Function.iterate_add_apply]
 
-theorem Nat.stepnWk_add (m n: ℕ): stepnWk (m + n) = stepnWk m ∘ stepnWk n
+theorem Nat.stepnWk_add (m n : ℕ) : stepnWk (m + n) = stepnWk m ∘ stepnWk n
   := by rw [stepnWk_eq_iterate_stepWk, Function.iterate_add]
 
-theorem Nat.stepnWk_add_apply (m n: ℕ) (ρ): stepnWk (m + n) ρ = stepnWk m (stepnWk n ρ)
+theorem Nat.stepnWk_add_apply (m n : ℕ) (ρ) : stepnWk (m + n) ρ = stepnWk m (stepnWk n ρ)
   := by rw [stepnWk_eq_iterate_stepWk, Function.iterate_add_apply]
 
 @[simp]
-theorem Nat.iterate_liftWk_id: (n: ℕ) -> liftWk^[n] id = id
+theorem Nat.iterate_liftWk_id : (n : ℕ) -> liftWk^[n] id = id
   | 0 => rfl
   | n + 1 => by simp [liftWk_id, iterate_liftWk_id n]
 
-theorem Nat.iterate_liftWk_comp: (n: ℕ)
+theorem Nat.iterate_liftWk_comp : (n : ℕ)
   -> ∀ρ σ, liftWk^[n] (ρ ∘ σ) = liftWk^[n] ρ ∘ liftWk^[n] σ
   | 0, _, _ => rfl
   | n + 1, _, _ => by simp [liftWk_comp, iterate_liftWk_comp n]
 
 @[simp]
-theorem Nat.liftnWk_id (n): liftnWk n id = id := by
+theorem Nat.liftnWk_id (n) : liftnWk n id = id := by
   rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_id]
 
 @[simp]
-theorem Nat.liftnWk_id' (n): liftnWk n (λx => x) = id := Nat.liftnWk_id n
+theorem Nat.liftnWk_id' (n) : liftnWk n (λx => x) = id := Nat.liftnWk_id n
 
-theorem Nat.liftnWk_comp (n ρ σ): liftnWk n (ρ ∘ σ) = liftnWk n ρ ∘ liftnWk n σ := by
+theorem Nat.liftnWk_comp (n ρ σ) : liftnWk n (ρ ∘ σ) = liftnWk n ρ ∘ liftnWk n σ := by
   rw [liftnWk_eq_iterate_liftWk, iterate_liftWk_comp]
 
-theorem Nat.liftnWk_comp_succ (n ρ): liftnWk (n + 1) ρ ∘ Nat.succ = Nat.succ ∘ liftnWk n ρ := by
+theorem Nat.liftnWk_comp_succ (n ρ) : liftnWk (n + 1) ρ ∘ Nat.succ = Nat.succ ∘ liftnWk n ρ := by
   rw [liftnWk_succ_apply', liftWk_comp_succ]
+
+theorem Nat.liftnWk_comp_add (n m ρ) : liftnWk (n + m) ρ ∘ (· + m) = (· + m) ∘ liftnWk n ρ := by
+  induction m with
+  | zero => rfl
+  | succ m I =>
+    have h : (· + (m + 1)) = Nat.succ ∘ (· + m) := funext (λx => rfl)
+    rw [<-add_assoc, h, <-Function.comp.assoc, liftnWk_comp_succ, Function.comp.assoc, I]
+    rfl
 
 /-- Weaken the `n`th variable of a term -/
 def Nat.wkn (n: ℕ) := λ m => if m < n then m else m + 1
