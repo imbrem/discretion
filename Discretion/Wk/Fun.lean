@@ -297,8 +297,8 @@ theorem Nat.liftnWk_comp (n ρ σ) : liftnWk n (ρ ∘ σ) = liftnWk n ρ ∘ li
 theorem Nat.liftnWk_comp_succ (n ρ) : liftnWk (n + 1) ρ ∘ Nat.succ = Nat.succ ∘ liftnWk n ρ := by
   rw [liftnWk_succ_apply', liftWk_comp_succ]
 
-theorem Nat.liftnWk_comp_add (n m ρ) : liftnWk (n + m) ρ ∘ (· + m) = (· + m) ∘ liftnWk n ρ := by
-  induction m with
+theorem Nat.liftnWk_comp_add_left (n m ρ) : liftnWk (n + m) ρ ∘ (· + m) = (· + m) ∘ liftnWk n ρ
+  := by induction m with
   | zero => rfl
   | succ m I =>
     have h : (· + (m + 1)) = Nat.succ ∘ (· + m) := funext (λx => rfl)
@@ -306,7 +306,10 @@ theorem Nat.liftnWk_comp_add (n m ρ) : liftnWk (n + m) ρ ∘ (· + m) = (· + 
     rfl
 
 theorem Nat.liftnWk_comp_add_right (n m ρ) : liftnWk (n + m) ρ ∘ (· + n) = (· + n) ∘ liftnWk m ρ
-  := by rw [add_comm, liftnWk_comp_add]
+  := by rw [add_comm, liftnWk_comp_add_left]
+
+theorem Nat.liftnWk_comp_add (n ρ) : liftnWk n ρ ∘ (· + n) = (· + n) ∘ ρ
+  := liftnWk_comp_add_right n 0 ρ
 
 /-- Weaken the `n`th variable of a term -/
 def Nat.wkn (n: ℕ) := λ m => if m < n then m else m + 1
