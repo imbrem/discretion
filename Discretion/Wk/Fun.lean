@@ -305,6 +305,9 @@ theorem Nat.liftnWk_comp_add (n m ρ) : liftnWk (n + m) ρ ∘ (· + m) = (· + 
     rw [<-add_assoc, h, <-Function.comp.assoc, liftnWk_comp_succ, Function.comp.assoc, I]
     rfl
 
+theorem Nat.liftnWk_comp_add_right (n m ρ) : liftnWk (n + m) ρ ∘ (· + n) = (· + n) ∘ liftnWk m ρ
+  := by rw [add_comm, liftnWk_comp_add]
+
 /-- Weaken the `n`th variable of a term -/
 def Nat.wkn (n: ℕ) := λ m => if m < n then m else m + 1
 
