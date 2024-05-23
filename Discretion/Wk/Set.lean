@@ -16,13 +16,46 @@ theorem Set.liftnFv_of_union (n : ℕ) (s t : Set ℕ) : (s ∪ t).liftnFv n = s
     | Or.inr ⟨k, ⟨hkt, hkn⟩, hkn'⟩ => ⟨k, ⟨Or.inr hkt, hkn⟩, hkn'⟩
   ⟩
 
+theorem Set.mem_liftnFv_of_add_mem (n : ℕ) (s : Set ℕ) (k : ℕ)
+    : k ∈ s.liftnFv n → k + n ∈ s := by
+  simp only [liftnFv, forall_exists_index, and_imp]
+  intro ⟨x, ⟨hx, hn⟩, hk⟩
+  cases hk
+  rw [Nat.sub_add_cancel hn]
+  exact hx
+
+theorem Set.add_mem_of_mem_liftnFv (n : ℕ) (s : Set ℕ) (k : ℕ) (h : k + n ∈ s)
+    : k ∈ s.liftnFv n := ⟨k + n, ⟨h, by simp⟩, by simp⟩
+
+theorem Set.mem_liftnFv (n : ℕ) (s : Set ℕ) (k : ℕ)
+  : k ∈ liftnFv n s ↔ k + n ∈ s
+  := ⟨mem_liftnFv_of_add_mem n s k, add_mem_of_mem_liftnFv n s k⟩
+
+theorem Set.not_mem_liftnFv (n : ℕ) (s : Set ℕ) (k : ℕ)
+  : k ∉ liftnFv n s ↔ k + n ∉ s
+  := by simp [mem_liftnFv]
+
 /-- Compute the free variable set of a term under a binder -/
 abbrev Set.liftFv := Set.liftnFv 1
+
+theorem Set.mem_liftFv_of_succ_mem (s : Set ℕ) (k : ℕ)
+    : k ∈ s.liftFv → k + 1 ∈ s := mem_liftnFv_of_add_mem 1 s k
+
+theorem Set.succ_mem_of_mem_liftFv (s : Set ℕ) (k : ℕ)
+    : k + 1 ∈ s → k ∈ s.liftFv := add_mem_of_mem_liftnFv 1 s k
+
+theorem Set.mem_liftFv (s : Set ℕ) (k : ℕ)
+  : k ∈ s.liftFv ↔ k + 1 ∈ s := mem_liftnFv 1 s k
+
+theorem Set.not_mem_liftFv (s : Set ℕ) (k : ℕ)
+  : k ∉ s.liftFv ↔ k + 1 ∉ s := not_mem_liftnFv 1 s k
 
 theorem Set.liftFv_of_union (s t : Set ℕ)
   : (s ∪ t).liftFv = s.liftFv ∪ t.liftFv := by simp
 
 theorem Set.liftnFv_one : Set.liftnFv 1 = Set.liftFv := rfl
+
+-- TODO: simplify proofs using above rewrite lemmas?
 
 theorem Set.liftnFv_succ (n) (s : Set ℕ) : s.liftnFv n.succ = s.liftFv.liftnFv n := Set.ext λ_ => ⟨
   λ⟨k, ⟨hks, hkn⟩, hkn'⟩ => ⟨k - 1,
@@ -62,6 +95,8 @@ theorem Set.liftnFv_map_liftnWk (n) (s : Set ℕ) (ρ)
 @[simp]
 theorem Set.liftFv_map_liftWk (s : Set ℕ) (ρ) : (Nat.liftWk ρ '' s).liftFv = ρ '' s.liftFv := by
   rw [<-Nat.liftnWk_one, <-liftnFv_one, liftnFv_map_liftnWk]
+
+-- TODO: liftnFv map add, liftFv map succ...
 
 -- TODO: liftnFv (and therefore liftFv) commute with multiset to set
 

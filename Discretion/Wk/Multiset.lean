@@ -2,7 +2,7 @@ import Discretion.Wk.Fun
 import Mathlib.Data.Multiset.Basic
 
 /-- Compute the free variable set of a term under `n` binders -/
-def Multiset.liftnFv (n : ℕ) (s : Multiset ℕ) := (s.filter (· ≥ n)).map (· - n)
+def Multiset.liftnFv (n : ℕ) (s : Multiset ℕ) := (s.filter (n ≤ ·)).map (· - n)
 
 @[simp]
 theorem Multiset.liftnFv_zero : Multiset.liftnFv 0 = id := by ext s i; simp [liftnFv]
@@ -11,8 +11,41 @@ theorem Multiset.liftnFv_zero : Multiset.liftnFv 0 = id := by ext s i; simp [lif
 theorem Multiset.liftnFv_of_add (n : ℕ) (s t : Multiset ℕ)
   : (s + t).liftnFv n = s.liftnFv n + t.liftnFv n := by simp [liftnFv]
 
+theorem Multiset.mem_liftnFv_of_add_mem (n : ℕ) (s : Multiset ℕ) (k : ℕ)
+    : k ∈ s.liftnFv n → k + n ∈ s := by
+  simp only [liftnFv, mem_map, mem_filter, forall_exists_index, and_imp]
+  intro x hx hn hk
+  cases hk
+  rw [Nat.sub_add_cancel hn]
+  exact hx
+
+theorem Multiset.add_mem_of_mem_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ) (h : k + n ∈ s)
+    : k ∈ s.liftnFv n := by
+  simp only [liftnFv, mem_map, mem_filter]
+  exact ⟨k + n, ⟨h, by simp⟩, by simp⟩
+
+theorem Multiset.mem_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
+  : k ∈ liftnFv n s ↔ k + n ∈ s
+  := ⟨mem_liftnFv_of_add_mem n s k, add_mem_of_mem_liftnFv n s k⟩
+
+theorem Multiset.not_mem_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
+  : k ∉ liftnFv n s ↔ k + n ∉ s
+  := by simp [mem_liftnFv]
+
 /-- Compute the free variable set of a term under a binder -/
 abbrev Multiset.liftFv := Multiset.liftnFv 1
+
+theorem Multiset.mem_liftFv_of_succ_mem (s : Multiset ℕ) (k : ℕ)
+    : k ∈ s.liftFv → k + 1 ∈ s := mem_liftnFv_of_add_mem 1 s k
+
+theorem Multiset.succ_mem_of_mem_liftFv (s : Multiset ℕ) (k : ℕ)
+    : k + 1 ∈ s → k ∈ s.liftFv := add_mem_of_mem_liftnFv 1 s k
+
+theorem Multiset.mem_liftFv (s : Multiset ℕ) (k : ℕ)
+  : k ∈ s.liftFv ↔ k + 1 ∈ s := mem_liftnFv 1 s k
+
+theorem Multiset.not_mem_liftFv (s : Multiset ℕ) (k : ℕ)
+  : k ∉ s.liftFv ↔ k + 1 ∉ s := not_mem_liftnFv 1 s k
 
 theorem Multiset.liftFv_of_add (s t : Multiset ℕ)
   : (s + t).liftFv = s.liftFv + t.liftFv := by simp
@@ -24,7 +57,7 @@ theorem Multiset.liftnFv_succ (n) (s : Multiset ℕ) : s.liftnFv n.succ = s.lift
   simp only [liftnFv, liftFv, count_map, filter_filter, <-countP_eq_card_filter, countP_map]
   congr
   ext a
-  simp only [Nat.succ_eq_add_one, ge_iff_le]
+  simp only [Nat.succ_eq_add_one]
   rw [Nat.add_comm n 1, Nat.sub_add_eq, and_assoc, and_congr_right_iff]
   intro hi; cases hi; cases a <;> simp_arith
 
@@ -43,7 +76,7 @@ theorem Multiset.liftnFv_map_liftnWk (n) (s : Multiset ℕ) (ρ)
   simp only [count_map, liftnFv, filter_filter, <-countP_eq_card_filter, countP_map]
   congr
   ext a
-  simp only [Nat.liftnWk, ge_iff_le]
+  simp only [Nat.liftnWk]
   split
   . simp_arith [*]
   . rename_i h
@@ -53,3 +86,5 @@ theorem Multiset.liftnFv_map_liftnWk (n) (s : Multiset ℕ) (ρ)
 theorem Multiset.liftFv_map_liftWk (s : Multiset ℕ) (ρ)
   : (s.map (Nat.liftWk ρ)).liftFv = s.liftFv.map ρ := by
   rw [<-Nat.liftnWk_one, <-liftnFv_one, liftnFv_map_liftnWk]
+
+-- TODO: liftnFv map add, liftFv map succ...
