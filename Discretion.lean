@@ -8,3 +8,5 @@ import Discretion.Indiscrete
 import Discretion.WithDefault
 import Discretion.Wk.Fun
 import Discretion.Wk.List
+import Discretion.Wk.Multiset
+import Discretion.Wk.Set
