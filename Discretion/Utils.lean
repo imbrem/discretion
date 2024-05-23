@@ -165,6 +165,10 @@ theorem Fin.strictMono_eq_id {n} {f : Fin n → Fin n} (h : StrictMono f) : f = 
 theorem Fin.strictMono_eq_cast {n} {f : Fin n → Fin m} (h : StrictMono f) (eq : n = m) : f = cast eq
   := by cases eq; exact Fin.strictMono_eq_id h
 
+theorem Fin.univ_val_sum [AddCommMonoid α] (f : (Fin n) → α)
+  : Finset.univ.sum f = (List.ofFn f).sum
+  := by simp [Finset.sum]
+
 theorem Multiset.map_finsum (i : Finset ι) (f : ι → Multiset α) (g : α → β)
   : (i.sum f).map g = i.sum (Multiset.map g ∘ f)
   := by
