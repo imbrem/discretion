@@ -174,3 +174,27 @@ theorem Multiset.map_finsum (i : Finset ι) (f : ι → Multiset α) (g : α →
     rw [Finset.sum_insert]
     simp [*]
     assumption
+
+theorem Multiset.not_mem_sum_map (s : Multiset ι) (f : ι → Multiset α) (a : α)
+  : a ∉ Multiset.sum (s.map f) ↔ (∀i ∈ s, a ∉ f i) := by
+  induction s using Multiset.induction <;> simp [*]
+
+theorem Multiset.mem_sum_map (s : Multiset ι) (f : ι → Multiset α) (a : α)
+  : a ∈ Multiset.sum (s.map f) ↔ (∃i ∈ s, a ∈ f i) := by
+  induction s using Multiset.induction <;> simp [*]
+
+theorem Multiset.not_mem_finsum (s : Finset ι) (f : ι → Multiset α) (a : α)
+  : a ∉ s.sum f ↔ (∀i ∈ s, a ∉ f i) := not_mem_sum_map s.val f a
+
+theorem Multiset.mem_finsum (s : Finset ι) (f : ι → Multiset α) (a : α)
+  : a ∈ s.sum f ↔ (∃i ∈ s, a ∈ f i) := mem_sum_map s.val f a
+
+theorem Multiset.not_mem_finsum_univ [Fintype ι] (f : ι → Multiset α) (a : α)
+  : a ∉ Finset.univ.sum f ↔ (∀i, a ∉ f i) := by
+  rw [Multiset.not_mem_finsum]
+  simp
+
+theorem Multiset.mem_finsum_univ [Fintype ι] (f : ι → Multiset α) (a : α)
+  : a ∈ Finset.univ.sum f ↔ (∃i, a ∈ f i) := by
+  rw [Multiset.mem_finsum]
+  simp
