@@ -527,6 +527,12 @@ theorem Fin.toNatWk_id (n) : toNatWk (@id (Fin n)) = id := by
   unfold toNatWk
   aesop
 
+theorem Fin.toNatWk_comp {n m k} (ρ : Fin m -> Fin k) (σ : Fin n -> Fin m)
+    : toNatWk (ρ ∘ σ) = toNatWk ρ ∘ toNatWk σ := by
+  funext k
+  unfold toNatWk
+  aesop
+
 -- TODO: wkOfBounded ∘ toNatWk = id
 
 -- TODO: toNatWk ∘ extendWk = toNatWk
