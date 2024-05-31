@@ -429,8 +429,8 @@ theorem Nat.unliftnWk_wkn_add_right (m n: ℕ): unliftnWk n (wkn (m + n)) = wkn 
 def Nat.isLift (f : Nat → Nat) : Prop := f 0 = 0 ∧ ∀i, f (i + 1) ≠ 0
 
 theorem Nat.wkn_isLift_iff (n) : isLift (wkn n) ↔ n ≠ 0 := by
-  simp only [isLift, wkn, zero_add, ite_eq_left_iff, not_lt, nonpos_iff_eq_zero, one_ne_zero,
-    imp_false, ne_eq, and_iff_left_iff_imp]
+  simp only [isLift, wkn, zero_add, ite_eq_left_iff, not_lt, le_zero_eq, one_ne_zero, imp_false,
+    ne_eq, and_iff_left_iff_imp]
   intros
   split <;> simp
 
@@ -531,7 +531,10 @@ theorem Fin.toNatWk_comp {n m k} (ρ : Fin m -> Fin k) (σ : Fin n -> Fin m)
     : toNatWk (ρ ∘ σ) = toNatWk ρ ∘ toNatWk σ := by
   funext k
   unfold toNatWk
-  aesop
+  simp only [Function.comp_apply]
+  split
+  simp only [is_lt, ↓reduceDite, Fin.eta]
+  simp_arith [Nat.add_sub_cancel]
 
 -- TODO: wkOfBounded ∘ toNatWk = id
 
