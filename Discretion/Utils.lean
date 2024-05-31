@@ -62,6 +62,8 @@ theorem Fin.foldl_eq_foldr {α} {f : α → α → α} (hcomm : Commutative f) (
 
 -- TODO: foldl_eq_foldr'...
 
+-- TODO: Fin.{minD, min, infD, inf}
+
 def Fin.maxD [Max α] (f : Fin n → α) (b : α) := Fin.foldr _ (λi v => max (f i) v) b
 
 @[simp]
@@ -115,7 +117,52 @@ theorem Fin.max_le [LinearOrder α] [OrderBot α] (f : Fin n → α) (c : α) (h
 
 instance singletonSetInhabited {a : α} : Inhabited ({a} : Set α) := ⟨⟨a, rfl⟩⟩
 
--- TODO: can do likewise for min, inf, and sup
+def Fin.supD [Sup α] (f : Fin n → α) (b : α) : α := Fin.foldr n (λi v => (f i) ⊔ v) b
+
+@[simp]
+theorem Fin.supD_zero [Sup α] (f : Fin 0 → α) (b : α) : supD f b = b := rfl
+
+theorem Fin.supD_succ [Sup α] (f : Fin (n+1) → α) (b : α)
+  : supD f b = (f 0) ⊔ (supD (f ∘ Fin.succ) b)  := by simp [supD, Fin.foldr_succ]
+
+theorem Fin.supD_succ' [SemilatticeSup α] (f : Fin (n+1) → α) (b : α)
+    : supD f b = supD (f ∘ Fin.succ) (b ⊔ (f 0)) := by
+  simp [supD, <-foldl_eq_foldr sup_comm sup_assoc, Fin.foldl_succ]
+
+theorem Fin.elem_le_supD [SemilatticeSup α] (f : Fin n → α) (b : α)
+  : ∀(i : Fin n), f i ≤ supD f b := by
+  induction n generalizing b with
+  | zero => simp
+  | succ n I =>
+    intro i
+    cases i using induction with
+    | zero => simp [supD_succ]
+    | succ i =>
+      rw [supD_succ]
+      exact le_sup_of_le_right $ I (f ∘ succ) _ i
+
+theorem Fin.supD_le [SemilatticeSup α] (f : Fin n → α) (b : α)
+  : (∀i, f i ≤ c) → b ≤ c → supD f b ≤ c := by
+  induction n generalizing b with
+  | zero => exact λ_ hb => hb
+  | succ n I =>
+    intro hf hb
+    rw [supD_succ]
+    exact sup_le (hf 0) (I _ _ (λi => hf i.succ) hb)
+
+def Fin.sup [Sup α] [Bot α] (f : Fin n → α) := supD f ⊥
+
+@[simp]
+theorem Fin.sup_zero [Sup α] [Bot α] (f : Fin 0 → α) : sup f = ⊥ := by simp [sup]
+
+theorem Fin.sup_succ [Sup α] [Bot α] (f : Fin (n+1) → α)
+  : sup f = (f 0) ⊔ (sup (f ∘ Fin.succ)) := by simp [sup, supD_succ]
+
+theorem Fin.elem_le_sup [SemilatticeSup α] [Bot α] (f : Fin n → α) : ∀(i : Fin n), f i ≤ sup f
+  := elem_le_supD f ⊥
+
+theorem Fin.sup_le [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (c : α) (hf : ∀i, f i ≤ c)
+  : sup f ≤ c := supD_le f ⊥ hf (by simp)
 
 -- TODO: move to Tuple?
 
