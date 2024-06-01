@@ -164,6 +164,16 @@ theorem Fin.elem_le_sup [SemilatticeSup α] [Bot α] (f : Fin n → α) : ∀(i 
 theorem Fin.sup_le [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (c : α) (hf : ∀i, f i ≤ c)
   : sup f ≤ c := supD_le f ⊥ hf (by simp)
 
+-- Note: this is basically Fin.sup mono; can do same with supD but order is wrong...
+
+theorem Fin.sup_le_sup [SemilatticeSup α] [OrderBot α] (f g : Fin n → α)
+  (h : ∀i, f i ≤ g i) : sup f ≤ sup g := by
+  induction n with
+  | zero => rfl
+  | succ n I =>
+    rw [Fin.sup_succ, Fin.sup_succ]
+    exact _root_.sup_le_sup (h 0) (I _ _ (λi => h i.succ))
+
 -- TODO: move to Tuple?
 
 -- TODO: do Finset-style max'?
