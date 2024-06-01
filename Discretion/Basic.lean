@@ -228,8 +228,8 @@ theorem DiscreteBotOrder.withTop_le {α} [LE α] [αb : Bot α] [DiscreteBotOrde
   : {a b : WithTop α} → a ≤ b → a = ⊥ ∨ b = ⊤ ∨ a = b
   | ⊤, _ => by aesop
   | _, ⊤ => by simp
-  | some a, some b => by
-    simp only [WithTop.some_le_some, WithTop.instBot, false_or]
+  | WithTop.some a, WithTop.some b => by
+    simp only [WithTop.coe_le_coe, WithTop.instBot, false_or]
     intro h
     cases DiscreteBotOrder.le_bot_or_eq a b h <;> simp [WithTop.some, *]
 
@@ -237,8 +237,8 @@ theorem DiscreteTopOrder.withBot_le {α} [LE α] [αt : Top α] [DiscreteTopOrde
   : {a b : WithBot α} → a ≤ b → a = ⊥ ∨ b = ⊤ ∨ a = b
   | ⊥, _ => by simp
   | _, ⊥ => by aesop
-  | some a, some b => by
-    simp only [WithBot.some_le_some, WithBot.instTop, false_or]
+  | WithBot.some a, WithBot.some b => by
+    simp only [WithBot.coe_le_coe, WithBot.instTop, false_or]
     intro h
     cases DiscreteTopOrder.le_top_or_eq a b h <;> simp [WithBot.some, *]
 
