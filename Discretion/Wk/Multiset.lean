@@ -32,8 +32,27 @@ theorem Multiset.not_mem_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
   : k ∉ liftnFv n s ↔ k + n ∉ s
   := by simp [mem_liftnFv]
 
+theorem Multiset.count_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
+  : count k (liftnFv n s) = count (k + n) s := by
+  simp only [
+    liftnFv, count_map, count_filter, count, countP_map, filter_filter, countP_eq_card_filter,
+    map_filter, card_map]
+  congr
+  funext i
+  simp only [Function.comp_apply, eq_iff_iff]
+  constructor
+  intro ⟨h, h'⟩
+  cases h
+  simp [h']
+  intro h
+  cases h
+  simp
+
 /-- Compute the free variable set of a term under a binder -/
 abbrev Multiset.liftFv := Multiset.liftnFv 1
+
+theorem Multiset.count_liftFv (s : Multiset ℕ) (k : ℕ)
+  : count k s.liftFv = count (k + 1) s := count_liftnFv 1 s k
 
 theorem Multiset.mem_liftFv_of_succ_mem (s : Multiset ℕ) (k : ℕ)
     : k ∈ s.liftFv → k + 1 ∈ s := mem_liftnFv_of_add_mem 1 s k
