@@ -536,6 +536,28 @@ theorem Fin.toNatWk_comp {n m k} (ρ : Fin m -> Fin k) (σ : Fin n -> Fin m)
   simp only [is_lt, ↓reduceDite, Fin.eta]
   simp_arith [Nat.add_sub_cancel]
 
+theorem Fin.toNatWk_swapAdd_comp_liftnWk_add_apply (n m i : ℕ)
+  : toNatWk (swapAdd n m) (n.liftnWk (· + m) i) = i + m := by
+  simp [toNatWk, Nat.liftnWk, swapAdd, addCases]
+  split
+  case inl h =>
+    rw [dite_cond_eq_true]
+    simp [Nat.add_comm]
+    simp [Nat.lt_add_right m h]
+  case inr h =>
+    have h' := Nat.le_of_not_lt h
+    have hi : i - n + m + n = i + m := by
+      rw [Nat.add_assoc, Nat.add_comm m n, <-Nat.add_assoc, Nat.sub_add_cancel h']
+    simp [hi, h, h', Nat.add_comm m n, Nat.sub_add_cancel (Nat.add_le_add_right h' m)]
+
+theorem Fin.toNatWk_swapAdd_comp_liftnWk_add (n m : ℕ)
+  : toNatWk (swapAdd n m) ∘ n.liftnWk (· + m) = (· + m)
+  := funext (Fin.toNatWk_swapAdd_comp_liftnWk_add_apply n m)
+
+theorem Fin.toNatWk_symm_swapAdd_comp_liftnWk_add (n m : ℕ)
+  : toNatWk (swapAdd m n).symm ∘ n.liftnWk (· + m) = (· + m)
+  := toNatWk_swapAdd_comp_liftnWk_add n m
+
 -- TODO: wkOfBounded ∘ toNatWk = id
 
 -- TODO: toNatWk ∘ extendWk = toNatWk

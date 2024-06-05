@@ -286,32 +286,52 @@ theorem Fin.addCases_comp_addCases_natAdd_castAdd (l: Fin n → α) (r : Fin m �
     exact i.prop
 
 theorem Fin.addCases_natAdd_castAdd_nil {n m}
-  : Fin.addCases (Fin.natAdd n) (Fin.castAdd m) ∘ Fin.addCases (Fin.natAdd m) (Fin.castAdd n) = id := by
+  : addCases (natAdd n) (castAdd m) ∘ addCases (natAdd m) (castAdd n) = id := by
   rw [Fin.addCases_comp_addCases_natAdd_castAdd, Fin.addCases_castAdd_natAdd]
 
 theorem Fin.addCases_natAdd_castAdd_left_inverse {n m}
   : Function.LeftInverse
-    (Fin.addCases (Fin.natAdd m) (Fin.castAdd n))
-    (Fin.addCases (Fin.natAdd n) (Fin.castAdd m))
+    (addCases (natAdd m) (castAdd n))
+    (addCases (natAdd n) (castAdd m))
   := congrFun Fin.addCases_natAdd_castAdd_nil
 
 theorem Fin.addCases_natAdd_castAdd_right_inverse {n m}
   : Function.RightInverse
-    (Fin.addCases (Fin.natAdd m) (Fin.castAdd n))
-    (Fin.addCases (Fin.natAdd n) (Fin.castAdd m))
+    (addCases (natAdd m) (castAdd n))
+    (addCases (natAdd n) (castAdd m))
   := congrFun Fin.addCases_natAdd_castAdd_nil
 
 theorem Fin.addCases_natAdd_castAdd_injective {n m}
-  : Function.Injective (Fin.addCases (Fin.natAdd n) (Fin.castAdd m)) :=
+  : Function.Injective (addCases (Fin.natAdd n) (Fin.castAdd m)) :=
   addCases_natAdd_castAdd_left_inverse.injective
 
 theorem Fin.addCases_natAdd_castAdd_surjective {n m}
-  : Function.Surjective (Fin.addCases (Fin.natAdd n) (Fin.castAdd m)) :=
+  : Function.Surjective (addCases (Fin.natAdd n) (Fin.castAdd m)) :=
     addCases_natAdd_castAdd_left_inverse.surjective
 
 theorem Fin.addCases_natAdd_castAdd_bijective {n m}
-  : Function.Bijective (Fin.addCases (Fin.natAdd n) (Fin.castAdd m))
+  : Function.Bijective (addCases (Fin.natAdd n) (Fin.castAdd m))
     := ⟨addCases_natAdd_castAdd_injective, addCases_natAdd_castAdd_surjective⟩
+
+def Fin.swapAdd (n m) : Fin (n + m) ≃ Fin (m + n) := ⟨
+    addCases (Fin.natAdd m) (Fin.castAdd n),
+    addCases (Fin.natAdd n) (Fin.castAdd m),
+    addCases_natAdd_castAdd_left_inverse,
+    addCases_natAdd_castAdd_right_inverse
+  ⟩
+
+theorem Fin.symm_swapAdd (n m)
+  : (swapAdd n m).symm = swapAdd m n := rfl
+
+@[simp]
+theorem Fin.swapAdd_comp_swapAdd
+  : swapAdd n m ∘ swapAdd m n = id := by rw [<-symm_swapAdd n m]; simp
+
+theorem Fin.addCases_comp_swapAdd (l: Fin n → α) (r : Fin m → α)
+  : addCases l r ∘ swapAdd m n = addCases r l := addCases_comp_addCases_natAdd_castAdd l r
+
+theorem Fin.addCases_comp_symm_swapAdd (l: Fin n → α) (r : Fin m → α)
+  : addCases l r ∘ (swapAdd n m).symm = addCases r l := addCases_comp_addCases_natAdd_castAdd l r
 
 -- TODO: addCases associator + inverse associator, to go with symmetry...
 
