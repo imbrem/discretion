@@ -259,3 +259,60 @@ theorem Multiset.mem_finsum_univ [Fintype ι] (f : ι → Multiset α) (a : α)
   : a ∈ Finset.univ.sum f ↔ (∃i, a ∈ f i) := by
   rw [Multiset.mem_finsum]
   simp
+
+theorem Fin.comp_addCases (f : α → β) (l: Fin n → α) (r : Fin m → α)
+  : f ∘ (Fin.addCases l r) = Fin.addCases (f ∘ l) (f ∘ r) := by
+  funext i
+  simp only [addCases, eq_rec_constant, Function.comp_apply]
+  split <;> rfl
+
+theorem Fin.addCases_castAdd_natAdd {n m}
+  : Fin.addCases (Fin.castAdd n) (Fin.natAdd m) = id := by
+  funext i
+  simp [addCases]
+
+theorem Fin.addCases_comp_addCases_natAdd_castAdd (l: Fin n → α) (r : Fin m → α)
+  : Fin.addCases l r ∘ Fin.addCases (Fin.natAdd _) (Fin.castAdd _) = Fin.addCases r l
+  := by
+  funext i
+  simp only [addCases, eq_rec_constant, Function.comp_apply]
+  split
+  case inl h => simp
+  case inr h =>
+    simp only [coe_castAdd, coe_subNat, coe_cast, castLT_castAdd, not_lt]
+    rw [dite_cond_eq_true]
+    simp
+    rw [Nat.sub_lt_iff_lt_add (Nat.le_of_not_lt h)]
+    exact i.prop
+
+theorem Fin.addCases_natAdd_castAdd_nil {n m}
+  : Fin.addCases (Fin.natAdd n) (Fin.castAdd m) ∘ Fin.addCases (Fin.natAdd m) (Fin.castAdd n) = id := by
+  rw [Fin.addCases_comp_addCases_natAdd_castAdd, Fin.addCases_castAdd_natAdd]
+
+theorem Fin.addCases_natAdd_castAdd_left_inverse {n m}
+  : Function.LeftInverse
+    (Fin.addCases (Fin.natAdd m) (Fin.castAdd n))
+    (Fin.addCases (Fin.natAdd n) (Fin.castAdd m))
+  := congrFun Fin.addCases_natAdd_castAdd_nil
+
+theorem Fin.addCases_natAdd_castAdd_right_inverse {n m}
+  : Function.RightInverse
+    (Fin.addCases (Fin.natAdd m) (Fin.castAdd n))
+    (Fin.addCases (Fin.natAdd n) (Fin.castAdd m))
+  := congrFun Fin.addCases_natAdd_castAdd_nil
+
+theorem Fin.addCases_natAdd_castAdd_injective {n m}
+  : Function.Injective (Fin.addCases (Fin.natAdd n) (Fin.castAdd m)) :=
+  addCases_natAdd_castAdd_left_inverse.injective
+
+theorem Fin.addCases_natAdd_castAdd_surjective {n m}
+  : Function.Surjective (Fin.addCases (Fin.natAdd n) (Fin.castAdd m)) :=
+    addCases_natAdd_castAdd_left_inverse.surjective
+
+theorem Fin.addCases_natAdd_castAdd_bijective {n m}
+  : Function.Bijective (Fin.addCases (Fin.natAdd n) (Fin.castAdd m))
+    := ⟨addCases_natAdd_castAdd_injective, addCases_natAdd_castAdd_surjective⟩
+
+-- TODO: addCases associator + inverse associator, to go with symmetry...
+
+-- TODO: addCases unitors...
