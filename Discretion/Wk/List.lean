@@ -7,9 +7,15 @@ variable [PartialOrder α] {Γ Δ Ξ : List α}
 def Fin.FWkn {n m : Nat} (Γ : Fin n → α) (Δ : Fin m → α) (ρ : Fin m → Fin n) : Prop
   := (Γ ∘ ρ) ≤ Δ
 
+theorem Fin.FWkn.id {n : Nat} (Γ : Fin n → α) : Fin.FWkn Γ Γ id := le_refl _
+
+-- theorem Fin.FWkn.comp {ρ : Fin m → Fin n} {σ : Fin o → Fin m}
+--   (hρ : Fin.FWkn Γ Δ ρ) (hσ : Fin.FWkn Δ Ξ σ) : Fin.FWkn Γ Ξ (ρ ∘ σ)
+--   := λ_ => le_trans (hρ _) (hσ _)
+
 /-- The function `ρ` weakens `Γ` to `Δ` -/
 def List.FWkn (Γ Δ : List α) (ρ : Fin Δ.length → Fin Γ.length) : Prop
-  := (Γ.get ∘ ρ) ≤ Δ.get
+  := Fin.FWkn Γ.get Δ.get ρ
 
 theorem List.FWkn.id (Γ : List α) : List.FWkn Γ Γ id := le_refl _
 
@@ -26,7 +32,7 @@ theorem List.FWkn.lift {ρ : Fin Δ.length → Fin Γ.length} (hAB : A ≤ B) (h
 theorem List.FWkn.step {ρ : Fin Δ.length → Fin Γ.length} (A : α) (hρ : List.FWkn Γ Δ ρ)
   : List.FWkn (A :: Γ) Δ (Fin.stepWk ρ) := λi => hρ i
 
-/-- The `Γ` weakens to `Δ` -/
+/-- The list `Γ` weakens to `Δ` -/
 def List.FWkns (Γ Δ : List α) : Prop := ∃ρ, List.FWkn Γ Δ ρ ∧ StrictMono ρ
 
 theorem List.FWkns.refl (Γ : List α) : List.FWkns Γ Γ
@@ -174,5 +180,37 @@ theorem List.NWkn.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.leng
 
 -- TODO: if the order is discrete and there are no duplicates in the source, then the are none
 --       in the target
+
+/-- The list Γ has a member compatible with `A` at index `n` -/
+def List.FVar (Γ : List α) (n : Fin Γ.length) (A : α) : Prop := Γ.get n ≤ A
+
+theorem List.FVar.le_trg {A A' : α} {n : Fin Γ.length} (h : List.FVar Γ n A) (hA : A ≤ A')
+  : List.FVar Γ n A' := le_trans h hA
+
+theorem List.FVar.head_le {A A' : α} (h : A ≤ A') : List.FVar (A :: Γ) ⟨0, by simp⟩ A'
+  := h
+
+theorem List.FVar.head (A : α) : List.FVar (A :: Γ) ⟨0, by simp⟩ A := le_refl _
+
+theorem List.FVar.tail (A : α) (h : List.FVar Γ n B) : List.FVar (A :: Γ) n.succ B
+  := h
+
+/-- The list Γ has a member compatible with `A` at index `n` -/
+structure List.Var (Γ : List α) (n : ℕ) (A : α) : Prop where
+  length : n < Γ.length
+  get : Γ.FVar ⟨n, length⟩ A
+
+theorem List.Var.le_trg {A A' : α} {n : ℕ} (h : List.Var Γ n A) (hA : A ≤ A') : List.Var Γ n A'
+  := ⟨h.length, le_trans h.get hA⟩
+
+theorem List.Var.head_le {A A' : α} (h : A ≤ A') : List.Var (A :: Γ) 0 A'
+  := ⟨Nat.zero_lt_succ _, h⟩
+
+theorem List.Var.head (A : α) : List.Var (A :: Γ) 0 A := ⟨Nat.zero_lt_succ _, le_refl _⟩
+
+theorem List.Var.tail (A : α) (h : List.Var Γ n B) : List.Var (A :: Γ) (n+1) B
+  := ⟨Nat.succ_lt_succ h.length, h.get⟩
+
+-- TODO: Var.wkn
 
 -- TODO: inductive weakening, associated lore
