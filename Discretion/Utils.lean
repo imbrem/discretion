@@ -49,7 +49,7 @@ theorem Set.eqOn_comp_left_iff_of_injOn_image
 theorem Set.eqOn_comp_left_iff_of_injective
   {s : Set α} {f₁ f₂ : α → β} {g : β → γ} (hf : Function.Injective g)
   : s.EqOn (g ∘ f₁) (g ∘ f₂) ↔ s.EqOn f₁ f₂
-  := eqOn_comp_left_iff_of_injOn_image (injOn_of_injective hf _)
+  := eqOn_comp_left_iff_of_injOn_image (injOn_of_injective hf)
 
 theorem Fin.foldl_eq_foldr {α} {f : α → α → α} (hcomm : Commutative f) (hassoc : Associative f)
   (x : α) (xs : Fin n → α)
