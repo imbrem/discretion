@@ -115,6 +115,50 @@ theorem Fin.elem_le_max [LinearOrder α] [Bot α] (f : Fin n → α) : ∀(i : F
 theorem Fin.max_le [LinearOrder α] [OrderBot α] (f : Fin n → α) (c : α) (hf : ∀i, f i ≤ c)
   : max f ≤ c := maxD_le f ⊥ hf (by simp)
 
+theorem bot_comp_eq_bot {α β} [Bot γ] (f : α → β) : (⊥ : β → γ) ∘ f = ⊥ := rfl
+
+-- theorem zero_comp_eq_zero {α β} [Zero γ] (f : α → β) : (0 : β → γ) ∘ f = (0 : α → γ) := rfl
+
+@[simp]
+theorem Fin.max_bot [LinearOrder α] [OrderBot α] : max (⊥ : Fin n → α) = ⊥ := by
+  induction n <;> simp [Fin.max_succ, bot_comp_eq_bot, *]
+
+theorem Fin.max_eq_bot [LinearOrder α] [OrderBot α] (f : Fin n → α) (hf : max f = ⊥)
+  : ∀i, f i = ⊥ := by induction n with
+  | zero => simp
+  | succ n I =>
+    rw [max_succ, _root_.max_eq_bot] at hf
+    intro i
+    cases i using Fin.cases with
+    | zero => exact hf.1
+    | succ i => exact (I _ hf.2) i
+
+theorem Fin.max_eq_bot' [LinearOrder α] [OrderBot α] (f : Fin n → α) (hf : max f = ⊥)
+  : f = ⊥ := funext (Fin.max_eq_bot f hf)
+
+theorem Fin.max_eq_bot_iff [LinearOrder α] [OrderBot α] (f : Fin n → α)
+  : max f = ⊥ ↔ ∀i, f i = ⊥ := by
+  apply Iff.intro
+  . apply Fin.max_eq_bot
+  . intro hf
+    cases (funext hf : f = ⊥)
+    rw [max_bot]
+
+theorem Fin.max_eq_bot_iff' [LinearOrder α] [OrderBot α] (f : Fin n → α)
+  : max f = ⊥ ↔ f = ⊥ := (Fin.max_eq_bot_iff f).trans Function.funext_iff.symm
+
+theorem Fin.max_nat_eq_zero (f : Fin n → ℕ) (hf : max f = 0)
+  : ∀i, f i = 0 := max_eq_bot f hf
+
+theorem Fin.max_nat_eq_zero' (f : Fin n → ℕ) (hf : max f = 0)
+  : f = 0 := max_eq_bot' f hf
+
+theorem Fin.max_nat_eq_zero_iff (f : Fin n → ℕ)
+  : max f = 0 ↔ ∀i, f i = 0 := max_eq_bot_iff f
+
+theorem Fin.max_nat_eq_zero_iff' (f : Fin n → ℕ)
+  : max f = 0 ↔ f = 0 := max_eq_bot_iff' f
+
 instance singletonSetInhabited {a : α} : Inhabited ({a} : Set α) := ⟨⟨a, rfl⟩⟩
 
 def Fin.supD [Sup α] (f : Fin n → α) (b : α) : α := Fin.foldr n (λi v => (f i) ⊔ v) b
@@ -225,6 +269,17 @@ theorem Fin.strictMono_eq_cast {n} {f : Fin n → Fin m} (h : StrictMono f) (eq 
 theorem Fin.sum_univ_list [AddCommMonoid α] (f : (Fin n) → α)
   : Finset.univ.sum f = (List.ofFn f).sum
   := by simp [Finset.sum]
+
+open Classical in
+theorem Finset.sum_nat_eq_zero (s : Finset α) (f : α → ℕ)
+  : s.sum f = 0 ↔ ∀a ∈ s, f a = 0 := by induction s using Finset.induction with
+    | empty => simp
+    | insert ha I => simp [sum_insert ha, I]
+
+theorem Finset.sum_nat_univ_eq_zero [Fintype α] (f : α → ℕ)
+  : Finset.univ.sum f = 0 ↔ ∀a, f a = 0 := by
+  rw [Finset.sum_nat_eq_zero]
+  simp
 
 theorem Multiset.map_finsum (i : Finset ι) (f : ι → Multiset α) (g : α → β)
   : (i.sum f).map g = i.sum (Multiset.map g ∘ f)
