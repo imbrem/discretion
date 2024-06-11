@@ -96,6 +96,12 @@ namespace Path
 
 def single : r a b → Path r a b := cons (nil _)
 
+def cast_trg (p : Path r a b) (h : b = c) : Path r a c := h ▸ p
+
+def cast_src (h : a = b) (p : Path r b c) : Path r a c := h ▸ p
+
+def cast (h : a = b) (p : Path r b c) (h' : c = d) : Path r a d := cast_src h (cast_trg p h')
+
 -- TODO: this should not be necessary
 set_option linter.unusedVariables false in
 def comp : Path r a b → Path r b c → Path r a c
@@ -119,13 +125,13 @@ theorem comp_assoc (p : Path r a b) (q : Path r b c) (s : Path r c d)
 
 def snoc (s : r a b) : Path r b c → Path r a c := comp (single s)
 
-instance : Trans (Path r) (Path r) (Path r) where
+instance pathTrans : Trans (Path r) (Path r) (Path r) where
   trans := comp
 
-instance : Trans (Path r) r (Path r) where
+instance pathTransCorr : Trans (Path r) r (Path r) where
   trans := cons
 
-instance : Trans r (Path r) (Path r) where
+instance corrTransPath : Trans r (Path r) (Path r) where
   trans := snoc
 
 end Path
