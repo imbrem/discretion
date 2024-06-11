@@ -100,7 +100,8 @@ def cast_trg (p : Path r a b) (h : b = c) : Path r a c := h ▸ p
 
 def cast_src (h : a = b) (p : Path r b c) : Path r a c := h ▸ p
 
-def cast (h : a = b) (h' : c = d) (p : Path r b c) : Path r a d := cast_src h (cast_trg p h')
+def cast (ha : a = a') (hb : b = b') (p : Path r a b) : Path r a' b'
+  := cast_src ha.symm (cast_trg p hb)
 
 -- TODO: this should not be necessary
 set_option linter.unusedVariables false in
