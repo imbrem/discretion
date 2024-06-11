@@ -96,12 +96,55 @@ namespace Path
 
 def single : r a b → Path r a b := cons (nil _)
 
-def cast_trg (p : Path r a b) (h : b = c) : Path r a c := h ▸ p
-
-def cast_src (h : a = b) (p : Path r b c) : Path r a c := h ▸ p
-
 def cast (ha : a = a') (hb : b = b') (p : Path r a b) : Path r a' b'
-  := cast_src ha.symm (cast_trg p hb)
+  := ha ▸ hb ▸ p
+
+@[simp]
+def cast_trg (p : Path r a b) (h : b = c) : Path r a c := cast rfl h p
+
+@[simp]
+def cast_src (h : a = b) (p : Path r b c) : Path r a c := cast h.symm rfl p
+
+def of_eq (h : a = b) : Path r a b := cast_trg (nil a) h
+
+@[simp]
+theorem cast_of_eq (h : a = a') (h' : b = b') (h'' : a = b)
+  : cast h h' (of_eq h'') = @of_eq _ _ _ r (h ▸ h' ▸ h'')
+  := by cases h; cases h'; rfl
+
+@[simp]
+theorem cast_cast (ha : a = a') (hb : b = b') (ha' : a' = a'') (hb' : b' = b'') (p : Path r a b)
+  : cast ha' hb' (cast ha hb p) = cast (ha ▸ ha') (hb ▸ hb') p
+  := by cases ha; cases ha'; cases hb; cases hb'; rfl
+
+theorem cast_cons {ha : a = a'} {hc : c = c'} {p : Path r a b} {s : r b c}
+  : cast ha hc (cons p s) = cons (cast ha rfl p) (hc ▸ s)
+  := by cases ha; cases hc; rfl
+
+theorem cast_cons' {ha : a = a'} {hb : b = b'} {p : Path r a b} {s : r b' c}
+ : cons (cast ha hb p) s = cast ha rfl (cons p (hb ▸ s))
+  := by cases ha; cases hb; rfl
+
+@[simp]
+theorem cast_rfl (p : Path r a b) : cast rfl rfl p = p := rfl
+
+theorem cast_trg_of_eq (h : a = b) (h' : b = c)
+  : cast_trg (of_eq h) h' = (@of_eq _ _ _ r (h' ▸ h)) := by cases h; cases h'; rfl
+
+theorem cast_trg_cast_trg (p : Path r a b) (h : b = c) (h' : c = d)
+  : cast_trg (cast_trg p h) h' = cast_trg p (h ▸ h')
+  := by cases h; cases h'; rfl
+
+theorem cast_trg_rfl : cast_trg p rfl = p := rfl
+
+theorem cast_src_of_eq (h : a = b) (h' : b = c)
+  : cast_src h (of_eq h') = (@of_eq _ _ _ r (h ▸ h')) := by cases h; cases h'; rfl
+
+theorem cast_src_cast_src (h : a = b) (h' : b = c) (p : Path r c d)
+  : cast_src h (cast_src h' p) = cast_src (h ▸ h') p
+  := by cases h; cases h'; rfl
+
+theorem cast_src_rfl : cast_src rfl p = p := rfl
 
 -- TODO: this should not be necessary
 set_option linter.unusedVariables false in
@@ -124,7 +167,12 @@ theorem nil_comp (p : Path r a b) : comp (nil _) p = p := by induction p with
 theorem comp_assoc (p : Path r a b) (q : Path r b c) (s : Path r c d)
   : comp p (comp q s) = comp (comp p q) s := by induction s generalizing p <;> simp [comp_cons, *]
 
+theorem cast_comp : cast ha hc (comp p q) = comp (cast ha hb p) (cast hb hc q)
+  := by cases ha; cases hb; cases hc; induction q generalizing p <;> simp [comp, *]
+
 def snoc (s : r a b) : Path r b c → Path r a c := comp (single s)
+
+-- TODO: cast_snoc
 
 instance pathTrans : Trans (Path r) (Path r) (Path r) where
   trans := comp
@@ -137,6 +185,7 @@ instance corrTransPath : Trans r (Path r) (Path r) where
 
 end Path
 
+@[ext]
 structure Prefunctor (r : α → α → Sort v) (s : β → β → Sort w) where
   obj : α → β
   map : r a b → s (obj a) (obj b)
@@ -150,6 +199,12 @@ def id (r : α → α → Sort v) : Prefunctor r r where
   map := _root_.id
 
 notation "𝟭Q" => id
+
+@[simp]
+theorem obj_id (r : α → α → Sort v) : (𝟭Q r).obj = _root_.id := rfl
+
+@[simp]
+theorem map_id (r : α → α → Sort v) (x : r a b) : (𝟭Q r).map x = x := rfl
 
 def comp (F : Prefunctor r s) (G : Prefunctor s t) : Prefunctor r t where
   obj := G.obj ∘ F.obj
@@ -192,6 +247,11 @@ theorem comp_mapPath {r : α → α → Sort*} (F : r ⥤Q s) (G : s ⥤Q t) (p 
   : (F ⋙Q G).mapPath p = G.mapPath (F.mapPath p) := by induction p <;> simp [*]
 
 @[simp]
+theorem mapPath_id {r : α → α → Sort*} (p : Path r a b)
+  : (𝟭Q r).mapPath p = p
+  := by induction p <;> simp [*]
+
+@[simp]
 theorem mapPath_comp {r : α → α → Sort*} (F : r ⥤Q s) (p : Path r a b) (q : Path r b c)
   : F.mapPath (p.comp q) = (F.mapPath p).comp (F.mapPath q) := by
   induction q generalizing p <;> simp [Path.comp, Prefunctor.mapPath_cons, *]
@@ -199,6 +259,49 @@ theorem mapPath_comp {r : α → α → Sort*} (F : r ⥤Q s) (p : Path r a b) (
 @[simp]
 theorem mapPath_single {r : α → α → Sort*} (F : r ⥤Q s) (s : r a b)
   : F.mapPath (Path.single s) = Path.single (F.map s) := rfl
+
+def toPath (F : r ⥤Q s) : Path r ⥤Q Path s where
+  obj := F.obj
+  map := F.mapPath
+
+@[simp]
+theorem obj_toPath (F : r ⥤Q s) : (F.toPath).obj = F.obj := rfl
+
+-- TODO: should this be a simp lemma? the other way around?
+theorem map_toPath (F : r ⥤Q s) (p : Path r a b) : (F.toPath).map p = F.mapPath p := rfl
+
+@[simp]
+theorem toPath_map_nil (F : r ⥤Q s) (a)
+  : (F.toPath).map (Path.nil a) = Path.nil _ := rfl
+
+@[simp]
+theorem toPath_map_cons (F : r ⥤Q s) (p : Path r a b) (s : r b c)
+  : (F.toPath).map (Path.cons p s) = Path.cons ((F.toPath).map p) (F.map s) := rfl
+
+@[simp]
+theorem toPath_map_comp (F : r ⥤Q s) (p : Path r a b) (q : Path r b c)
+  : (F.toPath).map (p.comp q) = ((F.toPath).map p).comp ((F.toPath).map q)
+  := mapPath_comp F p q
+
+@[simp]
+theorem toPath_map_single (F : r ⥤Q s) (s : r a b)
+  : (F.toPath).map (Path.single s) = Path.single (F.map s) := rfl
+
+@[simp]
+def toPath_comp (F : r ⥤Q s) (G : s ⥤Q t) : toPath (F ⋙Q G) = toPath F ⋙Q toPath G := by
+  ext
+  . rfl
+  . simp only [obj_comp, Function.comp_apply, heq_eq_eq]
+    funext _ _ p
+    exact comp_mapPath F G p
+
+@[simp]
+def toPath_id : toPath (𝟭Q r) = 𝟭Q (Path r) := by
+  ext
+  . rfl
+  . simp only [obj_id, Function.comp_apply, heq_eq_eq]
+    funext _ _ p
+    exact mapPath_id p
 
 end Prefunctor
 
