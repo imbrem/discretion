@@ -33,16 +33,16 @@ theorem Nat.liftnBot_succ_apply (n : ℕ) (εs : ℕ → ε) : Nat.liftnBot (n +
   | succ k =>
     simp only [liftnBot, Nat.add_lt_add_iff_right, reduceSubDiff, liftBot]
     split
-    case inl h =>
+    case isTrue h =>
       have h' := Nat.succ_le_of_lt h
       split
-      case inl h'' =>
+      case isTrue h'' =>
         rfl
-      case inr h'' =>
+      case isFalse h'' =>
         have h'' := Nat.le_of_not_lt h''
         cases le_antisymm h' h''
         simp
-    case inr h =>
+    case isFalse h =>
       rw [ite_cond_eq_false]
       rw [Nat.add_comm k 1]
       rw [Nat.add_sub_assoc]

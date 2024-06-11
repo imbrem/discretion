@@ -10,4 +10,5 @@ import Discretion.Wk.Fun
 import Discretion.Wk.List
 import Discretion.Wk.Multiset
 import Discretion.Wk.Set
+import Discretion.Wk.Order
 import Discretion.Correspondence.Definitions
