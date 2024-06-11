@@ -1,4 +1,4 @@
-import Discretion.Wk.Fun
+import Discretion.Wk.Nat
 import Mathlib.Data.Multiset.Basic
 
 /-- Compute the free variable set of a term under `n` binders -/

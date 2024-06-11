@@ -1,4 +1,4 @@
-import Discretion.Wk.Fun
+import Discretion.Wk.Nat
 import Discretion.Wk.Fin
 import Mathlib.Data.Fintype.Card
 
