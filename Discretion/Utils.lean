@@ -67,7 +67,7 @@ theorem Fin.foldl_eq_foldr {α} {f : α → α → α} (hcomm : Commutative f) (
 def Fin.maxD [Max α] (f : Fin n → α) (b : α) := Fin.foldr _ (λi v => max (f i) v) b
 
 @[simp]
-theorem Fin.maxD_zero [Max α] (f : Fin 0 → α) (b : α) : maxD f b = b := rfl
+theorem Fin.maxD_zero [Max α] (f : Fin 0 → α) (b : α) : maxD f b = b := by simp [maxD]
 
 theorem Fin.maxD_succ [Max α] (f : Fin (n+1) → α) (b : α)
   : maxD f b = max (f 0) (maxD (f ∘ Fin.succ) b)  := by simp [maxD, Fin.foldr_succ]
@@ -78,7 +78,7 @@ theorem Fin.maxD_succ' [LinearOrder α] (f : Fin (n+1) → α) (b : α)
 
 theorem Fin.base_le_maxD [LinearOrder α] (f : Fin n → α) (b : α)
   : b ≤ maxD f b := by induction n generalizing b with
-  | zero => rfl
+  | zero => simp
   | succ n I => rw [maxD_succ]; exact le_trans (I _ _) (le_max_right _ _)
 
 theorem Fin.elem_le_maxD [LinearOrder α] (f : Fin n → α) (b : α)
@@ -95,7 +95,7 @@ theorem Fin.elem_le_maxD [LinearOrder α] (f : Fin n → α) (b : α)
 theorem Fin.maxD_le [LinearOrder α] (f : Fin n → α) (b : α)
   : (∀i, f i ≤ c) → b ≤ c → maxD f b ≤ c := by
   induction n generalizing b with
-  | zero => exact λ_ hb => hb
+  | zero => exact λ_ hb => by simp [hb]
   | succ n I =>
     intro hf hb
     rw [maxD_succ]
@@ -164,7 +164,7 @@ instance singletonSetInhabited {a : α} : Inhabited ({a} : Set α) := ⟨⟨a, r
 def Fin.supD [Sup α] (f : Fin n → α) (b : α) : α := Fin.foldr n (λi v => (f i) ⊔ v) b
 
 @[simp]
-theorem Fin.supD_zero [Sup α] (f : Fin 0 → α) (b : α) : supD f b = b := rfl
+theorem Fin.supD_zero [Sup α] (f : Fin 0 → α) (b : α) : supD f b = b := by simp [supD]
 
 theorem Fin.supD_succ [Sup α] (f : Fin (n+1) → α) (b : α)
   : supD f b = (f 0) ⊔ (supD (f ∘ Fin.succ) b)  := by simp [supD, Fin.foldr_succ]
@@ -188,7 +188,7 @@ theorem Fin.elem_le_supD [SemilatticeSup α] (f : Fin n → α) (b : α)
 theorem Fin.supD_le [SemilatticeSup α] (f : Fin n → α) (b : α)
   : (∀i, f i ≤ c) → b ≤ c → supD f b ≤ c := by
   induction n generalizing b with
-  | zero => exact λ_ hb => hb
+  | zero => exact λ_ hb => by simp [hb]
   | succ n I =>
     intro hf hb
     rw [supD_succ]
@@ -213,7 +213,7 @@ theorem Fin.sup_le [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (c : α)
 theorem Fin.sup_le_sup [SemilatticeSup α] [OrderBot α] (f g : Fin n → α)
   (h : ∀i, f i ≤ g i) : sup f ≤ sup g := by
   induction n with
-  | zero => rfl
+  | zero => simp
   | succ n I =>
     rw [Fin.sup_succ, Fin.sup_succ]
     exact _root_.sup_le_sup (h 0) (I _ _ (λi => h i.succ))
@@ -332,8 +332,8 @@ theorem Fin.addCases_comp_addCases_natAdd_castAdd (l: Fin n → α) (r : Fin m �
   funext i
   simp only [addCases, eq_rec_constant, Function.comp_apply]
   split
-  case inl h => simp
-  case inr h =>
+  case h.isTrue h => simp
+  case h.isFalse h =>
     simp only [coe_castAdd, coe_subNat, coe_cast, castLT_castAdd, not_lt]
     rw [dite_cond_eq_true]
     simp

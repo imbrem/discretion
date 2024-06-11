@@ -318,8 +318,8 @@ theorem Nat.liftnWk_n_succ (n : ℕ) : liftnWk n succ = wkn n := by
   funext m
   simp only [liftnWk, wkn]
   split
-  case inl _ => rfl
-  case inr h => simp_arith [Nat.le_of_not_lt h]
+  case isTrue _ => rfl
+  case isFalse h => simp_arith [Nat.le_of_not_lt h]
 
 theorem Nat.wkn_zero : wkn 0 = succ := rfl
 
@@ -540,11 +540,11 @@ theorem Fin.toNatWk_swapAdd_comp_liftnWk_add_apply (n m i : ℕ)
   : toNatWk (swapAdd n m) (n.liftnWk (· + m) i) = i + m := by
   simp [toNatWk, Nat.liftnWk, swapAdd, addCases]
   split
-  case inl h =>
+  case isTrue h =>
     rw [dite_cond_eq_true]
     simp [Nat.add_comm]
     simp [Nat.lt_add_right m h]
-  case inr h =>
+  case isFalse h =>
     have h' := Nat.le_of_not_lt h
     have hi : i - n + m + n = i + m := by
       rw [Nat.add_assoc, Nat.add_comm m n, <-Nat.add_assoc, Nat.sub_add_cancel h']
