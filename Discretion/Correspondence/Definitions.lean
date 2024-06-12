@@ -1,8 +1,8 @@
 import Mathlib.Logic.Relation
 import Mathlib.Combinatorics.Quiver.Path
 
--- TODO: Bitransformer ==> BimodHom
--- TODO: remove Transformer, Biprefunctor; use BimodHom as necessary
+-- TODO: start thinking about epis and monos
+-- TODO: so... a natural extension of a correspondence is a bundled category then...
 
 namespace Corr
 
@@ -10,65 +10,113 @@ section Basic
 
 def Rel {α : Sort*} {β : Sort*} (r : α → β → Sort*) : α → β → Prop := λa b => Nonempty (r a b)
 
-def Comp {α : Type*} {β : Type*} {γ : Type*} (r : α → β → Type*) (s : β → γ → Type*)
-  : α → γ → Type _ := λa c => Σb, (_ : r a b) ×' s b c
-
-def Swap {α : Sort u} {β : Sort v} (r : α → β → Sort w) : β → α → Sort w := λb a => r a b
-
 @[ext]
-structure Transformer (r : α → β → Sort v) (s : α' → β' → Sort w) where
-  objIn : α → α'
-  objOut : β → β'
-  map : r a b → s (objIn a) (objOut b)
-
-@[ext]
-structure Bitransformer (r : α → β → Sort v) (s : α' → β' → Sort w) where
+structure BimodHom (r : α → β → Sort v) (s : α' → β' → Sort w) where
   objIn : α → β → α'
   objOut : α → β → β'
   map : r a b → s (objIn a b) (objOut a b)
 
 end Basic
 
-namespace Transformer
+namespace BimodHom
 
-infixl:50 " ⥤C " => Transformer
+infixl:50 " ⥤C " => BimodHom
 
-def id : Transformer r r where
-  objIn := _root_.id
-  objOut := _root_.id
+def id (r : α → β → Sort*) : BimodHom r r where
+  objIn a _ := a
+  objOut _ b := b
   map := _root_.id
 
 notation "𝟭C" => id
 
-def comp (F : Transformer r s) (G : Transformer s t) : Transformer r t where
-  objIn := G.objIn ∘ F.objIn
-  objOut := G.objOut ∘ F.objOut
+def comp (F : BimodHom r s) (G : BimodHom s t) : BimodHom r t where
+  objIn a b := G.objIn (F.objIn a b) (F.objOut a b)
+  objOut a b := G.objOut (F.objIn a b) (F.objOut a b)
   map := G.map ∘ F.map
 
 infixl:60 " ⋙C " => comp
 
 @[simp]
-theorem comp_id (F : r ⥤C s) : F ⋙C 𝟭C = F := rfl
+theorem comp_id (F : r ⥤C s) : F ⋙C 𝟭C _ = F := rfl
 
 @[simp]
-theorem id_comp (F : r ⥤C s) : 𝟭C ⋙C F = F := rfl
+theorem id_comp (F : r ⥤C s) : 𝟭C _ ⋙C F = F := rfl
 
 theorem comp_assoc (F : r ⥤C s) (G : s ⥤C t) (H : t ⥤C u)
   : (F ⋙C G) ⋙C H = F ⋙C (G ⋙C H) := rfl
 
 @[simp]
-theorem objIn_comp (F : r ⥤C s) (G : s ⥤C t) : (F ⋙C G).objIn = G.objIn ∘ F.objIn := rfl
+theorem objIn_comp (F : r ⥤C s) (G : s ⥤C t)
+  : (F ⋙C G).objIn a b = G.objIn (F.objIn a b) (F.objOut a b) := rfl
 
 @[simp]
-theorem objOut_comp (F : r ⥤C s) (G : s ⥤C t) : (F ⋙C G).objOut = G.objOut ∘ F.objOut := rfl
+theorem objOut_comp (F : r ⥤C s) (G : s ⥤C t)
+  : (F ⋙C G).objOut a b = G.objOut (F.objIn a b) (F.objOut a b) := rfl
 
 @[simp]
 theorem map_comp (F : r ⥤C s) (G : s ⥤C t) (x : r a b)
   : (F ⋙C G).map x = G.map (F.map x) := rfl
 
-theorem toLiftFun (F : r ⥤C s) : (Rel r ⇒ Rel s) F.objIn F.objOut := λ_ _ ⟨p⟩ => ⟨F.map p⟩
+-- theorem toLiftFun (F : r ⥤C s) : (Rel r ⇒ Rel s) F.objIn F.objOut := λ_ _ ⟨p⟩ => ⟨F.map p⟩
 
-end Transformer
+def IsAligned {r : α → α → Sort v} {s : β → β → Sort w} (F : r ⥤C s)
+  : Prop := ∀a, F.objIn a a = F.objOut a a
+
+theorem IsAligned.id (r : α → α → Sort*) : IsAligned (𝟭C r) := λ_ => rfl
+
+theorem IsAligned.comp {F : r ⥤C s} {G : s ⥤C t} (hF : IsAligned F) (hG : IsAligned G)
+  : IsAligned (F ⋙C G) := λa => by
+    simp [objIn_comp, objOut_comp, hF a, hG (F.objOut a a)]
+
+end BimodHom
+
+def Op {α : Sort u} {β : Sort v} (r : α → β → Sort w) : β → α → Sort w := λb a => r a b
+
+@[simp]
+theorem op_op : Op (Op r) = r := rfl
+
+@[simp]
+theorem op_comp_op : Op ∘ Op = @id (α → β → Sort*) := rfl
+
+def toOp : r a b → Op r b a := _root_.id
+
+def toOpH (r : α → β → Sort*) : r ⥤C Op r where
+  objIn _ a := a
+  objOut b _ := b
+  map := toOp
+
+theorem toOpH_comp_toOpH (r : α → β → Sort*)
+  : toOpH r ⋙C toOpH (Op r) = 𝟭C r := by
+  ext
+  . rfl
+  . rfl
+  . simp only [toOpH, BimodHom.objIn_comp, BimodHom.objOut_comp, heq_eq_eq]
+    funext _ _ p
+    rfl
+
+def Sum (r : α → β → Type u) (s : α → β → Type v) : α → β → Type (max u v)
+  := λa b => r a b ⊕ s a b
+
+@[match_pattern]
+def Sum.inl {r : α → β → Type*} {s : α → β → Type*} : r a b → Sum r s a b := _root_.Sum.inl
+
+@[match_pattern]
+def Sum.inr {r : α → β → Type*} {s : α → β → Type*} : s a b → Sum r s a b := _root_.Sum.inr
+
+def Prod (r : α → β → Type u) (s : α → β → Type v) : α → β → Type (max u v)
+  := λa b => r a b × s a b
+
+inductive DSum {α : Type*} {β : Type*} (r : α → β → Type*) (s : α' → β' → Type*)
+  : (α ⊕ α') → (β ⊕ β') → Type _
+  | inl : r a b → DSum r s (_root_.Sum.inl a) (_root_.Sum.inl b)
+  | inr : s a' b' → DSum r s (_root_.Sum.inr a') (_root_.Sum.inr b')
+
+inductive DProd {α : Type*} {β : Type*} (r : α → β → Type*) (s : α' → β' → Type*)
+  : (α × α') → (β × β') → Type _
+  | mk : r a b → s a' b' → DProd r s (a, a') (b, b')
+
+def Comp {α : Type*} {β : Type*} {γ : Type*} (r : α → β → Type*) (s : β → γ → Type*)
+  : α → γ → Type _ := λa c => Σb, r a b × s b c
 
 inductive Path.{u, v} {α : Type u} (r : α → α → Sort v) : α → α → Sort (max (u + 1) v)
   | nil (a) : Path r a a
@@ -77,10 +125,6 @@ inductive Path.{u, v} {α : Type u} (r : α → α → Sort v) : α → α → S
 inductive SPath.{u, v} {α : Type u} (r : α → α → Sort v) : α → α → Sort (max (u + 1) v)
   | single : r a b → SPath r a b
   | cons : SPath r a b → r b c → SPath r a c
-
-inductive Edge.{u, v} {α : Type u} (r : α → α → Sort v) : α → α → Sort (max (u + 1) v)
-  | inl : r a b → Edge r a b
-  | inr : r a b → Edge r b a
 
 section Rel
 
@@ -278,140 +322,9 @@ theorem toPath_snoc (s : r a b) (p : SPath r b c) : (snoc s p).toPath = p.toPath
 end SPath
 
 @[ext]
-structure Biprefunctor (r : α → α → Sort v) (s : β → β → Sort w) where
-  objIn : α → α → β
-  objOut : α → α → β
-  map : r a b → s (objIn a b) (objOut a b)
-
-@[ext]
 structure Prefunctor (r : α → α → Sort v) (s : β → β → Sort w) where
   obj : α → β
   map : r a b → s (obj a) (obj b)
-
--- TODO: coerces to biprefunctor or extends biprefunctor
-
-namespace Biprefunctor
-
-infixl:50 " ⥤Q₂ " => Biprefunctor
-
-def id (r : α → α → Sort v) : Biprefunctor r r where
-  objIn a _ := a
-  objOut _ b := b
-  map := _root_.id
-
-notation "𝟭Q₂" => id
-
-@[simp]
-theorem objIn_def (r : α → α → Sort v) : (𝟭Q₂ r).objIn a b = a := rfl
-
-@[simp]
-theorem objOut_def (r : α → α → Sort v) : (𝟭Q₂ r).objOut a b = b := rfl
-
-@[simp]
-theorem map_id (r : α → α → Sort v) (x : r a b) : (𝟭Q₂ r).map x = x := rfl
-
-def comp (F : Biprefunctor r s) (G : Biprefunctor s t) : Biprefunctor r t where
-  objIn a b := G.objIn (F.objIn a b) (F.objOut a b)
-  objOut a b := G.objOut (F.objIn a b) (F.objOut a b)
-  map := G.map ∘ F.map
-
-infixl:60 " ⋙Q₂ " => comp
-
-@[simp]
-theorem comp_id (F : r ⥤Q₂ s) : F ⋙Q₂ 𝟭Q₂ s = F := rfl
-
-@[simp]
-theorem id_comp (F : r ⥤Q₂ s) : 𝟭Q₂ r ⋙Q₂ F = F := rfl
-
-theorem comp_assoc (F : r ⥤Q₂ s) (G : s ⥤Q₂ t) (H : t ⥤Q₂ u)
-  : (F ⋙Q₂ G) ⋙Q₂ H = F ⋙Q₂ (G ⋙Q₂ H) := rfl
-
-@[simp]
-theorem objIn_comp (F : r ⥤Q₂ s) (G : s ⥤Q₂ t)
-  : (F ⋙Q₂ G).objIn a b = G.objIn (F.objIn a b) (F.objOut a b) := rfl
-
-@[simp]
-theorem objOut_comp (F : r ⥤Q₂ s) (G : s ⥤Q₂ t)
-  : (F ⋙Q₂ G).objOut a b = G.objOut (F.objIn a b) (F.objOut a b) := rfl
-
-@[simp]
-theorem map_comp (F : r ⥤Q₂ s) (G : s ⥤Q₂ t) (x : r a b)
-  : (F ⋙Q₂ G).map x = G.map (F.map x) := rfl
-
--- def mapPath (F : r ⥤Q s) : Path r a b → Path s (F.obj a) (F.obj b)
---   | Path.nil a => Path.nil (F.obj a)
---   | Path.cons p s => Path.cons (mapPath F p) (F.map s)
-
--- @[simp]
--- theorem mapPath_nil {r : α → α → Sort*} (F : r ⥤Q s) (a : α)
---   : F.mapPath (Path.nil a) = Path.nil _ := rfl
-
--- @[simp]
--- theorem mapPath_cons {r : α → α → Sort*} (F : r ⥤Q s) (p : Path r a b) (s : r b c)
---   : F.mapPath (Path.cons p s) = Path.cons (F.mapPath p) (F.map s) := rfl
-
--- @[simp]
--- theorem comp_mapPath {r : α → α → Sort*} (F : r ⥤Q s) (G : s ⥤Q t) (p : Path r a b)
---   : (F ⋙Q G).mapPath p = G.mapPath (F.mapPath p) := by induction p <;> simp [*]
-
--- @[simp]
--- theorem mapPath_id {r : α → α → Sort*} (p : Path r a b)
---   : (𝟭Q r).mapPath p = p
---   := by induction p <;> simp [*]
-
--- @[simp]
--- theorem mapPath_comp {r : α → α → Sort*} (F : r ⥤Q s) (p : Path r a b) (q : Path r b c)
---   : F.mapPath (p.comp q) = (F.mapPath p).comp (F.mapPath q) := by
---   induction q generalizing p <;> simp [Path.comp, Prefunctor.mapPath_cons, *]
-
--- @[simp]
--- theorem mapPath_single {r : α → α → Sort*} (F : r ⥤Q s) (s : r a b)
---   : F.mapPath (Path.single s) = Path.single (F.map s) := rfl
-
--- def toPath (F : r ⥤Q s) : Path r ⥤Q Path s where
---   obj := F.obj
---   map := F.mapPath
-
--- @[simp]
--- theorem obj_toPath (F : r ⥤Q s) : (F.toPath).obj = F.obj := rfl
-
--- -- TODO: should this be a simp lemma? the other way around?
--- theorem map_toPath (F : r ⥤Q s) (p : Path r a b) : (F.toPath).map p = F.mapPath p := rfl
-
--- @[simp]
--- theorem toPath_map_nil (F : r ⥤Q s) (a)
---   : (F.toPath).map (Path.nil a) = Path.nil _ := rfl
-
--- @[simp]
--- theorem toPath_map_cons (F : r ⥤Q s) (p : Path r a b) (s : r b c)
---   : (F.toPath).map (Path.cons p s) = Path.cons ((F.toPath).map p) (F.map s) := rfl
-
--- @[simp]
--- theorem toPath_map_comp (F : r ⥤Q s) (p : Path r a b) (q : Path r b c)
---   : (F.toPath).map (p.comp q) = ((F.toPath).map p).comp ((F.toPath).map q)
---   := mapPath_comp F p q
-
--- @[simp]
--- theorem toPath_map_single (F : r ⥤Q s) (s : r a b)
---   : (F.toPath).map (Path.single s) = Path.single (F.map s) := rfl
-
--- @[simp]
--- def toPath_comp (F : r ⥤Q s) (G : s ⥤Q t) : toPath (F ⋙Q G) = toPath F ⋙Q toPath G := by
---   ext
---   . rfl
---   . simp only [obj_comp, Function.comp_apply, heq_eq_eq]
---     funext _ _ p
---     exact comp_mapPath F G p
-
--- @[simp]
--- def toPath_id : toPath (𝟭Q r) = 𝟭Q (Path r) := by
---   ext
---   . rfl
---   . simp only [obj_id, Function.comp_apply, heq_eq_eq]
---     funext _ _ p
---     exact mapPath_id p
-
-end Biprefunctor
 
 namespace Prefunctor
 
@@ -452,6 +365,25 @@ theorem map_comp (F : r ⥤Q s) (G : s ⥤Q t) (x : r a b)
   : (F ⋙Q G).map x = G.map (F.map x) := rfl
 
 theorem toLiftFun (F : r ⥤Q s) : (Rel r ⇒ Rel s) F.obj F.obj := λ_ _ ⟨p⟩ => ⟨F.map p⟩
+
+def toBimodHom (F : r ⥤Q s) : r ⥤C s where
+  objIn a _ := F.obj a
+  objOut _ b := F.obj b
+  map := F.map
+
+instance coeToBimodHom : Coe (r ⥤Q s) (r ⥤C s) := ⟨toBimodHom⟩
+
+@[simp]
+def coe_id : ↑(𝟭Q r) = (𝟭C r) := rfl
+
+@[simp]
+def coe_comp (F : r ⥤Q s) (G : s ⥤Q t) : ↑(F ⋙Q G) = (F : r ⥤C s) ⋙C (G : s ⥤C t) := rfl
+
+-- TODO: coe_inj
+
+end Prefunctor
+
+namespace Prefunctor
 
 def mapPath (F : r ⥤Q s) : Path r a b → Path s (F.obj a) (F.obj b)
   | Path.nil a => Path.nil (F.obj a)
@@ -526,7 +458,17 @@ def toPath_id : toPath (𝟭Q r) = 𝟭Q (Path r) := by
     funext _ _ p
     exact mapPath_id p
 
+-- TODO: mapSPath; toSPath
+
 end Prefunctor
+
+namespace SPath
+
+def toPathF : SPath r ⥤Q Path r where
+  obj := _root_.id
+  map := toPath
+
+end SPath
 
 section Quiver
 
@@ -599,19 +541,102 @@ theorem toQuiver_ofSrc_apply {a b : Src r} (p : Quiver.Path a b)
 
 end Path
 
-namespace Edge
+namespace Sum
 
-variable {r : α → α → Sort v}
+def inlH {r : α → β → Type*} {s : α → β → Type*} : r ⥤C Sum r s where
+  objIn a _ := a
+  objOut _ b := b
+  map := inl
 
-def inlF (r : α → α → Sort v) : r ⥤Q Edge r where
-  obj := _root_.id
-  map := Edge.inl
+def inlF {r s : α → α → Type*} : r ⥤Q Sum r s where
+  obj := id
+  map := inl
 
-def swap : Edge r a b -> Edge r b a
+@[simp]
+theorem coe_inlF : (@inlF _ r s : r ⥤C Sum r s) = inlH := rfl
+
+def inrH {r : α → β → Type*} {s : α → β → Type*} : s ⥤C Sum r s where
+  objIn a _ := a
+  objOut _ b := b
+  map := inr
+
+def inrF {r s : α → α → Type*} : s ⥤Q Sum r s where
+  obj := id
+  map := inr
+
+@[simp]
+theorem coe_inrF : (@inrF _ r s : s ⥤C Sum r s) = inrH := rfl
+
+@[simp]
+def swap : Sum r s a b -> Sum s r a b
   | inl x => inr x
   | inr x => inl x
 
-end Edge
+@[simp]
+theorem swap_comp_swap : swap ∘ swap = @_root_.id (Sum r s a b) := by
+  funext x
+  cases x <;> rfl
+
+@[simp]
+theorem swap_swap {p : Sum r s a b} : (swap (swap p)) = p := by cases p <;> rfl
+
+def swapH : Sum r s ⥤C Sum s r where
+  objIn a _ := a
+  objOut _ b := b
+  map := swap
+
+@[simp]
+theorem swapH_comp_swapH : swapH ⋙C swapH = 𝟭C (Sum r s) := by
+  ext
+  . rfl
+  . rfl
+  . simp only [swapH, BimodHom.objIn_comp, BimodHom.objOut_comp, heq_eq_eq]
+    funext _ _ p
+    cases p <;> rfl
+
+def swapF : Sum r s ⥤Q Sum s r where
+  obj := id
+  map := swap
+
+@[simp]
+theorem swapF_comp_swapF : swapF ⋙Q swapF = 𝟭Q (Sum r s) := by
+  ext
+  . rfl
+  . simp only [swapF, Function.comp_apply, heq_eq_eq]
+    funext _ _ p
+    cases p <;> rfl
+
+theorem coe_swapF : (@swapF _ r s : Sum r s ⥤C Sum s r) = swapH := rfl
+
+@[simp]
+def flip : Sum r (Op r) a b → Sum r (Op r) b a
+  | inl x => inr x
+  | inr x => inl x
+
+@[simp]
+def flip_flip {p : Sum r (Op r) a b} : flip (flip p) = p := by
+  cases p <;> rfl
+
+@[simp]
+theorem flip_comp_flip : flip ∘ flip = @_root_.id (Sum r (Op r) a b) := by
+  funext x
+  cases x <;> rfl
+
+def flipH : Sum r (Op r) ⥤C Sum r (Op r) where
+  objIn _ a := a
+  objOut b _ := b
+  map := flip
+
+@[simp]
+def flipH_comp_flipH : flipH ⋙C flipH = 𝟭C (Sum r (Op r)) := by
+  ext
+  . rfl
+  . rfl
+  . simp only [flipH, BimodHom.objIn_comp, BimodHom.objOut_comp, heq_eq_eq]
+    funext _ _ p
+    cases p <;> rfl
+
+end Sum
 
 namespace Prefunctor
 
