@@ -1,6 +1,9 @@
 import Mathlib.Logic.Relation
 import Mathlib.Combinatorics.Quiver.Path
 
+-- TODO: Bitransformer ==> Transformer (remove original)
+-- TODO: remove Biprefunctor; use Transformer instead
+
 namespace Corr
 
 section Basic
@@ -10,10 +13,19 @@ def Rel {α : Sort*} {β : Sort*} (r : α → β → Sort*) : α → β → Prop
 def Comp {α : Type*} {β : Type*} {γ : Type*} (r : α → β → Type*) (s : β → γ → Type*)
   : α → γ → Type _ := λa c => Σb, (_ : r a b) ×' s b c
 
+def Swap {α : Sort u} {β : Sort v} (r : α → β → Sort w) : β → α → Sort w := λb a => r a b
+
+@[ext]
 structure Transformer (r : α → β → Sort v) (s : α' → β' → Sort w) where
   objIn : α → α'
   objOut : β → β'
   map : r a b → s (objIn a) (objOut b)
+
+@[ext]
+structure Bitransformer (r : α → β → Sort v) (s : α' → β' → Sort w) where
+  objIn : α → β → α'
+  objOut : α → β → β'
+  map : r a b → s (objIn a b) (objOut a b)
 
 end Basic
 
@@ -62,9 +74,13 @@ inductive Path.{u, v} {α : Type u} (r : α → α → Sort v) : α → α → S
   | nil (a) : Path r a a
   | cons : Path r a b → r b c → Path r a c
 
-inductive TransGen.{u, v} {α : Type u} (r : α → α → Sort v) : α → α → Sort (max (u + 1) v)
-  | single : r a b → TransGen r a b
-  | cons : TransGen r a b → r b c → TransGen r a c
+inductive SPath.{u, v} {α : Type u} (r : α → α → Sort v) : α → α → Sort (max (u + 1) v)
+  | single : r a b → SPath r a b
+  | cons : SPath r a b → r b c → SPath r a c
+
+inductive Edge.{u, v} {α : Type u} (r : α → α → Sort v) : α → α → Sort (max (u + 1) v)
+  | inl : r a b → Edge r a b
+  | inr : r a b → Edge r b a
 
 section Rel
 
@@ -117,6 +133,10 @@ theorem cast_cast (ha : a = a') (hb : b = b') (ha' : a' = a'') (hb' : b' = b'') 
   : cast ha' hb' (cast ha hb p) = cast (ha ▸ ha') (hb ▸ hb') p
   := by cases ha; cases ha'; cases hb; cases hb'; rfl
 
+@[simp]
+theorem cast_nil {ha : a = b} {ha' : a = c}
+  : cast ha ha' (@nil _ r a) = of_eq (ha.symm.trans ha') := by cases ha; rfl
+
 theorem cast_cons {ha : a = a'} {hc : c = c'} {p : Path r a b} {s : r b c}
   : cast ha hc (cons p s) = cons (cast ha rfl p) (hc ▸ s)
   := by cases ha; cases hc; rfl
@@ -165,10 +185,10 @@ theorem nil_comp (p : Path r a b) : comp (nil _) p = p := by induction p with
   | cons => simp [comp_cons, *]
 
 theorem comp_assoc (p : Path r a b) (q : Path r b c) (s : Path r c d)
-  : comp p (comp q s) = comp (comp p q) s := by induction s generalizing p <;> simp [comp_cons, *]
+  : comp p (comp q s) = comp (comp p q) s := by induction s generalizing p <;> simp [*]
 
 theorem cast_comp : cast ha hc (comp p q) = comp (cast ha hb p) (cast hb hc q)
-  := by cases ha; cases hb; cases hc; induction q generalizing p <;> simp [comp, *]
+  := by cases ha; cases hb; cases hc; rfl
 
 def snoc (s : r a b) : Path r b c → Path r a c := comp (single s)
 
@@ -185,10 +205,213 @@ instance corrTransPath : Trans r (Path r) (Path r) where
 
 end Path
 
+namespace SPath
+
+variable {r : α → α → Sort v}
+
+def cast (ha : a = a') (hb : b = b') (p : SPath r a b) : SPath r a' b'
+  := ha ▸ hb ▸ p
+
+@[simp]
+def cast_trg (p : SPath r a b) (h : b = c) : SPath r a c := cast rfl h p
+
+@[simp]
+def cast_src (h : a = b) (p : SPath r b c) : SPath r a c := cast h.symm rfl p
+
+@[simp]
+theorem cast_cast (ha : a = a') (hb : b = b') (ha' : a' = a'') (hb' : b' = b'') (p : SPath r a b)
+  : cast ha' hb' (cast ha hb p) = cast (ha ▸ ha') (hb ▸ hb') p
+  := by cases ha; cases ha'; cases hb; cases hb'; rfl
+
+theorem cast_single (ha : a = a') (hb : b = b') (s : r a b)
+  : cast ha hb (single s) = single (ha ▸ hb ▸ s)
+  := by cases ha; cases hb; rfl
+
+theorem cast_cons {ha : a = a'} {hc : c = c'} {p : SPath r a b} {s : r b c}
+  : cast ha hc (cons p s) = cons (cast ha rfl p) (hc ▸ s)
+  := by cases ha; cases hc; rfl
+
+theorem cast_cons' {ha : a = a'} {hb : b = b'} {p : SPath r a b} {s : r b' c}
+ : cons (cast ha hb p) s = cast ha rfl (cons p (hb ▸ s))
+  := by cases ha; cases hb; rfl
+
+@[simp]
+theorem cast_rfl (p : SPath r a b) : cast rfl rfl p = p := rfl
+
+def comp : SPath r a b → SPath r b c → SPath r a c
+  | p, single s => cons p s
+  | p, cons q s => (comp p q).cons s
+
+@[simp]
+theorem comp_single (p : SPath r a b) (s : r b c) : comp p (single s) = cons p s := rfl
+
+@[simp]
+theorem comp_cons (p : SPath r a b) (q : SPath r b c) (s : r c d)
+  : comp p (cons q s) = cons (comp p q) s := rfl
+
+@[simp]
+theorem comp_assoc (p : SPath r a b) (q : SPath r b c) (s : SPath r c d)
+  : comp p (comp q s) = comp (comp p q) s := by induction s generalizing p <;> simp [*]
+
+@[simp]
+theorem cast_comp : cast ha hc (comp p q) = comp (cast ha hb p) (cast hb hc q)
+  := by cases ha; cases hb; cases hc; rfl
+
+def snoc (s : r a b) : SPath r b c → SPath r a c := comp (single s)
+
+@[simp]
+def toPath : SPath r a b → Path r a b
+  | single s => Path.single s
+  | cons p s => Path.cons p.toPath s
+
+theorem toPath_single (s : r a b) : (single s).toPath = Path.single s := rfl
+
+theorem toPath_cons (p : SPath r a b) (s : r b c) : (cons p s).toPath = Path.cons p.toPath s := rfl
+
+theorem toPath_comp (p : SPath r a b) (q : SPath r b c)
+  : (comp p q).toPath = Path.comp p.toPath q.toPath := by
+  induction q generalizing p <;> simp [Path.comp, *]
+
+theorem toPath_snoc (s : r a b) (p : SPath r b c) : (snoc s p).toPath = p.toPath.snoc s
+  := by simp [snoc, toPath_comp, Path.snoc]
+
+end SPath
+
+@[ext]
+structure Biprefunctor (r : α → α → Sort v) (s : β → β → Sort w) where
+  objIn : α → α → β
+  objOut : α → α → β
+  map : r a b → s (objIn a b) (objOut a b)
+
 @[ext]
 structure Prefunctor (r : α → α → Sort v) (s : β → β → Sort w) where
   obj : α → β
   map : r a b → s (obj a) (obj b)
+
+-- TODO: coerces to biprefunctor or extends biprefunctor
+
+namespace Biprefunctor
+
+infixl:50 " ⥤Q₂ " => Biprefunctor
+
+def id (r : α → α → Sort v) : Biprefunctor r r where
+  objIn a _ := a
+  objOut _ b := b
+  map := _root_.id
+
+notation "𝟭Q₂" => id
+
+@[simp]
+theorem objIn_def (r : α → α → Sort v) : (𝟭Q₂ r).objIn a b = a := rfl
+
+@[simp]
+theorem objOut_def (r : α → α → Sort v) : (𝟭Q₂ r).objOut a b = b := rfl
+
+@[simp]
+theorem map_id (r : α → α → Sort v) (x : r a b) : (𝟭Q₂ r).map x = x := rfl
+
+def comp (F : Biprefunctor r s) (G : Biprefunctor s t) : Biprefunctor r t where
+  objIn a b := G.objIn (F.objIn a b) (F.objOut a b)
+  objOut a b := G.objOut (F.objIn a b) (F.objOut a b)
+  map := G.map ∘ F.map
+
+infixl:60 " ⋙Q₂ " => comp
+
+@[simp]
+theorem comp_id (F : r ⥤Q₂ s) : F ⋙Q₂ 𝟭Q₂ s = F := rfl
+
+@[simp]
+theorem id_comp (F : r ⥤Q₂ s) : 𝟭Q₂ r ⋙Q₂ F = F := rfl
+
+theorem comp_assoc (F : r ⥤Q₂ s) (G : s ⥤Q₂ t) (H : t ⥤Q₂ u)
+  : (F ⋙Q₂ G) ⋙Q₂ H = F ⋙Q₂ (G ⋙Q₂ H) := rfl
+
+@[simp]
+theorem objIn_comp (F : r ⥤Q₂ s) (G : s ⥤Q₂ t)
+  : (F ⋙Q₂ G).objIn a b = G.objIn (F.objIn a b) (F.objOut a b) := rfl
+
+@[simp]
+theorem objOut_comp (F : r ⥤Q₂ s) (G : s ⥤Q₂ t)
+  : (F ⋙Q₂ G).objOut a b = G.objOut (F.objIn a b) (F.objOut a b) := rfl
+
+@[simp]
+theorem map_comp (F : r ⥤Q₂ s) (G : s ⥤Q₂ t) (x : r a b)
+  : (F ⋙Q₂ G).map x = G.map (F.map x) := rfl
+
+-- def mapPath (F : r ⥤Q s) : Path r a b → Path s (F.obj a) (F.obj b)
+--   | Path.nil a => Path.nil (F.obj a)
+--   | Path.cons p s => Path.cons (mapPath F p) (F.map s)
+
+-- @[simp]
+-- theorem mapPath_nil {r : α → α → Sort*} (F : r ⥤Q s) (a : α)
+--   : F.mapPath (Path.nil a) = Path.nil _ := rfl
+
+-- @[simp]
+-- theorem mapPath_cons {r : α → α → Sort*} (F : r ⥤Q s) (p : Path r a b) (s : r b c)
+--   : F.mapPath (Path.cons p s) = Path.cons (F.mapPath p) (F.map s) := rfl
+
+-- @[simp]
+-- theorem comp_mapPath {r : α → α → Sort*} (F : r ⥤Q s) (G : s ⥤Q t) (p : Path r a b)
+--   : (F ⋙Q G).mapPath p = G.mapPath (F.mapPath p) := by induction p <;> simp [*]
+
+-- @[simp]
+-- theorem mapPath_id {r : α → α → Sort*} (p : Path r a b)
+--   : (𝟭Q r).mapPath p = p
+--   := by induction p <;> simp [*]
+
+-- @[simp]
+-- theorem mapPath_comp {r : α → α → Sort*} (F : r ⥤Q s) (p : Path r a b) (q : Path r b c)
+--   : F.mapPath (p.comp q) = (F.mapPath p).comp (F.mapPath q) := by
+--   induction q generalizing p <;> simp [Path.comp, Prefunctor.mapPath_cons, *]
+
+-- @[simp]
+-- theorem mapPath_single {r : α → α → Sort*} (F : r ⥤Q s) (s : r a b)
+--   : F.mapPath (Path.single s) = Path.single (F.map s) := rfl
+
+-- def toPath (F : r ⥤Q s) : Path r ⥤Q Path s where
+--   obj := F.obj
+--   map := F.mapPath
+
+-- @[simp]
+-- theorem obj_toPath (F : r ⥤Q s) : (F.toPath).obj = F.obj := rfl
+
+-- -- TODO: should this be a simp lemma? the other way around?
+-- theorem map_toPath (F : r ⥤Q s) (p : Path r a b) : (F.toPath).map p = F.mapPath p := rfl
+
+-- @[simp]
+-- theorem toPath_map_nil (F : r ⥤Q s) (a)
+--   : (F.toPath).map (Path.nil a) = Path.nil _ := rfl
+
+-- @[simp]
+-- theorem toPath_map_cons (F : r ⥤Q s) (p : Path r a b) (s : r b c)
+--   : (F.toPath).map (Path.cons p s) = Path.cons ((F.toPath).map p) (F.map s) := rfl
+
+-- @[simp]
+-- theorem toPath_map_comp (F : r ⥤Q s) (p : Path r a b) (q : Path r b c)
+--   : (F.toPath).map (p.comp q) = ((F.toPath).map p).comp ((F.toPath).map q)
+--   := mapPath_comp F p q
+
+-- @[simp]
+-- theorem toPath_map_single (F : r ⥤Q s) (s : r a b)
+--   : (F.toPath).map (Path.single s) = Path.single (F.map s) := rfl
+
+-- @[simp]
+-- def toPath_comp (F : r ⥤Q s) (G : s ⥤Q t) : toPath (F ⋙Q G) = toPath F ⋙Q toPath G := by
+--   ext
+--   . rfl
+--   . simp only [obj_comp, Function.comp_apply, heq_eq_eq]
+--     funext _ _ p
+--     exact comp_mapPath F G p
+
+-- @[simp]
+-- def toPath_id : toPath (𝟭Q r) = 𝟭Q (Path r) := by
+--   ext
+--   . rfl
+--   . simp only [obj_id, Function.comp_apply, heq_eq_eq]
+--     funext _ _ p
+--     exact mapPath_id p
+
+end Biprefunctor
 
 namespace Prefunctor
 
@@ -375,6 +598,20 @@ theorem toQuiver_ofSrc_apply {a b : Src r} (p : Quiver.Path a b)
     : toQuiver (ofSrc p) = p := toQuiver_ofQuiver_apply p
 
 end Path
+
+namespace Edge
+
+variable {r : α → α → Sort v}
+
+def inlF (r : α → α → Sort v) : r ⥤Q Edge r where
+  obj := _root_.id
+  map := Edge.inl
+
+def swap : Edge r a b -> Edge r b a
+  | inl x => inr x
+  | inr x => inl x
+
+end Edge
 
 namespace Prefunctor
 
