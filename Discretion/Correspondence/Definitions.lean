@@ -1,8 +1,8 @@
 import Mathlib.Logic.Relation
 import Mathlib.Combinatorics.Quiver.Path
 
--- TODO: Bitransformer ==> Transformer (remove original)
--- TODO: remove Biprefunctor; use Transformer instead
+-- TODO: Bitransformer ==> BimodHom
+-- TODO: remove Transformer, Biprefunctor; use BimodHom as necessary
 
 namespace Corr
 
