@@ -244,6 +244,12 @@ theorem Nat.liftnWk_one : liftnWk 1 = liftWk := by simp [liftnWk_succ', liftnWk_
 
 theorem Nat.stepnWk_one : stepnWk 1 = stepWk := rfl
 
+theorem Nat.liftnWk_two : liftnWk 2 = liftWk ∘ liftWk
+  := by simp [liftnWk_succ', liftnWk_one, liftnWk_zero]
+
+theorem Nat.liftnWk_two_apply (ρ) : liftnWk 2 ρ = liftWk (liftWk ρ) := by
+  rw [liftnWk_two]; rfl
+
 theorem Nat.liftnWk_eq_iterate_liftWk : liftnWk = Nat.iterate liftWk := by
   funext n
   induction n with
