@@ -208,22 +208,6 @@ instance DiscreteBotOrder.toDiscreteBoundedOrder {α} [LE α] [Bot α] [Top α] 
   : DiscreteBoundedOrder α where
   le_bot_or_top_or_eq a b h := (DiscreteBotOrder.le_bot_or_eq a b h).elim Or.inl (Or.inr ∘ Or.inr)
 
-instance WithBot.instTop {α} [t : Top α] : Top (WithBot α) where
-  top := t.top
-
--- TODO: equality lemmas
-
-instance WithBot.instOrderTop {α} [LE α] [OrderTop α] : OrderTop (WithBot α) where
-  le_top | ⊥ => by simp | some a => by simp [instTop, coe_le_coe]
-
-instance WithTop.instBot {α} [b : Bot α] : Bot (WithTop α) where
-  bot := b.bot
-
--- TODO: equality lemmas
-
-instance WithTop.instOrderBot {α} [LE α] [OrderBot α] : OrderBot (WithTop α) where
-  bot_le | ⊤ => by simp | some a => by simp [instBot, coe_le_coe]
-
 theorem DiscreteBotOrder.withTop_le {α} [LE α] [αb : Bot α] [DiscreteBotOrder α]
   : {a b : WithTop α} → a ≤ b → a = ⊥ ∨ b = ⊤ ∨ a = b
   | ⊤, _ => by aesop
