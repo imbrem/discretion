@@ -63,6 +63,9 @@ theorem Nat.liftWk_comp_succ (ρ : Nat -> Nat): liftWk ρ ∘ Nat.succ = Nat.suc
 
 theorem Nat.liftWk_comp_succ' (ρ : Nat -> Nat): liftWk ρ ∘ Nat.succ = stepWk ρ := rfl
 
+@[simp]
+theorem Nat.liftWk_succ_comp_succ : (Nat.liftWk Nat.succ) ∘ Nat.succ = (· + 2) := rfl
+
 theorem Nat.liftWk_ne_stepWk (ρ σ : Nat -> Nat) : liftWk ρ ≠ stepWk σ :=
   have H: (liftWk ρ 0) ≠ (stepWk σ 0) := by simp [liftWk, stepWk]
   λH' => H (by rw [H'])
