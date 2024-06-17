@@ -88,6 +88,23 @@ theorem Fin.toNatWk_comp {n m k} (ρ : Fin m -> Fin k) (σ : Fin n -> Fin m)
   simp only [is_lt, ↓reduceDite, Fin.eta]
   simp_arith [Nat.add_sub_cancel]
 
+theorem Fin.toNatWk_comp_lower_bound {n m} (ρ : Fin n -> Fin m) (σ : ℕ → ℕ) (hσ : ∀k, n ≤ σ k)
+    : toNatWk ρ ∘ σ = (· - n + m) ∘ σ := by
+  funext k
+  simp [toNatWk, Nat.not_lt_of_le (hσ k)]
+
+theorem Fin.toNatWk_perm_comp_lower_bound {n} (ρ : Fin n -> Fin n) (σ : ℕ → ℕ) (hσ : ∀k, n ≤ σ k)
+    : toNatWk ρ ∘ σ = σ := by
+  rw [toNatWk_comp_lower_bound _ _ hσ]
+  funext k
+  simp [Nat.sub_add_cancel (hσ k)]
+
+theorem Fin.toNatWk_comp_add {n m} (ρ : Fin n -> Fin m)
+    : toNatWk ρ ∘ (· + n) = (· + m) := by
+  rw [toNatWk_comp_lower_bound _ _ (by simp)]
+  funext k
+  simp
+
 theorem Fin.toNatWk_swapAdd_comp_liftnWk_add_apply (n m i : ℕ)
   : toNatWk (swapAdd n m) (n.liftnWk (· + m) i) = i + m := by
   simp [toNatWk, Nat.liftnWk, swapAdd, addCases]
