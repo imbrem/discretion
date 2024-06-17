@@ -24,6 +24,11 @@ theorem Nat.liftBot_comp_liftWk (εs : ℕ → ε) (ρ)
   : Nat.liftBot εs ∘ Nat.liftWk ρ = Nat.liftBot (εs ∘ ρ)
   := funext (Nat.liftBot_liftWk εs ρ)
 
+@[simp]
+theorem Nat.liftBot_comp_succ (εs : ℕ → ε)
+  : Nat.liftBot εs ∘ Nat.succ = εs
+  := rfl
+
 def Nat.liftnBot (n : ℕ) (εs : ℕ → ε) : ℕ → ε
   := λm => if m < n then ⊥ else εs (m - n)
 
