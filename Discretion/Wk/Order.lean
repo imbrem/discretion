@@ -1,6 +1,8 @@
 import Mathlib.Order.Basic
 import Mathlib.Order.Monotone.Basic
 
+import Discretion.Wk.Nat
+
 section Bot
 
 variable [Bot ε]
@@ -14,8 +16,24 @@ theorem Nat.liftBot_mono [PartialOrder ε] : Monotone (@Nat.liftBot ε _) :=
 
 theorem Nat.liftBot_zero : Nat.liftBot εs 0 = (⊥ : ε) := rfl
 
+theorem Nat.liftBot_liftWk (εs : ℕ → ε) (ρ) (k)
+  : Nat.liftBot εs (Nat.liftWk ρ k) = Nat.liftBot (εs ∘ ρ) k
+  := by cases k <;> rfl
+
+theorem Nat.liftBot_comp_liftWk (εs : ℕ → ε) (ρ)
+  : Nat.liftBot εs ∘ Nat.liftWk ρ = Nat.liftBot (εs ∘ ρ)
+  := funext (Nat.liftBot_liftWk εs ρ)
+
 def Nat.liftnBot (n : ℕ) (εs : ℕ → ε) : ℕ → ε
   := λm => if m < n then ⊥ else εs (m - n)
+
+theorem Nat.liftnBot_liftnWk (n : ℕ) (εs : ℕ → ε) (ρ) (k)
+  : Nat.liftnBot n εs (Nat.liftnWk n ρ k) = Nat.liftnBot n (εs ∘ ρ) k
+  := by simp only [Nat.liftnWk, Nat.liftnBot]; split <;> simp
+
+theorem Nat.liftnBot_comp_liftnWk (n : ℕ) (εs : ℕ → ε)
+  : Nat.liftnBot n εs ∘ Nat.liftnWk n ρ = Nat.liftnBot n (εs ∘ ρ)
+  := funext (Nat.liftnBot_liftnWk n εs ρ)
 
 theorem Nat.liftnBot_mono [PartialOrder ε] (n : ℕ) : Monotone (@Nat.liftnBot ε _ n) :=
   λ_ _ h k => by if h' : k < n then simp [liftnBot, h'] else simp [liftnBot, h', h (k - n)]
