@@ -388,6 +388,12 @@ theorem Fin.addCases_comp_swapAdd (l: Fin n → α) (r : Fin m → α)
 theorem Fin.addCases_comp_symm_swapAdd (l: Fin n → α) (r : Fin m → α)
   : addCases l r ∘ (swapAdd n m).symm = addCases r l := addCases_comp_addCases_natAdd_castAdd l r
 
+theorem Fin.addCases_zero {n} (l : Fin n → α) (r : Fin 0 → α)
+  : @addCases n 0 _ l r = l := by
+  funext i
+  simp only [addCases, Nat.add_zero, is_lt, ↓reduceDite]
+  rfl
+
 -- TODO: addCases associator + inverse associator, to go with symmetry...
 
 -- TODO: addCases unitors...
