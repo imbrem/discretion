@@ -109,7 +109,13 @@ theorem Nat.liftnBot_succ_apply' (n : ℕ) (εs : ℕ → ε) : Nat.liftnBot (n 
   rw [Nat.liftnBot_succ']
   rfl
 
--- theorem Nat.liftnBot_one : Nat.liftnBot 1 = @Nat.liftBot ε _ := sorry
+theorem Nat.liftnBot_one : Nat.liftnBot 1 = @Nat.liftBot ε _ := by simp [Nat.liftnBot_succ]
+
+theorem Nat.liftnBot_two : Nat.liftnBot 2 = (@Nat.liftBot ε _) ∘ Nat.liftBot := by
+  simp [Nat.liftnBot_succ, Nat.liftnBot_one]
+
+theorem Nat.liftnBot_two_apply (εs : ℕ → ε) : Nat.liftnBot 2 εs = Nat.liftBot (Nat.liftBot εs) := by
+  simp [Nat.liftnBot_two]
 
 end Bot
 
