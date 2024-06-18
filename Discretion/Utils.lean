@@ -424,11 +424,60 @@ theorem Fin.addCases_comp_swapAdd (l: Fin n → α) (r : Fin m → α)
 theorem Fin.addCases_comp_symm_swapAdd (l: Fin n → α) (r : Fin m → α)
   : addCases l r ∘ (swapAdd n m).symm = addCases r l := addCases_comp_addCases_natAdd_castAdd l r
 
-theorem Fin.addCases_zero {n} (l : Fin n → α) (r : Fin 0 → α)
+theorem Fin.addCases_zero {n} {α : Fin n → Type _}
+  (l : (i : Fin n) → α i) (r : (i : Fin 0) → α (Fin.natAdd n i))
   : @addCases n 0 _ l r = l := by
   funext i
   simp only [addCases, Nat.add_zero, is_lt, ↓reduceDite]
   rfl
+
+theorem Fin.addCases_zero_right {n} (l : Fin 0 → α) (r : Fin n → α)
+  : @addCases 0 n (λ_ => α) l r = r ∘ cast (by simp) := by
+  funext i
+  simp [addCases, subNat, cast]
+
+theorem Fin.addCases_comp_castAdd {n m} (l : Fin n → α) (r : Fin m → α)
+  : addCases l r ∘ castAdd m = l := by funext i; simp
+
+theorem Fin.addCases_comp_natAdd {n m} (l : Fin n → α) (r : Fin m → α)
+  : addCases l r ∘ natAdd n = r := by funext i; simp
+
+theorem Fin.addCases_surjective_left {n m} {l : Fin n → α}
+  (hl : Function.Surjective l) (r : Fin m → α)
+  : Function.Surjective (addCases l r) := λa => let ⟨i, hi⟩ := hl a; ⟨i.castAdd _, by simp [hi]⟩
+
+theorem Fin.addCases_surjective_right {n m} (l : Fin n → α) {r : Fin m → α}
+  (hr : Function.Surjective r)
+  : Function.Surjective (addCases l r) := λa => let ⟨i, hi⟩ := hr a; ⟨i.natAdd _, by simp [hi]⟩
+
+theorem Fin.addCases_injective {n m} {l : Fin n → α} {r : Fin m → α}
+  (hl : Function.Injective l) (hr : Function.Injective r)
+  (hlr : Disjoint (Set.range l) (Set.range r))
+  : Function.Injective (addCases l r) := λa b => by
+    simp only [addCases, eq_rec_constant]
+    split
+    case isTrue ha =>
+      split
+      case isTrue hb =>
+        intro h
+        have h := hl h;
+        simp only [castLT, mk.injEq, Fin.ext_iff] at *
+        exact h
+      case isFalse hb =>
+        intro h
+        exact (Set.disjoint_right.mp hlr ⟨_, rfl⟩ ⟨_, h⟩).elim
+    case isFalse ha =>
+      split
+      case isTrue hb =>
+        intro h
+        exact (Set.disjoint_left.mp hlr ⟨_, rfl⟩ ⟨_, h⟩).elim
+      case isFalse hb =>
+        intro h
+        have h := hr h;
+        simp only [subNat, cast,mk.injEq, Fin.ext_iff] at *
+        rw [<-@Nat.add_left_inj _ _ n] at h
+        rw [Nat.sub_add_cancel (Nat.le_of_not_lt ha), Nat.sub_add_cancel (Nat.le_of_not_lt hb)] at h
+        exact h
 
 -- TODO: addCases associator + inverse associator, to go with symmetry...
 
