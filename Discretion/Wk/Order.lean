@@ -24,6 +24,10 @@ theorem Nat.liftBot_comp_liftWk (εs : ℕ → ε) (ρ)
   : Nat.liftBot εs ∘ Nat.liftWk ρ = Nat.liftBot (εs ∘ ρ)
   := funext (Nat.liftBot_liftWk εs ρ)
 
+theorem Nat.liftBot_succ (εs : ℕ → ε)
+  : (Nat.liftBot εs (n + 1)) = εs n
+  := rfl
+
 @[simp]
 theorem Nat.liftBot_comp_succ (εs : ℕ → ε)
   : Nat.liftBot εs ∘ Nat.succ = εs
@@ -39,6 +43,15 @@ theorem Nat.liftnBot_liftnWk (n : ℕ) (εs : ℕ → ε) (ρ) (k)
 theorem Nat.liftnBot_comp_liftnWk (n : ℕ) (εs : ℕ → ε)
   : Nat.liftnBot n εs ∘ Nat.liftnWk n ρ = Nat.liftnBot n (εs ∘ ρ)
   := funext (Nat.liftnBot_liftnWk n εs ρ)
+
+theorem Nat.liftnBot_add (n : ℕ) (εs : ℕ → ε) (i)
+  : Nat.liftnBot n εs (i + n) = εs i
+  := by simp [liftnBot]
+
+@[simp]
+theorem Nat.liftnBot_comp_add (n : ℕ) (εs : ℕ → ε)
+  : Nat.liftnBot n εs ∘ (· + n) = εs
+  := funext (Nat.liftnBot_add n εs)
 
 theorem Nat.liftnBot_mono [PartialOrder ε] (n : ℕ) : Monotone (@Nat.liftnBot ε _ n) :=
   λ_ _ h k => by if h' : k < n then simp [liftnBot, h'] else simp [liftnBot, h', h (k - n)]
