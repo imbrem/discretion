@@ -243,6 +243,17 @@ theorem Fin.sup_addCases [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (g
 theorem Fin.sup_addCases_swap [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (g : Fin m → α)
   : sup (addCases f g) = sup (addCases g f) := by simp only [Fin.sup_addCases, sup_comm]
 
+theorem Fin.sup_comp_le [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (ρ : Fin m → Fin n)
+  : sup (f ∘ ρ) ≤ sup f
+  := sup_le _ _ (λi => elem_le_sup f (ρ i))
+
+theorem Fin.sup_comp_surj [SemilatticeSup α] [OrderBot α]
+  (f : Fin n → α) {ρ : Fin m → Fin n} (hρ : Function.Surjective ρ)
+  : sup (f ∘ ρ) = sup f
+  := le_antisymm
+    (sup_comp_le f ρ)
+    (sup_le _ _ (λi => have ⟨j, hj⟩ := hρ i; hj ▸ elem_le_sup (f ∘ ρ) j))
+
 -- TODO: move to Tuple?
 
 -- TODO: do Finset-style max'?
