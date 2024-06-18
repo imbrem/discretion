@@ -218,6 +218,31 @@ theorem Fin.sup_le_sup [SemilatticeSup α] [OrderBot α] (f g : Fin n → α)
     rw [Fin.sup_succ, Fin.sup_succ]
     exact _root_.sup_le_sup (h 0) (I _ _ (λi => h i.succ))
 
+theorem Fin.sup_left_le_sup_addCases [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (g : Fin m → α)
+  : sup f ≤ sup (addCases f g) := Fin.sup_le _ _ (λi => by
+    have h := addCases_left i ▸ elem_le_sup (addCases f g) (i.castAdd _)
+    exact h)
+
+theorem Fin.sup_right_le_sup_addCases [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (g : Fin m → α)
+  : sup g ≤ sup (addCases f g) := Fin.sup_le _ _ (λi => by
+    have h := addCases_right i ▸ elem_le_sup (addCases f g) (i.natAdd _)
+    exact h)
+
+theorem Fin.sup_addCases [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (g : Fin m → α)
+  : sup (addCases f g) = sup f ⊔ sup g
+  := le_antisymm
+    (Fin.sup_le _ _ (λi => by
+      simp only [addCases, eq_rec_constant]
+      split
+      . apply le_sup_of_le_left
+        apply elem_le_sup
+      . apply le_sup_of_le_right
+        apply elem_le_sup))
+    (sup_le_iff.mpr ⟨sup_left_le_sup_addCases f g, sup_right_le_sup_addCases f g⟩)
+
+theorem Fin.sup_addCases_swap [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (g : Fin m → α)
+  : sup (addCases f g) = sup (addCases g f) := by simp only [Fin.sup_addCases, sup_comm]
+
 -- TODO: move to Tuple?
 
 -- TODO: do Finset-style max'?
