@@ -482,3 +482,123 @@ theorem Fin.addCases_injective {n m} {l : Fin n → α} {r : Fin m → α}
 -- TODO: addCases associator + inverse associator, to go with symmetry...
 
 -- TODO: addCases unitors...
+
+def Fin.num_missed_before (ρ : Fin n → Fin m) : ℕ → ℕ
+  | 0 => 0
+  | k + 1 => (if ∃i : Fin n, ρ i = k then 0 else 1) + num_missed_before ρ k
+
+@[simp]
+theorem Fin.num_missed_before_zero (ρ : Fin n → Fin m)
+  : num_missed_before ρ 0 = 0 := rfl
+
+def Fin.num_missed (ρ : Fin n → Fin m) : ℕ := num_missed_before ρ m
+
+@[simp]
+theorem Fin.num_missed_to_zero (ρ : Fin n → Fin 0)
+  : num_missed ρ = 0 := by simp [num_missed]
+
+@[simp]
+theorem Fin.num_missed_before_from_zero (ρ : Fin 0 → Fin m)
+  : num_missed_before ρ k = k := by induction k with
+  | zero => rfl
+  | succ k I => simp [num_missed_before, Nat.add_comm, I]
+
+@[simp]
+theorem Fin.num_missed_from_zero (ρ : Fin 0 → Fin m)
+  : num_missed ρ = m := num_missed_before_from_zero ρ
+
+def Fin.num_hit_before (ρ : Fin n → Fin m) : ℕ → ℕ
+  | 0 => 0
+  | k + 1 => (if ∃i : Fin n, ρ i = k then 1 else 0) + num_hit_before ρ k
+
+def Fin.num_hit (ρ : Fin n → Fin m) : ℕ := num_hit_before ρ m
+
+theorem Fin.num_missed_before_add_num_hit_before (ρ : Fin n → Fin m) (k : ℕ)
+  : num_missed_before ρ k + num_hit_before ρ k = k := by
+  induction k with
+  | zero => simp [num_missed_before, num_hit_before]
+  | succ n I =>
+    simp only [num_missed_before, num_hit_before]
+    split <;> simp_arith [I]
+
+theorem Fin.num_missed_add_num_hit (ρ : Fin n → Fin m)
+  : num_missed ρ + num_hit ρ = m := num_missed_before_add_num_hit_before ρ m
+
+theorem Fin.num_missed_before_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective ρ) (k : ℕ)
+  : num_missed_before ρ k = k - m := by induction k with
+  | zero => simp [num_missed_before]
+  | succ k I =>
+    simp only [num_missed_before, I]
+    if h : k < m then
+      rw [ite_cond_eq_true]
+      rw [Nat.sub_eq_zero_of_le h, Nat.sub_eq_zero_of_le (Nat.le_of_lt h)]
+      rw [eq_iff_iff, iff_true]
+      have ⟨i, hi⟩ := hρ ⟨k, h⟩
+      exact ⟨i, val_eq_of_eq hi⟩
+    else
+      rw [ite_cond_eq_false, Nat.one_add, Nat.succ_sub (Nat.le_of_not_lt h)]
+      rw [eq_iff_iff, iff_false]
+      intro ⟨i, hi⟩
+      cases hi
+      exact h (ρ i).prop
+
+theorem Fin.num_missed_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective ρ)
+  : num_missed ρ = 0 := by simp [num_missed, num_missed_before_surjective hρ]
+
+theorem Fin.num_hit_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective ρ)
+  : num_hit ρ = m := by
+  have h := Fin.num_missed_add_num_hit ρ
+  rw [Fin.num_missed_surjective hρ, zero_add] at h
+  exact h
+
+theorem Fin.num_missed_before_cast_succ_below (ρ : Fin (n + 1) → Fin m) (k : ℕ) (hk : k ≤ ρ 0)
+  : num_missed_before (ρ ∘ Fin.succ) k = num_missed_before ρ k
+  := by induction k with
+  | zero => rfl
+  | succ k I =>
+    simp only [num_missed_before, I (Nat.le_of_succ_le hk)]
+    apply congrFun
+    apply congrArg
+    congr 1
+    simp only [Function.comp_apply, eq_iff_iff]
+    exact ⟨
+      λ⟨i, hi⟩ => ⟨i.succ, hi⟩,
+      λ⟨i, hi⟩ => ⟨
+        i.pred (λh => by cases h; cases hi; exact Nat.not_succ_le_self _ hk),
+        by simp [hi]⟩⟩
+
+theorem Fin.num_missed_before_cast_succ_above (ρ : Fin (n + 1) → Fin m) (k : ℕ)
+  (hρ : ∀⦃i⦄, ρ 0 = ρ i -> 0 = i) (hk : ρ 0 < k)
+  : num_missed_before (ρ ∘ Fin.succ) k = num_missed_before ρ k + 1
+  := by induction k with
+  | zero => cases hk
+  | succ k I =>
+    simp only [num_missed_before]
+    if h : ρ 0 = k then
+      cases h
+      rw [num_missed_before_cast_succ_below ρ _ (le_refl _), ite_cond_eq_false, ite_cond_eq_true]
+      . simp_arith
+      . rw [eq_iff_iff, iff_true]
+        exact ⟨0, rfl⟩
+      . simp only [Function.comp_apply, eq_iff_iff, iff_false, not_exists]
+        intro i hi
+        cases hρ (Fin.eq_of_val_eq hi.symm)
+    else
+      have he : (∃i, ρ i = k) ↔ ∃i : Fin n, ρ i.succ = k := ⟨
+        λ⟨i, hi⟩ => ⟨i.pred (λhi' => by simp [<-hi, hi'] at h), by simp [hi]⟩,
+        λ⟨i, hi⟩ => ⟨i.succ, hi⟩⟩
+      simp_arith [he, I (Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hk) h)]
+
+theorem Fin.num_missed_cast_succ (ρ : Fin (n + 1) → Fin m) (h : ∀⦃i⦄, ρ 0 = ρ i -> 0 = i)
+  : num_missed (ρ ∘ Fin.succ) = num_missed ρ + 1
+  := num_missed_before_cast_succ_above ρ m h ((ρ 0).prop)
+
+theorem Fin.num_missed_injective {ρ : Fin n → Fin m} (hρ : Function.Injective ρ)
+  : num_missed ρ = m - n := by induction n with
+  | zero => simp
+  | succ n I =>
+    have I := I (hρ.comp (Fin.succ_injective n))
+    rw [num_missed_cast_succ] at I
+    rw [Nat.sub_succ]
+    exact (Nat.pred_eq_of_eq_succ I.symm).symm
+    apply hρ
