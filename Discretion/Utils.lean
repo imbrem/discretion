@@ -483,88 +483,97 @@ theorem Fin.addCases_injective {n m} {l : Fin n → α} {r : Fin m → α}
 
 -- TODO: addCases unitors...
 
-def Fin.num_missed_before (ρ : Fin n → Fin m) : ℕ → ℕ
+def Fin.numMissedBefore (ρ : Fin n → Fin m) : ℕ → ℕ
   | 0 => 0
-  | k + 1 => (if ∃i : Fin n, ρ i = k then 0 else 1) + num_missed_before ρ k
+  | k + 1 => (if ∃i : Fin n, ρ i = k then 0 else 1) + numMissedBefore ρ k
 
 @[simp]
-theorem Fin.num_missed_before_zero (ρ : Fin n → Fin m)
-  : num_missed_before ρ 0 = 0 := rfl
+theorem Fin.numMissedBefore_zero (ρ : Fin n → Fin m)
+  : numMissedBefore ρ 0 = 0 := rfl
 
-def Fin.num_missed (ρ : Fin n → Fin m) : ℕ := num_missed_before ρ m
+theorem Fin.numMissedBefore_le_numMissedBefore_succ (ρ : Fin n → Fin m) (k : ℕ)
+  : numMissedBefore ρ k ≤ numMissedBefore ρ (k + 1) := by simp [numMissedBefore]
+
+theorem Fin.numMissedBefore_mono (ρ : Fin n → Fin m) : Monotone (numMissedBefore ρ) := by
+  intro i j hij
+  induction hij with
+  | refl => rfl
+  | step _ I => exact I.trans (numMissedBefore_le_numMissedBefore_succ ρ _)
+
+def Fin.numMissed (ρ : Fin n → Fin m) : ℕ := numMissedBefore ρ m
 
 @[simp]
-theorem Fin.num_missed_to_zero (ρ : Fin n → Fin 0)
-  : num_missed ρ = 0 := by simp [num_missed]
+theorem Fin.numMissed_to_zero (ρ : Fin n → Fin 0)
+  : numMissed ρ = 0 := by simp [numMissed]
 
 @[simp]
-theorem Fin.num_missed_before_from_zero (ρ : Fin 0 → Fin m)
-  : num_missed_before ρ k = k := by induction k with
+theorem Fin.numMissedBefore_from_zero (ρ : Fin 0 → Fin m)
+  : numMissedBefore ρ k = k := by induction k with
   | zero => rfl
-  | succ k I => simp [num_missed_before, Nat.add_comm, I]
+  | succ k I => simp [numMissedBefore, Nat.add_comm, I]
 
 @[simp]
-theorem Fin.num_missed_from_zero (ρ : Fin 0 → Fin m)
-  : num_missed ρ = m := num_missed_before_from_zero ρ
+theorem Fin.numMissed_from_zero (ρ : Fin 0 → Fin m)
+  : numMissed ρ = m := numMissedBefore_from_zero ρ
 
-def Fin.num_hit_before (ρ : Fin n → Fin m) : ℕ → ℕ
+def Fin.numHitBefore (ρ : Fin n → Fin m) : ℕ → ℕ
   | 0 => 0
-  | k + 1 => (if ∃i : Fin n, ρ i = k then 1 else 0) + num_hit_before ρ k
+  | k + 1 => (if ∃i : Fin n, ρ i = k then 1 else 0) + numHitBefore ρ k
 
-def Fin.num_hit (ρ : Fin n → Fin m) : ℕ := num_hit_before ρ m
+def Fin.numHit (ρ : Fin n → Fin m) : ℕ := numHitBefore ρ m
 
-theorem Fin.num_missed_before_add_num_hit_before (ρ : Fin n → Fin m) (k : ℕ)
-  : num_missed_before ρ k + num_hit_before ρ k = k := by
+theorem Fin.numMissedBefore_add_numHitBefore (ρ : Fin n → Fin m) (k : ℕ)
+  : numMissedBefore ρ k + numHitBefore ρ k = k := by
   induction k with
-  | zero => simp [num_missed_before, num_hit_before]
+  | zero => simp [numMissedBefore, numHitBefore]
   | succ n I =>
-    simp only [num_missed_before, num_hit_before]
+    simp only [numMissedBefore, numHitBefore]
     split <;> simp_arith [I]
 
-theorem Fin.total_sub_num_missed_before (ρ : Fin n → Fin m) (k : ℕ)
-  : k - num_missed_before ρ k = num_hit_before ρ k := by
+theorem Fin.total_sub_numMissedBefore (ρ : Fin n → Fin m) (k : ℕ)
+  : k - numMissedBefore ρ k = numHitBefore ρ k := by
   conv =>
     lhs
     lhs
-    rw [<-Fin.num_missed_before_add_num_hit_before ρ k]
+    rw [<-Fin.numMissedBefore_add_numHitBefore ρ k]
   simp
 
-theorem Fin.total_sub_num_hit_before (ρ : Fin n → Fin m) (k : ℕ)
-  : k - num_hit_before ρ k = num_missed_before ρ k := by
+theorem Fin.total_sub_numHitBefore (ρ : Fin n → Fin m) (k : ℕ)
+  : k - numHitBefore ρ k = numMissedBefore ρ k := by
   conv =>
     lhs
     lhs
-    rw [<-Fin.num_missed_before_add_num_hit_before ρ k]
+    rw [<-Fin.numMissedBefore_add_numHitBefore ρ k]
   simp
 
-theorem Fin.num_missed_before_eq_total_sub_num_hit_before (ρ : Fin n → Fin m) (k : ℕ)
-  : num_missed_before ρ k = k - num_hit_before ρ k := by
-  rw [total_sub_num_hit_before ρ k]
+theorem Fin.numMissedBefore_eq_total_sub_numHitBefore (ρ : Fin n → Fin m) (k : ℕ)
+  : numMissedBefore ρ k = k - numHitBefore ρ k := by
+  rw [total_sub_numHitBefore ρ k]
 
-theorem Fin.num_hit_before_eq_total_sub_num_missed_before (ρ : Fin n → Fin m) (k : ℕ)
-  : num_hit_before ρ k = k - num_missed_before ρ k := by
-  rw [total_sub_num_missed_before ρ k]
+theorem Fin.numHitBefore_eq_total_sub_numMissedBefore (ρ : Fin n → Fin m) (k : ℕ)
+  : numHitBefore ρ k = k - numMissedBefore ρ k := by
+  rw [total_sub_numMissedBefore ρ k]
 
-theorem Fin.num_missed_add_num_hit (ρ : Fin n → Fin m)
-  : num_missed ρ + num_hit ρ = m := num_missed_before_add_num_hit_before ρ m
+theorem Fin.numMissed_add_numHit (ρ : Fin n → Fin m)
+  : numMissed ρ + numHit ρ = m := numMissedBefore_add_numHitBefore ρ m
 
-theorem Fin.total_sub_num_missed (ρ : Fin n → Fin m)
-  : m - num_missed ρ = num_hit ρ := total_sub_num_missed_before ρ m
+theorem Fin.total_sub_numMissed (ρ : Fin n → Fin m)
+  : m - numMissed ρ = numHit ρ := total_sub_numMissedBefore ρ m
 
-theorem Fin.total_sub_num_hit (ρ : Fin n → Fin m)
-  : m - num_hit ρ = num_missed ρ := total_sub_num_hit_before ρ m
+theorem Fin.total_sub_numHit (ρ : Fin n → Fin m)
+  : m - numHit ρ = numMissed ρ := total_sub_numHitBefore ρ m
 
-theorem Fin.num_missed_eq_total_sub_num_hit (ρ : Fin n → Fin m)
-  : num_missed ρ = m - num_hit ρ := num_missed_before_eq_total_sub_num_hit_before ρ m
+theorem Fin.numMissed_eq_total_sub_numHit (ρ : Fin n → Fin m)
+  : numMissed ρ = m - numHit ρ := numMissedBefore_eq_total_sub_numHitBefore ρ m
 
-theorem Fin.num_hit_eq_total_sub_num_missed (ρ : Fin n → Fin m)
-  : num_hit ρ = m - num_missed ρ := num_hit_before_eq_total_sub_num_missed_before ρ m
+theorem Fin.numHit_eq_total_sub_numMissed (ρ : Fin n → Fin m)
+  : numHit ρ = m - numMissed ρ := numHitBefore_eq_total_sub_numMissedBefore ρ m
 
-theorem Fin.num_missed_before_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective ρ) (k : ℕ)
-  : num_missed_before ρ k = k - m := by induction k with
-  | zero => simp [num_missed_before]
+theorem Fin.numMissedBefore_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective ρ) (k : ℕ)
+  : numMissedBefore ρ k = k - m := by induction k with
+  | zero => simp [numMissedBefore]
   | succ k I =>
-    simp only [num_missed_before, I]
+    simp only [numMissedBefore, I]
     if h : k < m then
       rw [ite_cond_eq_true]
       rw [Nat.sub_eq_zero_of_le h, Nat.sub_eq_zero_of_le (Nat.le_of_lt h)]
@@ -578,18 +587,18 @@ theorem Fin.num_missed_before_surjective {ρ : Fin n → Fin m} (hρ : Function.
       cases hi
       exact h (ρ i).prop
 
-theorem Fin.num_missed_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective ρ)
-  : num_missed ρ = 0 := by simp [num_missed, num_missed_before_surjective hρ]
+theorem Fin.numMissed_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective ρ)
+  : numMissed ρ = 0 := by simp [numMissed, numMissedBefore_surjective hρ]
 
-theorem Fin.num_hit_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective ρ)
-  : num_hit ρ = m := by simp [num_hit_eq_total_sub_num_missed, num_missed_surjective hρ]
+theorem Fin.numHit_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective ρ)
+  : numHit ρ = m := by simp [numHit_eq_total_sub_numMissed, numMissed_surjective hρ]
 
-theorem Fin.num_missed_before_cast_succ_below (ρ : Fin (n + 1) → Fin m) (k : ℕ) (hk : k ≤ ρ 0)
-  : num_missed_before (ρ ∘ Fin.succ) k = num_missed_before ρ k
+theorem Fin.numMissedBefore_cast_succ_below (ρ : Fin (n + 1) → Fin m) (k : ℕ) (hk : k ≤ ρ 0)
+  : numMissedBefore (ρ ∘ Fin.succ) k = numMissedBefore ρ k
   := by induction k with
   | zero => rfl
   | succ k I =>
-    simp only [num_missed_before, I (Nat.le_of_succ_le hk)]
+    simp only [numMissedBefore, I (Nat.le_of_succ_le hk)]
     apply congrFun
     apply congrArg
     congr 1
@@ -600,16 +609,16 @@ theorem Fin.num_missed_before_cast_succ_below (ρ : Fin (n + 1) → Fin m) (k : 
         i.pred (λh => by cases h; cases hi; exact Nat.not_succ_le_self _ hk),
         by simp [hi]⟩⟩
 
-theorem Fin.num_missed_before_cast_succ_above (ρ : Fin (n + 1) → Fin m) (k : ℕ)
+theorem Fin.numMissedBefore_cast_succ_above (ρ : Fin (n + 1) → Fin m) (k : ℕ)
   (hρ : ∀⦃i⦄, ρ 0 = ρ i -> 0 = i) (hk : ρ 0 < k)
-  : num_missed_before (ρ ∘ Fin.succ) k = num_missed_before ρ k + 1
+  : numMissedBefore (ρ ∘ Fin.succ) k = numMissedBefore ρ k + 1
   := by induction k with
   | zero => cases hk
   | succ k I =>
-    simp only [num_missed_before]
+    simp only [numMissedBefore]
     if h : ρ 0 = k then
       cases h
-      rw [num_missed_before_cast_succ_below ρ _ (le_refl _), ite_cond_eq_false, ite_cond_eq_true]
+      rw [numMissedBefore_cast_succ_below ρ _ (le_refl _), ite_cond_eq_false, ite_cond_eq_true]
       . simp_arith
       . rw [eq_iff_iff, iff_true]
         exact ⟨0, rfl⟩
@@ -622,16 +631,16 @@ theorem Fin.num_missed_before_cast_succ_above (ρ : Fin (n + 1) → Fin m) (k : 
         λ⟨i, hi⟩ => ⟨i.succ, hi⟩⟩
       simp_arith [he, I (Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hk) h)]
 
-theorem Fin.num_missed_cast_succ (ρ : Fin (n + 1) → Fin m) (h : ∀⦃i⦄, ρ 0 = ρ i -> 0 = i)
-  : num_missed (ρ ∘ Fin.succ) = num_missed ρ + 1
-  := num_missed_before_cast_succ_above ρ m h ((ρ 0).prop)
+theorem Fin.numMissed_cast_succ (ρ : Fin (n + 1) → Fin m) (h : ∀⦃i⦄, ρ 0 = ρ i -> 0 = i)
+  : numMissed (ρ ∘ Fin.succ) = numMissed ρ + 1
+  := numMissedBefore_cast_succ_above ρ m h ((ρ 0).prop)
 
-theorem Fin.num_missed_injective {ρ : Fin n → Fin m} (hρ : Function.Injective ρ)
-  : num_missed ρ = m - n := by induction n with
+theorem Fin.numMissed_injective {ρ : Fin n → Fin m} (hρ : Function.Injective ρ)
+  : numMissed ρ = m - n := by induction n with
   | zero => simp
   | succ n I =>
     have I := I (hρ.comp (Fin.succ_injective n))
-    rw [num_missed_cast_succ] at I
+    rw [numMissed_cast_succ] at I
     rw [Nat.sub_succ]
     exact (Nat.pred_eq_of_eq_succ I.symm).symm
     apply hρ
@@ -648,9 +657,45 @@ theorem Fin.le_of_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective �
   simp only [Fintype.card_fin] at h
   exact h
 
-theorem Fin.num_hit_injective {ρ : Fin n → Fin m} (hρ : Function.Injective ρ)
-  : num_hit ρ = n := by
+theorem Fin.numHit_injective {ρ : Fin n → Fin m} (hρ : Function.Injective ρ)
+  : numHit ρ = n := by
   rw [
-    num_hit_eq_total_sub_num_missed,
-    num_missed_injective hρ,
+    numHit_eq_total_sub_numMissed,
+    numMissed_injective hρ,
     Nat.sub_sub_self (le_of_injective hρ)]
+
+def Fin.lastHitBefore (ρ : Fin n → Fin m) (k : ℕ) : ℕ → ℕ
+  | 0 => (Fin.numMissedBefore ρ k) + n
+  | a + 1 =>
+    if ha : a < n then
+      if ρ ⟨a, ha⟩ = k then a
+      else lastHitBefore ρ k a
+    else
+      lastHitBefore ρ k a
+
+@[simp]
+theorem Fin.lastHitBefore_zero (ρ : Fin n → Fin m) (k : ℕ)
+  : lastHitBefore ρ k 0 = numMissedBefore ρ k + n := rfl
+
+theorem Fin.lastHitBefore_le_numMissedBefore_add_n (ρ : Fin n → Fin m) (k : ℕ) (i)
+  : lastHitBefore ρ k i ≤ numMissedBefore ρ k + n := by induction i with
+  | zero => simp
+  | succ i I =>
+    simp only [lastHitBefore]
+    split
+    case isTrue h =>
+      split
+      . exact (Nat.le_of_lt h).trans (Nat.le_add_left _ _)
+      . exact I
+    case _ => exact I
+
+def Fin.lastHit (ρ : Fin n → Fin m) (k : ℕ) : ℕ
+  := lastHitBefore ρ k n
+
+theorem Fin.lastHit_le_numMissed_add_n (ρ : Fin n → Fin m) (k : ℕ) (hk : k ≤ m)
+  : lastHit ρ k ≤ numMissed ρ + n := by
+  rw [lastHit, numMissed]
+  apply (lastHitBefore_le_numMissedBefore_add_n ρ k n).trans
+  rw [Nat.add_le_add_iff_right]
+  apply numMissedBefore_mono
+  exact hk
