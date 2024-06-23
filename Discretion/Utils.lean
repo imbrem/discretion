@@ -500,6 +500,10 @@ theorem Fin.numMissedBefore_mono (ρ : Fin n → Fin m) : Monotone (numMissedBef
   | refl => rfl
   | step _ I => exact I.trans (numMissedBefore_le_numMissedBefore_succ ρ _)
 
+theorem Fin.numMissedBefore_le_succ (ρ : Fin n → Fin m) (k : ℕ)
+  : numMissedBefore ρ (k + 1) ≤ numMissedBefore ρ k + 1
+  := by simp only [numMissedBefore]; split <;> simp_arith
+
 def Fin.numMissed (ρ : Fin n → Fin m) : ℕ := numMissedBefore ρ m
 
 @[simp]
@@ -568,6 +572,16 @@ theorem Fin.numMissed_eq_total_sub_numHit (ρ : Fin n → Fin m)
 
 theorem Fin.numHit_eq_total_sub_numMissed (ρ : Fin n → Fin m)
   : numHit ρ = m - numMissed ρ := numHitBefore_eq_total_sub_numMissedBefore ρ m
+
+theorem Fin.numMissed_le_total (ρ : Fin n → Fin m)
+  : numMissed ρ ≤ m := by
+  rw [numMissed_eq_total_sub_numHit ρ]
+  apply Nat.sub_le
+
+theorem Fin.numHit_le_total (ρ : Fin n → Fin m)
+  : numHit ρ ≤ m := by
+  rw [numHit_eq_total_sub_numMissed ρ]
+  apply Nat.sub_le
 
 theorem Fin.numMissedBefore_surjective {ρ : Fin n → Fin m} (hρ : Function.Surjective ρ) (k : ℕ)
   : numMissedBefore ρ k = k - m := by induction k with
@@ -664,8 +678,13 @@ theorem Fin.numHit_injective {ρ : Fin n → Fin m} (hρ : Function.Injective ρ
     numMissed_injective hρ,
     Nat.sub_sub_self (le_of_injective hρ)]
 
+theorem Fin.numMissed_injective_add_source {ρ : Fin n → Fin m} (hρ : Function.Injective ρ)
+    : numMissed ρ + n = m := by
+  apply Eq.trans _ (numMissed_add_numHit ρ)
+  rw [numHit_injective hρ]
+
 def Fin.lastHitBefore (ρ : Fin n → Fin m) (k : ℕ) : ℕ → ℕ
-  | 0 => (Fin.numMissedBefore ρ k) + n
+  | 0 => Fin.numMissedBefore ρ k + n
   | a + 1 =>
     if ha : a < n then
       if ρ ⟨a, ha⟩ = k then a
@@ -699,3 +718,175 @@ theorem Fin.lastHit_le_numMissed_add_n (ρ : Fin n → Fin m) (k : ℕ) (hk : k 
   rw [Nat.add_le_add_iff_right]
   apply numMissedBefore_mono
   exact hk
+
+
+theorem Fin.lastHitBefore_of_hit (ρ : Fin n → Fin m) (k : ℕ) (i : Fin n) (hi : ρ i = k)
+  : lastHitBefore ρ k (↑i + 1) = i := by simp [lastHitBefore, hi]
+
+theorem Fin.lastHitBefore_lt_of_hit (ρ : Fin n → Fin m) (k : ℕ) (i : Fin n) (hi : ρ i = k) (j : ℕ)
+  (hj : i < j) : lastHitBefore ρ k j < n := by induction hj with
+  | refl => simp [lastHitBefore_of_hit ρ k i hi]
+  | step h I =>
+    simp only [lastHitBefore]
+    repeat first | assumption | split
+
+theorem Fin.lastHit_lt_of_hit (ρ : Fin n → Fin m) (k : ℕ) (h : ∃i, ρ i = k) : lastHit ρ k < n :=
+  have ⟨i, hi⟩ := h;
+  lastHitBefore_lt_of_hit ρ k i hi n i.prop
+
+theorem Fin.lastHitBefore_of_not_hit (ρ : Fin n → Fin m) (k : ℕ) (a : ℕ) (h : ¬∃i, ρ i = k)
+  : lastHitBefore ρ k a = Fin.numMissedBefore ρ k + n := by
+  induction a with
+  | zero => rfl
+  | succ n I =>
+    simp only [lastHitBefore]
+    split
+    split
+    case isTrue h' => exact (h ⟨_, h'⟩).elim
+    assumption
+    assumption
+
+theorem Fin.lastHit_of_not_hit (ρ : Fin n → Fin m) (k : ℕ) (h : ¬∃i, ρ i = k)
+  : lastHit ρ k = Fin.numMissedBefore ρ k + n := lastHitBefore_of_not_hit ρ k n h
+
+theorem Fin.lastHit_lt_numMissed_add_src (ρ : Fin n → Fin m) (k : ℕ) (hk : k < m)
+  : lastHit ρ k < numMissed ρ + n := by
+  if h : ∃i, ρ i = k then
+    exact Nat.lt_of_lt_of_le (lastHit_lt_of_hit ρ k h) (Nat.le_add_left _ _)
+  else
+    rw [lastHit_of_not_hit _ _ h, numMissed, Nat.add_lt_add_iff_right]
+    apply Nat.lt_of_lt_of_le _ (numMissedBefore_mono ρ hk)
+    simp [numMissedBefore, h]
+
+theorem Fin.lastHit_lt_src_add_numMissed_add (ρ : Fin n → Fin m) (k : ℕ) (hk : k < m)
+  : lastHit ρ k < n + numMissed ρ := by
+  rw [Nat.add_comm]
+  exact lastHit_lt_numMissed_add_src ρ k hk
+
+def Fin.missedInv (ρ : Fin n → Fin m) (i : Fin m) : Fin (n + numMissed ρ)
+  := ⟨lastHit ρ i, lastHit_lt_src_add_numMissed_add ρ i i.prop⟩
+
+theorem Fin.lastHit_lt_target {ρ : Fin n → Fin m} (hρ : Function.Injective ρ) (k : ℕ) (hk : k < m)
+  : lastHit ρ k < m := by
+  have h := lastHit_lt_numMissed_add_src ρ k hk;
+  rw [numMissed_injective_add_source hρ] at h
+  exact h
+
+def Fin.semiInv {ρ : Fin n → Fin m} (hρ : Function.Injective ρ) (i : Fin m) : Fin m
+  := ⟨lastHit ρ i, lastHit_lt_target hρ i i.prop⟩
+
+@[simp]
+theorem Fin.cast_comp_missedInv {ρ : Fin n → Fin m} (hρ : Function.Injective ρ)
+  : cast (by rw [Nat.add_comm, numMissed_injective_add_source hρ]) ∘ missedInv ρ = semiInv hρ
+  := rfl
+
+@[simp]
+theorem Fin.cast_comp_semiInv {ρ : Fin n → Fin m} (hρ : Function.Injective ρ)
+  : cast (by rw [Nat.add_comm, numMissed_injective_add_source hρ]) ∘ semiInv hρ = missedInv ρ
+  := rfl
+
+def Fin.missedBelow (ρ : Fin n → Fin m) (i : ℕ) : ℕ → ℕ
+  | 0 => 0
+  | k + 1 =>
+    if ∃j, ρ j = k then
+      missedBelow ρ i k
+    else match i with
+    | 0 => k
+    | i + 1 => missedBelow ρ i k
+
+theorem Fin.missedBelow_le (ρ : Fin n → Fin m) (i k : ℕ)
+  : missedBelow ρ i k ≤ k := by induction k generalizing i with
+  | zero => rfl
+  | succ k I =>
+    simp only [missedBelow]
+    split
+    exact (I i).trans (Nat.le_succ _)
+    split
+    exact Nat.le_succ _
+    exact (I _).trans (Nat.le_succ _)
+
+theorem Fin.missedBelow_le_of_le (ρ : Fin n → Fin m) (i k : ℕ) (h : k ≤ m)
+  : missedBelow ρ i k ≤ m := (missedBelow_le ρ i k).trans h
+
+theorem Fin.missedBelow_lt_of_ne (ρ : Fin n → Fin m) (i k : ℕ) (hk : k ≠ 0)
+  : missedBelow ρ i k < k := by cases k with
+  | zero => cases hk rfl
+  | succ k =>
+    simp only [missedBelow]
+    split
+    exact Nat.lt_of_le_of_lt (missedBelow_le ρ i k) (Nat.lt_succ_self _)
+    split
+    exact Nat.lt_succ_self _
+    exact Nat.lt_of_le_of_lt (missedBelow_le ρ _ k) (Nat.lt_succ_self _)
+
+theorem Fin.missedBelow_bounded (ρ : Fin n → Fin m) (i k : ℕ) (hi : i < numMissed ρ) (hk : k ≤ m)
+  : missedBelow ρ i k < m := by induction k generalizing i with
+  | zero =>
+    apply Nat.lt_of_le_of_lt (Nat.zero_le i)
+    apply Nat.lt_of_lt_of_le hi
+    apply numMissed_le_total
+  | succ k I =>
+    simp only [missedBelow]
+    split
+    apply I
+    exact hi
+    exact Nat.le_of_succ_le hk
+    split
+    exact hk
+    apply I
+    exact Nat.lt_of_succ_lt hi
+    exact Nat.le_of_succ_le hk
+
+theorem Fin.missedBelow_not_hit
+  (ρ : Fin n → Fin m) (i k : ℕ) (hi : i < numMissedBefore ρ k)
+  : ¬∃j, ρ j = missedBelow ρ i k := by induction k generalizing i with
+  | zero => cases hi
+  | succ k I =>
+    simp only [missedBelow]
+    split
+    case isTrue hj =>
+      apply I
+      simp only [numMissedBefore, hj, ↓reduceIte, zero_add] at hi
+      exact hi
+    case isFalse hj =>
+      split
+      exact hj
+      apply I
+      exact Nat.lt_of_succ_lt_succ $ Nat.lt_of_lt_of_le hi (numMissedBefore_le_succ ρ k)
+
+def Fin.missed (ρ : Fin n → Fin m) (i : Fin (numMissed ρ)) : Fin m
+  := ⟨missedBelow ρ i.rev m, missedBelow_bounded ρ i.rev m i.rev.prop (le_refl m)⟩
+
+theorem Fin.missed_not_hit (ρ : Fin n → Fin m) (i : Fin (numMissed ρ))
+  : ¬∃j, ρ j = (missed ρ i : ℕ) := missedBelow_not_hit ρ i.rev m i.rev.prop
+
+-- theorem Fin.numMissedBefore_missedBelow (ρ : Fin n → Fin m) (i) (hi : i < numMissed ρ)
+--   : numMissedBefore ρ (missedBelow ρ i k) = numMissedBefore ρ k - (i + 1) := by induction k with
+--   | zero => simp [missedBelow]
+--   | succ k I =>
+--     simp only [numMissedBefore, missedBelow]
+--     split
+--     case isTrue h => simp [I]
+--     case isFalse h =>
+--     induction i with
+--     | zero => simp
+--     | succ i I2 =>
+--       simp only
+--       rw [Nat.add_comm 1]
+--       simp only [Nat.reduceSubDiff]
+--       have I2 := I2 (Nat.lt_of_succ_lt hi)
+--       rw [<-I2]
+
+-- theorem Fin.numMissedBefore_missedBelow' (ρ : Fin n → Fin m) (i : Fin (numMissed ρ))
+--   : numMissedBefore ρ (missedBelow ρ i m) = i.rev
+--   := by simp [numMissedBefore_missedBelow, numMissed]
+
+-- theorem Fin.numMissedBefore_missed (ρ : Fin n → Fin m) (i : Fin (numMissed ρ))
+--   : numMissedBefore ρ (missed ρ i) = i := by rw [missed, numMissedBefore_missedBelow', Fin.rev_rev]
+
+-- theorem Fin.missedInv_missed (ρ : Fin n → Fin m) (i : Fin (numMissed ρ))
+--   : missedInv ρ (missed ρ i) = i.natAdd n := by
+--   simp only [missedInv, natAdd, mk.injEq]
+--   rw [Nat.add_comm n, lastHit_of_not_hit, add_left_inj]
+--   apply numMissedBefore_missed
+--   apply missed_not_hit
