@@ -127,20 +127,35 @@ theorem List.NWkn.lift {ρ : ℕ → ℕ} (hAB : A ≤ B) (hρ : List.NWkn Γ Δ
   | 0 => ⟨Nat.zero_lt_succ _, hAB⟩
   | n+1 => have ⟨hΔ, hρ⟩ := hρ n (Nat.lt_of_succ_lt_succ hΔ); ⟨Nat.succ_lt_succ hΔ, hρ⟩
 
-theorem List.NWkn.tail {ρ : ℕ → ℕ} (h : List.NWkn (left :: Γ) (right :: Δ) (Nat.liftWk ρ))
+theorem List.NWkn.lift_tail {ρ : ℕ → ℕ} (h : List.NWkn (left :: Γ) (right :: Δ) (Nat.liftWk ρ))
     : List.NWkn Γ Δ ρ
   := λi hΔ => have ⟨hΔ, hρ⟩ := h i.succ (Nat.succ_lt_succ hΔ); ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
 
-theorem List.NWkn.head {ρ : ℕ → ℕ} (h : List.NWkn (left :: Γ) (right :: Δ) (Nat.liftWk ρ))
+theorem List.NWkn.lift_head {ρ : ℕ → ℕ} (h : List.NWkn (left :: Γ) (right :: Δ) (Nat.liftWk ρ))
   : left ≤ right
   := (h 0 (Nat.zero_lt_succ _)).2
 
 theorem List.NWkn.lift_iff (A B) (Γ Δ : List α) (ρ : ℕ → ℕ)
   : List.NWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ) ↔ A ≤ B ∧ List.NWkn Γ Δ ρ
   := ⟨
-    λh => ⟨h.head, List.NWkn.tail h⟩,
+    λh => ⟨h.lift_head, List.NWkn.lift_tail h⟩,
     λ⟨hAB, hρ⟩ => List.NWkn.lift hAB hρ
   ⟩
+
+theorem List.NWkn.lift_id (hρ : List.NWkn Γ Δ _root_.id) (h : A ≤ B)
+  : List.NWkn (A :: Γ) (B :: Δ) _root_.id := Nat.liftWk_id ▸ hρ.lift h
+
+theorem List.NWkn.lift_id_tail (h : List.NWkn (left :: Γ) (right :: Δ) _root_.id)
+    : List.NWkn Γ Δ _root_.id
+  := (Nat.liftWk_id ▸ h).lift_tail
+
+theorem List.NWkn.lift_id_head (h : List.NWkn (left :: Γ) (right :: Δ) _root_.id)
+  : left ≤ right
+  := (Nat.liftWk_id ▸ h).lift_head
+
+theorem List.NWkn.lift_id_iff (h : List.NWkn (left :: Γ) (right :: Δ) _root_.id)
+  : left ≤ right ∧ List.NWkn Γ Δ _root_.id
+  := ⟨h.lift_id_head, h.lift_id_tail⟩
 
 theorem List.NWkn.lift₂ {ρ : ℕ → ℕ} (hAB₁ : A₁ ≤ B₁) (hAB₂ : A₂ ≤ B₂) (hρ : List.NWkn Γ Δ ρ)
     : List.NWkn (A₁ :: A₂ :: Γ) (B₁ :: B₂ :: Δ) (Nat.liftWk (Nat.liftWk ρ))
@@ -168,13 +183,13 @@ theorem List.NWkn.step {ρ : ℕ → ℕ} (A : α) (hρ : List.NWkn Γ Δ ρ)
     : List.NWkn (A :: Γ) Δ (Nat.succ ∘ ρ)
   := λn hΔ => have ⟨hΔ, hρ⟩ := hρ n hΔ; ⟨Nat.succ_lt_succ hΔ, hρ⟩
 
-theorem List.NWkn.of_step {ρ : ℕ → ℕ} (h : List.NWkn (A :: Γ) Δ (Nat.succ ∘ ρ)) : List.NWkn Γ Δ ρ
+theorem List.NWkn.step_tail {ρ : ℕ → ℕ} (h : List.NWkn (A :: Γ) Δ (Nat.succ ∘ ρ)) : List.NWkn Γ Δ ρ
   := λi hΔ => have ⟨hΔ, hρ⟩ := h i hΔ; ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
 
 theorem List.NWkn.step_iff (A) (Γ Δ : List α) (ρ : ℕ → ℕ)
   : List.NWkn (A :: Γ) Δ (Nat.succ ∘ ρ) ↔ List.NWkn Γ Δ ρ
   := ⟨
-    List.NWkn.of_step,
+    List.NWkn.step_tail,
     List.NWkn.step A
   ⟩
 
@@ -235,19 +250,34 @@ theorem List.NEWkn.lift {ρ : ℕ → ℕ} (hρ : List.NEWkn Γ Δ ρ)
   | 0 => ⟨Nat.zero_lt_succ _, rfl⟩
   | n+1 => have ⟨hΔ, hρ⟩ := hρ n (Nat.lt_of_succ_lt_succ hΔ); ⟨Nat.succ_lt_succ hΔ, hρ⟩
 
-theorem List.NEWkn.tail {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
+theorem List.NEWkn.lift_tail {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
     : List.NEWkn Γ Δ ρ
   := λi hΔ => have ⟨hΔ, hρ⟩ := h i.succ (Nat.succ_lt_succ hΔ); ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
 
-theorem List.NEWkn.head {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)) : A = B
+theorem List.NEWkn.lift_head {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)) : A = B
   := (h 0 (Nat.zero_lt_succ _)).2
 
 theorem List.NEWkn.lift_iff (A B) (Γ Δ : List α) (ρ : ℕ → ℕ)
   : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ) ↔ A = B ∧ List.NEWkn Γ Δ ρ
   := ⟨
-    λh => ⟨h.head, List.NEWkn.tail h⟩,
+    λh => ⟨h.lift_head, List.NEWkn.lift_tail h⟩,
     λ⟨rfl, hρ⟩ => List.NEWkn.lift hρ
   ⟩
+
+theorem List.NEWkn.lift_id (hρ : List.NEWkn Γ Δ _root_.id)
+  : List.NEWkn (A :: Γ) (A :: Δ) _root_.id := Nat.liftWk_id ▸ hρ.lift
+
+theorem List.NEWkn.lift_id_tail (h : List.NEWkn (left :: Γ) (right :: Δ) _root_.id)
+    : List.NEWkn Γ Δ _root_.id
+  := (Nat.liftWk_id ▸ h).lift_tail
+
+theorem List.NEWkn.lift_id_head (h : List.NEWkn (left :: Γ) (right :: Δ) _root_.id)
+  : left = right
+  := (Nat.liftWk_id ▸ h).lift_head
+
+theorem List.NEWkn.lift_id_iff (h : List.NEWkn (left :: Γ) (right :: Δ) _root_.id)
+  : left = right ∧ List.NEWkn Γ Δ _root_.id
+  := ⟨h.lift_id_head, h.lift_id_tail⟩
 
 theorem List.NEWkn.lift₂ {ρ : ℕ → ℕ} (hρ : List.NEWkn Γ Δ ρ)
     : List.NEWkn (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftWk (Nat.liftWk ρ))
@@ -272,13 +302,13 @@ theorem List.NEWkn.step {ρ : ℕ → ℕ} (A : α) (hρ : List.NEWkn Γ Δ ρ)
     : List.NEWkn (A :: Γ) Δ (Nat.succ ∘ ρ)
   := λn hΔ => have ⟨hΔ, hρ⟩ := hρ n hΔ; ⟨Nat.succ_lt_succ hΔ, hρ⟩
 
-theorem List.NEWkn.of_step {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) Δ (Nat.succ ∘ ρ)) : List.NEWkn Γ Δ ρ
+theorem List.NEWkn.step_tail {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) Δ (Nat.succ ∘ ρ)) : List.NEWkn Γ Δ ρ
   := λi hΔ => have ⟨hΔ, hρ⟩ := h i hΔ; ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
 
 theorem List.NEWkn.step_iff (A) (Γ Δ : List α) (ρ : ℕ → ℕ)
   : List.NEWkn (A :: Γ) Δ (Nat.succ ∘ ρ) ↔ List.NEWkn Γ Δ ρ
   := ⟨
-    List.NEWkn.of_step,
+    List.NEWkn.step_tail,
     List.NEWkn.step A
   ⟩
 
