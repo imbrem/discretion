@@ -64,6 +64,16 @@ theorem Fin.foldl_eq_foldr {α} {f : α → α → α} (hcomm : Commutative f) (
 
 -- TODO: Fin.{minD, min, infD, inf}
 
+-- @[inline] def natSub (n) (i : Fin (n + m)) (h : n ≤ i) : Fin m :=
+--   ⟨i - n, by rw [Nat.add_comm]⟩
+
+-- def Fin.casesAdd {m : Nat} {n : Nat}
+--   {motive : Fin (m + n) → Sort u}
+--   (left : (i : Fin m) → motive (Fin.addNat i n))
+--   (right : (i : Fin n) → motive (i.castLE (by simp)))
+--   (i : Fin (m + n)): motive i
+--   := if h : i < n then right ⟨i, h⟩ else left ⟨i - n, sorry⟩
+
 def Fin.maxD [Max α] (f : Fin n → α) (b : α) := Fin.foldr _ (λi v => max (f i) v) b
 
 @[simp]

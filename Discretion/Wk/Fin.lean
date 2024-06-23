@@ -39,8 +39,9 @@ theorem Fin.liftWk_comp {n m} (ρ : Fin m -> Fin k) (σ : Fin n -> Fin m)
 
 theorem Fin.liftWk_comp_succ {n m} (ρ : Fin n -> Fin m) : liftWk ρ ∘ Fin.succ = Fin.succ ∘ ρ := rfl
 
-def Fin.liftnWk (k) {n m} (ρ : Fin n -> Fin m) : Fin (n + k) -> Fin (m + k)
-  := Fin.addCases sorry sorry
+-- TODO: casesAdd
+def Fin.liftnWk (k) {n m} (ρ : Fin n -> Fin m) (i : Fin (n + k)) : Fin (m + k)
+  := if h : i < k then ⟨i, Nat.lt_add_left _ h⟩ else (ρ (i.subNat k (Nat.le_of_not_lt h))).addNat k
 
 -- TODO: extendWk, liftWk, stepWk preserve injectivity, monotonicity, strict monotonicity
 -- TODO: extendWk, liftWk preserve surjectivity ==> bijectivity
