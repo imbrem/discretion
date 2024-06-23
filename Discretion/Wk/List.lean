@@ -45,7 +45,6 @@ theorem List.FEWkn.lift {ρ : Fin Δ.length → Fin Γ.length} (hρ : List.FEWkn
   | zero => rfl
   | succ i => simp [hρ.get, Fin.liftWk]
 
-
 /-- The list `Γ` weakens to `Δ` -/
 def List.FWkns (Γ Δ : List α) : Prop := ∃ρ, List.FWkn Γ Δ ρ ∧ StrictMono ρ
 
@@ -128,17 +127,18 @@ theorem List.NWkn.lift {ρ : ℕ → ℕ} (hAB : A ≤ B) (hρ : List.NWkn Γ Δ
   | 0 => ⟨Nat.zero_lt_succ _, hAB⟩
   | n+1 => have ⟨hΔ, hρ⟩ := hρ n (Nat.lt_of_succ_lt_succ hΔ); ⟨Nat.succ_lt_succ hΔ, hρ⟩
 
-theorem List.NWkn.of_lift {ρ : ℕ → ℕ} (h : List.NWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
+theorem List.NWkn.tail {ρ : ℕ → ℕ} (h : List.NWkn (left :: Γ) (right :: Δ) (Nat.liftWk ρ))
     : List.NWkn Γ Δ ρ
   := λi hΔ => have ⟨hΔ, hρ⟩ := h i.succ (Nat.succ_lt_succ hΔ); ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
 
-theorem List.NWkn.le_of_lift {ρ : ℕ → ℕ} (h : List.NWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)) : A ≤ B
+theorem List.NWkn.head {ρ : ℕ → ℕ} (h : List.NWkn (left :: Γ) (right :: Δ) (Nat.liftWk ρ))
+  : left ≤ right
   := (h 0 (Nat.zero_lt_succ _)).2
 
 theorem List.NWkn.lift_iff (A B) (Γ Δ : List α) (ρ : ℕ → ℕ)
   : List.NWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ) ↔ A ≤ B ∧ List.NWkn Γ Δ ρ
   := ⟨
-    λh => ⟨h.le_of_lift, List.NWkn.of_lift h⟩,
+    λh => ⟨h.head, List.NWkn.tail h⟩,
     λ⟨hAB, hρ⟩ => List.NWkn.lift hAB hρ
   ⟩
 
@@ -235,17 +235,17 @@ theorem List.NEWkn.lift {ρ : ℕ → ℕ} (hρ : List.NEWkn Γ Δ ρ)
   | 0 => ⟨Nat.zero_lt_succ _, rfl⟩
   | n+1 => have ⟨hΔ, hρ⟩ := hρ n (Nat.lt_of_succ_lt_succ hΔ); ⟨Nat.succ_lt_succ hΔ, hρ⟩
 
-theorem List.NEWkn.of_lift {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
+theorem List.NEWkn.tail {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
     : List.NEWkn Γ Δ ρ
   := λi hΔ => have ⟨hΔ, hρ⟩ := h i.succ (Nat.succ_lt_succ hΔ); ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
 
-theorem List.NEWkn.le_of_lift {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)) : A = B
+theorem List.NEWkn.head {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)) : A = B
   := (h 0 (Nat.zero_lt_succ _)).2
 
 theorem List.NEWkn.lift_iff (A B) (Γ Δ : List α) (ρ : ℕ → ℕ)
   : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ) ↔ A = B ∧ List.NEWkn Γ Δ ρ
   := ⟨
-    λh => ⟨h.le_of_lift, List.NEWkn.of_lift h⟩,
+    λh => ⟨h.head, List.NEWkn.tail h⟩,
     λ⟨rfl, hρ⟩ => List.NEWkn.lift hρ
   ⟩
 
