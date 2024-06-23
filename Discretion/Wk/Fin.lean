@@ -163,8 +163,36 @@ theorem Fin.toNatWk_symm_swapAdd_comp_liftnWk_add (n m : ℕ)
 def Fin.FWkn {n m : Nat} (Γ : Fin n → α) (Δ : Fin m → α) (ρ : Fin m → Fin n) : Prop
   := (Γ ∘ ρ) ≤ Δ
 
+theorem Fin.FWkn.apply {n m : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {ρ : Fin m → Fin n}
+  (h : Fin.FWkn Γ Δ ρ) (k : Fin m) : Γ (ρ k) ≤ Δ k
+  := h k
+
 theorem Fin.FWkn.id {n : Nat} (Γ : Fin n → α) : Fin.FWkn Γ Γ id := le_refl _
 
--- theorem Fin.FWkn.comp {ρ : Fin m → Fin n} {σ : Fin o → Fin m}
---   (hρ : Fin.FWkn Γ Δ ρ) (hσ : Fin.FWkn Δ Ξ σ) : Fin.FWkn Γ Ξ (ρ ∘ σ)
---   := λ_ => le_trans (hρ _) (hσ _)
+theorem Fin.FWkn.comp {n m o : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {Ξ : Fin o → α}
+  {ρ : Fin m → Fin n} {σ : Fin o → Fin m}
+  (hρ : Fin.FWkn Γ Δ ρ) (hσ : Fin.FWkn Δ Ξ σ) : Fin.FWkn Γ Ξ (ρ ∘ σ)
+  := le_trans (by rw [<-Function.comp.assoc]; exact Function.comp_left_mono hρ) hσ
+
+-- The function `ρ` sends `Γ` to `Δ` -/
+def Fin.FEWkn {n m : Nat} (Γ : Fin n → α) (Δ : Fin m → α) (ρ : Fin m → Fin n) : Prop
+  := (Γ ∘ ρ) = Δ
+
+theorem Fin.FEWkn.apply {n m : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {ρ : Fin m → Fin n}
+  (h : Fin.FEWkn Γ Δ ρ) (k : Fin m) : Γ (ρ k) = Δ k
+  := by rw [<-Function.comp_apply (f := Γ), h]
+
+theorem Fin.FEWkn.id {n : Nat} (Γ : Fin n → α) : Fin.FEWkn Γ Γ id := rfl
+
+theorem Fin.FEWkn.comp {n m o : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {Ξ : Fin o → α}
+  {ρ : Fin m → Fin n} {σ : Fin o → Fin m}
+  (hρ : Fin.FEWkn Γ Δ ρ) (hσ : Fin.FEWkn Δ Ξ σ) : Fin.FEWkn Γ Ξ (ρ ∘ σ)
+  := by rw [FEWkn, <-Function.comp.assoc, hρ, hσ]
+
+theorem Fin.FEWkn.trg_eq {n m : Nat} {Γ : Fin n → α} {Δ Δ' : Fin m → α} {ρ : Fin m → Fin n}
+  (h : Fin.FEWkn Γ Δ ρ) (h' : Fin.FEWkn Γ Δ' ρ) : Δ = Δ'
+  := by cases h; cases h'; rfl
+
+theorem Fin.FEWkn.toFWkn {n m : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {ρ : Fin m → Fin n}
+  (h : Fin.FEWkn Γ Δ ρ) : Fin.FWkn Γ Δ ρ
+  := le_of_eq h
