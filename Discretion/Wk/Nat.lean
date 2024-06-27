@@ -268,6 +268,18 @@ theorem Nat.liftnWk_succ (n) : liftnWk (n.succ) = liftnWk n ∘ liftWk := by
 theorem Nat.liftnWk_succ_apply (n) (ρ) : liftnWk (n.succ) ρ = liftnWk n (liftWk ρ) := by
   rw [liftnWk_eq_iterate_liftWk, Function.iterate_succ_apply]
 
+theorem Nat.liftWk_comm_liftnWk (n) : liftWk ∘ liftnWk n = liftnWk n ∘ liftWk := by
+  rw [<-Nat.liftnWk_succ, <-Nat.liftnWk_succ']
+
+theorem Nat.liftWk_comm_liftnWk_apply (n) (ρ) : liftWk (liftnWk n ρ) = liftnWk n (liftWk ρ) := by
+  rw [<-Nat.liftnWk_succ_apply, <-Nat.liftnWk_succ_apply']
+
+theorem Nat.liftnWk_comm_liftWk (n) : liftnWk n ∘ liftWk = liftWk ∘ liftnWk n := by
+  rw [Nat.liftWk_comm_liftnWk]
+
+theorem Nat.liftnWk_comm_liftWk_apply (n) (ρ) : liftnWk n (liftWk ρ) = liftWk (liftnWk n ρ) := by
+  rw [Nat.liftWk_comm_liftnWk_apply]
+
 theorem Nat.stepnWk_succ (n) : stepnWk (n.succ) = stepnWk n ∘ stepWk := by
   rw [stepnWk_eq_iterate_stepWk, Function.iterate_succ]
 
@@ -276,6 +288,12 @@ theorem Nat.liftnWk_add (m n : ℕ) : liftnWk (m + n) = liftnWk m ∘ liftnWk n
 
 theorem Nat.liftnWk_add_apply (m n : ℕ) (ρ) : liftnWk (m + n) ρ = liftnWk m (liftnWk n ρ)
   := by rw [liftnWk_eq_iterate_liftWk, Function.iterate_add_apply]
+
+theorem Nat.liftnWk_comm_liftnWk (m n) : liftnWk m ∘ liftnWk n = liftnWk n ∘ liftnWk m
+  := by rw [<-Nat.liftnWk_add, add_comm, Nat.liftnWk_add]
+
+theorem Nat.liftnWk_comm_liftnWK_apply (m n ρ) : liftnWk m (liftnWk n ρ) = liftnWk n (liftnWk m ρ)
+  := by rw [<-Nat.liftnWk_add_apply, add_comm, Nat.liftnWk_add_apply]
 
 theorem Nat.stepnWk_add (m n : ℕ) : stepnWk (m + n) = stepnWk m ∘ stepnWk n
   := by rw [stepnWk_eq_iterate_stepWk, Function.iterate_add]
