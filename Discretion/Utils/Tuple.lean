@@ -227,11 +227,15 @@ theorem Fin.sum_univ_list [AddCommMonoid α] (f : (Fin n) → α)
   : Finset.univ.sum f = (List.ofFn f).sum
   := by simp [Finset.sum]
 
-theorem Fin.comp_addCases (f : α → β) (l: Fin n → α) (r : Fin m → α)
-  : f ∘ (Fin.addCases l r) = Fin.addCases (f ∘ l) (f ∘ r) := by
-  funext i
+theorem Fin.comp_addCases_apply
+  (f : α → β) (l: Fin n → α) (r : Fin m → α) (i)
+  : f (Fin.addCases l r i) = Fin.addCases (f ∘ l) (f ∘ r) i := by
   simp only [addCases, eq_rec_constant, Function.comp_apply]
   split <;> rfl
+
+theorem Fin.comp_addCases (f : α → β) (l: Fin n → α) (r : Fin m → α)
+  : f ∘ (Fin.addCases l r) = Fin.addCases (f ∘ l) (f ∘ r) :=
+  funext (Fin.comp_addCases_apply f l r)
 
 theorem Fin.addCases_castAdd_natAdd {n m}
   : Fin.addCases (Fin.castAdd n) (Fin.natAdd m) = id := by
