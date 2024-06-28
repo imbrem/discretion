@@ -4,6 +4,8 @@ import Discretion.Utils.Perm
 import Discretion.Utils.Equiv
 import Discretion.Utils.Multiset
 
+
+
 theorem Function.comp_update_apply {α β γ} [DecidableEq α] {f : β → γ} {g : α → β}
   (a : _) (b : _) (c : _) : f (Function.update g a b c) = Function.update (f ∘ g) a (f b) c
   := by simp only [Function.update]; split <;> simp
