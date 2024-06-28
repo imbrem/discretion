@@ -41,6 +41,24 @@ theorem Set.liftnFv_insert_n {s : Set ℕ} {n}
   : (insert n s).liftnFv n = insert 0 (s.liftnFv n)
   := by simp
 
+@[simp]
+theorem Set.liftnFv_singleton_lt {k n} (h : k < n) : ({k} : Set ℕ).liftnFv n = ∅
+  := by simp [liftnFv, h]
+
+@[simp]
+theorem Set.liftnFv_singleton_le {k n} (h : n ≤ k) : ({k} : Set ℕ).liftnFv n = {k - n} := by
+  simp only [liftnFv]
+  ext k
+  simp only [mem_image, mem_inter_iff, mem_singleton_iff, mem_Ici]
+  constructor
+  intro ⟨x, ⟨hx, hn⟩, hk⟩
+  cases hk
+  cases hx
+  rfl
+  intro hk
+  cases hk
+  exact ⟨k, ⟨rfl, h⟩, rfl⟩
+
 theorem Set.mem_liftnFv_of_add_mem (n : ℕ) (s : Set ℕ) (k : ℕ)
     : k ∈ s.liftnFv n → k + n ∈ s := by
   simp only [liftnFv, forall_exists_index, and_imp]
