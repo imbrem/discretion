@@ -136,6 +136,27 @@ theorem Set.liftnFv_map_liftnWk (n) (s : Set ℕ) (ρ)
 theorem Set.liftFv_map_liftWk (s : Set ℕ) (ρ) : (Nat.liftWk ρ '' s).liftFv = ρ '' s.liftFv := by
   rw [<-Nat.liftnWk_one, <-liftnFv_one, liftnFv_map_liftnWk]
 
+@[simp]
+theorem Set.liftnFv_map_add (n) (s : Set ℕ) : (· + n) '' s.liftnFv n = s ∩ Set.Ici n := by
+  simp only [Set.liftnFv, Set.image_image]
+  ext i
+  simp only [mem_image, mem_inter_iff, mem_Ici]
+  constructor
+  intro ⟨x, hx, hx'⟩
+  cases hx'
+  simp [hx]
+  intro ⟨hi, hi'⟩
+  exact ⟨i, ⟨hi, hi'⟩, by simp [hi']⟩
+
+@[simp]
+theorem Set.liftnFv_inter_Ici (n) (s : Set ℕ)
+  : (s ∩ Set.Ici n).liftnFv n = s.liftnFv n
+  := by simp [Set.liftnFv, Set.inter_assoc]
+
+theorem Set.liftnFv_map_add_liftnFv (n) (s : Set ℕ)
+  : ((· + n) '' s.liftnFv n).liftnFv n = s.liftnFv n
+  := by simp
+
 -- TODO: liftnFv map add, liftFv map succ...
 
 -- TODO: liftnFv (and therefore liftFv) commute with multiset to set
