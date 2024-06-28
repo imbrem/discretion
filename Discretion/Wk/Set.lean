@@ -16,6 +16,31 @@ theorem Set.liftnFv_of_union (n : ℕ) (s t : Set ℕ) : (s ∪ t).liftnFv n = s
     | Or.inr ⟨k, ⟨hkt, hkn⟩, hkn'⟩ => ⟨k, ⟨Or.inr hkt, hkn⟩, hkn'⟩
   ⟩
 
+@[simp]
+theorem Set.liftnFv_empty (n : ℕ) : (∅ : Set ℕ).liftnFv n = ∅ := by simp [liftnFv]
+
+@[simp]
+theorem Set.liftnFv_insert_lt {s : Set ℕ} {k n} (h : k < n) : (insert k s).liftnFv n = s.liftnFv n
+  := by
+  rw [liftnFv, insert_inter_of_not_mem]
+  rfl
+  simp [h]
+
+theorem Set.liftnFv_insert_zero {s : Set ℕ} {n}
+  : (insert 0 s).liftnFv (n + 1) = s.liftnFv (n + 1) := by simp
+
+@[simp]
+theorem Set.liftnFv_insert_le {s : Set ℕ} {k n} (h : n ≤ k)
+  : (insert k s).liftnFv n = insert (k - n) (s.liftnFv n)
+  := by
+  rw [liftnFv, insert_inter_of_mem, image_insert_eq]
+  rfl
+  simp [h]
+
+theorem Set.liftnFv_insert_n {s : Set ℕ} {n}
+  : (insert n s).liftnFv n = insert 0 (s.liftnFv n)
+  := by simp
+
 theorem Set.mem_liftnFv_of_add_mem (n : ℕ) (s : Set ℕ) (k : ℕ)
     : k ∈ s.liftnFv n → k + n ∈ s := by
   simp only [liftnFv, forall_exists_index, and_imp]
@@ -44,6 +69,13 @@ abbrev Set.liftFv := Set.liftnFv 1
 theorem Set.liftFv_mono {lo hi : Set ℕ} (h : lo ⊆ hi)
   : lo.liftFv ⊆ hi.liftFv := Set.image_mono (Set.inter_subset_inter_left _ h)
 
+theorem Set.liftFv_insert_zero {s : Set ℕ}
+  : (insert 0 s).liftFv = s.liftFv := by simp
+
+theorem Set.liftFv_insert_succ {s : Set ℕ}
+  : (insert (n + 1) s).liftFv = insert n s.liftFv
+    := by simp
+
 theorem Set.mem_liftFv_of_succ_mem (s : Set ℕ) (k : ℕ)
     : k ∈ s.liftFv → k + 1 ∈ s := mem_liftnFv_of_add_mem 1 s k
 
@@ -58,6 +90,8 @@ theorem Set.not_mem_liftFv (s : Set ℕ) (k : ℕ)
 
 theorem Set.liftFv_of_union (s t : Set ℕ)
   : (s ∪ t).liftFv = s.liftFv ∪ t.liftFv := by simp
+
+theorem Set.liftFv_empty : (∅ : Set ℕ).liftFv = ∅ := by simp
 
 theorem Set.liftnFv_one : Set.liftnFv 1 = Set.liftFv := rfl
 
