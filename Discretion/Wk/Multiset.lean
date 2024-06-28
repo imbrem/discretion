@@ -48,6 +48,9 @@ theorem Multiset.count_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
   cases h
   simp
 
+theorem Multiset.liftnFv_mono {lo hi : Multiset ℕ} (n) (h : lo ≤ hi)
+  : lo.liftnFv n ≤ hi.liftnFv n := map_le_map $ filter_le_filter _ h
+
 /-- Compute the free variable set of a term under a binder -/
 abbrev Multiset.liftFv := Multiset.liftnFv 1
 
@@ -105,5 +108,8 @@ theorem Multiset.liftnFv_map_liftnWk (n) (s : Multiset ℕ) (ρ)
 theorem Multiset.liftFv_map_liftWk (s : Multiset ℕ) (ρ)
   : (s.map (Nat.liftWk ρ)).liftFv = s.liftFv.map ρ := by
   rw [<-Nat.liftnWk_one, <-liftnFv_one, liftnFv_map_liftnWk]
+
+theorem Multiset.liftFv_mono {lo hi : Multiset ℕ} (h : lo ≤ hi)
+  : lo.liftFv ≤ hi.liftFv := liftnFv_mono 1 h
 
 -- TODO: liftnFv map add, liftFv map succ...
