@@ -222,6 +222,17 @@ theorem Set.liftnFv_iUnion (n) (s : α → Set ℕ)
   : (iUnion s).liftnFv n = iUnion (λi => (s i).liftnFv n)
   := by ext k; simp [mem_liftnFv]
 
+@[simp]
+theorem Set.liftnFv_two_lift_succ_image (s : Set ℕ)
+  : (Nat.liftWk Nat.succ '' s).liftnFv 2 = s.liftFv := by
+  ext k
+  simp only [mem_liftnFv, mem_image]
+  constructor
+  intro ⟨x, hx, hx'⟩
+  cases x <;> cases hx'; exact hx
+  intro hk
+  exact ⟨k + 1, hk, rfl⟩
+
 -- TODO: liftnFv map add, liftFv map succ...
 
 -- TODO: liftnFv (and therefore liftFv) commute with multiset to set
