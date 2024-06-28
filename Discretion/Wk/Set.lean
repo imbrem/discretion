@@ -137,7 +137,7 @@ theorem Set.liftFv_map_liftWk (s : Set ℕ) (ρ) : (Nat.liftWk ρ '' s).liftFv =
   rw [<-Nat.liftnWk_one, <-liftnFv_one, liftnFv_map_liftnWk]
 
 @[simp]
-theorem Set.liftnFv_map_add (n) (s : Set ℕ) : (· + n) '' s.liftnFv n = s ∩ Set.Ici n := by
+theorem Set.map_add_liftnFv (n) (s : Set ℕ) : (· + n) '' s.liftnFv n = s ∩ Set.Ici n := by
   simp only [Set.liftnFv, Set.image_image]
   ext i
   simp only [mem_image, mem_inter_iff, mem_Ici]
@@ -147,6 +147,18 @@ theorem Set.liftnFv_map_add (n) (s : Set ℕ) : (· + n) '' s.liftnFv n = s ∩ 
   simp [hx]
   intro ⟨hi, hi'⟩
   exact ⟨i, ⟨hi, hi'⟩, by simp [hi']⟩
+
+@[simp]
+theorem Set.liftnFv_map_add (n) (s : Set ℕ) : ((· + n) '' s).liftnFv n = s := by
+  ext i
+  simp only [Set.liftnFv, mem_image, mem_inter_iff, mem_Ici]
+  constructor
+  intro ⟨x, ⟨⟨y, hy, hy'⟩, hn⟩, hx'⟩
+  cases hx'
+  cases hy'
+  simp [hy]
+  intro hi
+  exact ⟨i + n, ⟨⟨i, hi, rfl⟩, by simp⟩, by simp⟩
 
 @[simp]
 theorem Set.liftnFv_inter_Ici (n) (s : Set ℕ)
