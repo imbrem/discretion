@@ -15,6 +15,10 @@ theorem Multiset.liftnFv_of_add (n : ℕ) (s t : Multiset ℕ)
 theorem Multiset.liftnFv_cons_zero {s : Multiset ℕ} {n}
   : (0::ₘs).liftnFv (n + 1) = s.liftnFv (n + 1) := by simp [liftnFv]
 
+@[simp]
+theorem Multiset.liftnFv_cons_n {s : Multiset ℕ} {n}
+  : (n::ₘs).liftnFv n = 0::ₘ(s.liftnFv n) := by simp [liftnFv]
+
 theorem Multiset.mem_liftnFv_of_add_mem (n : ℕ) (s : Multiset ℕ) (k : ℕ)
     : k ∈ s.liftnFv n → k + n ∈ s := by
   simp only [liftnFv, mem_map, mem_filter, forall_exists_index, and_imp]
@@ -52,15 +56,33 @@ theorem Multiset.count_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
   cases h
   simp
 
+@[simp]
+theorem Multiset.liftnFv_of_map_add (n : ℕ) (s : Multiset ℕ)
+  : (s.map (· + n)).liftnFv n = s := by
+  simp only [liftnFv, map_filter, map_map]
+  rw [Multiset.filter_eq_self.mpr (by simp)]
+  simp
+
 theorem Multiset.liftnFv_mono {lo hi : Multiset ℕ} (n) (h : lo ≤ hi)
   : lo.liftnFv n ≤ hi.liftnFv n := map_le_map $ filter_le_filter _ h
 
 /-- Compute the free variable set of a term under a binder -/
 abbrev Multiset.liftFv := Multiset.liftnFv 1
 
-@[simp]
 theorem Multiset.liftFv_cons_zero {s : Multiset ℕ}
   : (0::ₘs).liftFv = s.liftFv := by simp
+
+theorem Multiset.liftFv_of_map_add_one (s : Multiset ℕ)
+  : (s.map (· + 1)).liftFv = s := by
+  simp only [liftFv, liftnFv, map_map, map_filter]
+  rw [filter_eq_self.mpr (by simp)]
+  simp
+
+theorem Multiset.liftFv_of_map_succ (s : Multiset ℕ)
+  : (s.map Nat.succ).liftFv = s := by
+  simp only [liftFv, liftnFv, map_map, map_filter]
+  rw [filter_eq_self.mpr (by simp)]
+  simp
 
 theorem Multiset.count_liftFv (s : Multiset ℕ) (k : ℕ)
   : count k s.liftFv = count (k + 1) s := count_liftnFv 1 s k
