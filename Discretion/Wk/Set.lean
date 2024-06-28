@@ -17,6 +17,21 @@ theorem Set.liftnFv_of_union (n : ℕ) (s t : Set ℕ) : (s ∪ t).liftnFv n = s
   ⟩
 
 @[simp]
+theorem Set.liftnFv_of_inter (n : ℕ) (s t : Set ℕ) : (s ∩ t).liftnFv n = s.liftnFv n ∩ t.liftnFv n
+  := by
+  simp only [liftnFv]
+  have h : s ∩ t ∩ Ici n = (s ∩ Ici n) ∩ (t ∩ Ici n) := by
+    rw [
+      inter_comm t, inter_assoc s (Ici n), <-inter_assoc (Ici n),
+      inter_self, inter_comm (Ici n), inter_assoc]
+  rw [h, image_inter_on]
+  simp only [mem_inter_iff, mem_Ici, and_imp]
+  intro x _ hx y _ hy hxy
+  have h : (x - n) + n = (y - n) + n := by rw [hxy]
+  simp only [hx, Nat.sub_add_cancel, hy] at h
+  exact h
+
+@[simp]
 theorem Set.liftnFv_empty (n : ℕ) : (∅ : Set ℕ).liftnFv n = ∅ := by simp [liftnFv]
 
 @[simp]
@@ -179,9 +194,21 @@ theorem Set.liftnFv_map_add (n) (s : Set ℕ) : ((· + n) '' s).liftnFv n = s :=
   exact ⟨i + n, ⟨⟨i, hi, rfl⟩, by simp⟩, by simp⟩
 
 @[simp]
-theorem Set.liftnFv_inter_Ici (n) (s : Set ℕ)
-  : (s ∩ Set.Ici n).liftnFv n = s.liftnFv n
-  := by simp [Set.liftnFv, Set.inter_assoc]
+theorem Set.liftnFv_Ici {n k} (h : k ≤ n)
+  : (Set.Ici k).liftnFv n = Set.univ
+  := by
+  ext i
+  simp only [liftnFv, Ici_inter_Ici, ge_iff_le, h, sup_of_le_right, mem_image, mem_Ici,
+    mem_univ, iff_true]
+  exact ⟨i + n, by simp, by simp⟩
+
+theorem Set.liftnFv_inter_Ici {n k} (h : k ≤ n) (s : Set ℕ)
+  : (s ∩ Set.Ici k).liftnFv n = s.liftnFv n
+  := by simp [h]
+
+theorem Set.liftnFv_Ici_inter {n k} (h : k ≤ n) (s : Set ℕ)
+  : (Set.Ici k ∩ s).liftnFv n = s.liftnFv n
+  := by simp [h]
 
 theorem Set.liftnFv_map_add_liftnFv (n) (s : Set ℕ)
   : ((· + n) '' s.liftnFv n).liftnFv n = s.liftnFv n
