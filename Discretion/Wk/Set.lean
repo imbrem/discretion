@@ -187,6 +187,10 @@ theorem Set.liftnFv_map_add_liftnFv (n) (s : Set ℕ)
   : ((· + n) '' s.liftnFv n).liftnFv n = s.liftnFv n
   := by simp
 
+theorem Set.liftnFv_iUnion (n) (s : α → Set ℕ)
+  : (iUnion s).liftnFv n = iUnion (liftnFv n ∘ s)
+  := by ext k; simp [mem_liftnFv]
+
 -- TODO: liftnFv map add, liftFv map succ...
 
 -- TODO: liftnFv (and therefore liftFv) commute with multiset to set
