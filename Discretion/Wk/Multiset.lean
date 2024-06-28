@@ -11,6 +11,10 @@ theorem Multiset.liftnFv_zero : Multiset.liftnFv 0 = id := by ext s i; simp [lif
 theorem Multiset.liftnFv_of_add (n : ℕ) (s t : Multiset ℕ)
   : (s + t).liftnFv n = s.liftnFv n + t.liftnFv n := by simp [liftnFv]
 
+@[simp]
+theorem Multiset.liftnFv_cons_zero {s : Multiset ℕ} {n}
+  : (0::ₘs).liftnFv (n + 1) = s.liftnFv (n + 1) := by simp [liftnFv]
+
 theorem Multiset.mem_liftnFv_of_add_mem (n : ℕ) (s : Multiset ℕ) (k : ℕ)
     : k ∈ s.liftnFv n → k + n ∈ s := by
   simp only [liftnFv, mem_map, mem_filter, forall_exists_index, and_imp]
@@ -53,6 +57,10 @@ theorem Multiset.liftnFv_mono {lo hi : Multiset ℕ} (n) (h : lo ≤ hi)
 
 /-- Compute the free variable set of a term under a binder -/
 abbrev Multiset.liftFv := Multiset.liftnFv 1
+
+@[simp]
+theorem Multiset.liftFv_cons_zero {s : Multiset ℕ}
+  : (0::ₘs).liftFv = s.liftFv := by simp
 
 theorem Multiset.count_liftFv (s : Multiset ℕ) (k : ℕ)
   : count k s.liftFv = count (k + 1) s := count_liftnFv 1 s k
