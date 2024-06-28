@@ -187,8 +187,12 @@ theorem Set.liftnFv_map_add_liftnFv (n) (s : Set ℕ)
   : ((· + n) '' s.liftnFv n).liftnFv n = s.liftnFv n
   := by simp
 
-theorem Set.liftnFv_iUnion (n) (s : α → Set ℕ)
+theorem Set.liftnFv_iUnion' (n) (s : α → Set ℕ)
   : (iUnion s).liftnFv n = iUnion (liftnFv n ∘ s)
+  := by ext k; simp [mem_liftnFv]
+
+theorem Set.liftnFv_iUnion (n) (s : α → Set ℕ)
+  : (iUnion s).liftnFv n = iUnion (λi => (s i).liftnFv n)
   := by ext k; simp [mem_liftnFv]
 
 -- TODO: liftnFv map add, liftFv map succ...
