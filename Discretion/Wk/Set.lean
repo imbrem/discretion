@@ -35,14 +35,14 @@ theorem Set.not_mem_liftnFv (n : ℕ) (s : Set ℕ) (k : ℕ)
   : k ∉ liftnFv n s ↔ k + n ∉ s
   := by simp [mem_liftnFv]
 
-theorem Set.liftnFv_mono {lo hi : Set ℕ} (n) (h : lo ≤ hi)
-  : lo.liftnFv n ≤ hi.liftnFv n := Set.image_mono (Set.inter_subset_inter_left _ h)
+theorem Set.liftnFv_mono {lo hi : Set ℕ} (n) (h : lo ⊆ hi)
+  : lo.liftnFv n ⊆ hi.liftnFv n := Set.image_mono (Set.inter_subset_inter_left _ h)
 
 /-- Compute the free variable set of a term under a binder -/
 abbrev Set.liftFv := Set.liftnFv 1
 
-theorem Set.liftFv_mono {lo hi : Set ℕ} (h : lo ≤ hi)
-  : lo.liftFv ≤ hi.liftFv := Set.image_mono (Set.inter_subset_inter_left _ h)
+theorem Set.liftFv_mono {lo hi : Set ℕ} (h : lo ⊆ hi)
+  : lo.liftFv ⊆ hi.liftFv := Set.image_mono (Set.inter_subset_inter_left _ h)
 
 theorem Set.mem_liftFv_of_succ_mem (s : Set ℕ) (k : ℕ)
     : k ∈ s.liftFv → k + 1 ∈ s := mem_liftnFv_of_add_mem 1 s k
