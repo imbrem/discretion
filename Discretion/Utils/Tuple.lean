@@ -359,6 +359,29 @@ theorem Fin.addCases_injective {n m} {l : Fin n → α} {r : Fin m → α}
         rw [Nat.sub_add_cancel (Nat.le_of_not_lt ha), Nat.sub_add_cancel (Nat.le_of_not_lt hb)] at h
         exact h
 
+theorem Set.iUnion_addCases {n m} (l : Fin n → Set α) (r : Fin m → Set α)
+  : ⋃i, Fin.addCases l r i = (⋃i, l i) ∪ (⋃i, r i) := by
+  ext a
+  simp only [mem_iUnion, mem_union]
+  constructor
+  intro ⟨i, hi⟩
+  if h : i < n then
+    simp only [Fin.addCases, h, ↓reduceDite] at hi
+    exact Or.inl ⟨_, hi⟩
+  else
+    simp only [Fin.addCases, h, ↓reduceDite, eq_rec_constant] at hi
+    exact Or.inr ⟨_, hi⟩
+  intro h
+  cases h with
+  | inl h =>
+    have ⟨i, hi⟩ := h;
+    exists i.castAdd _
+    simp [hi]
+  | inr h =>
+    have ⟨i, hi⟩ := h;
+    exists i.natAdd _
+    simp [hi]
+
 -- TODO: addCases associator + inverse associator, to go with symmetry...
 
 -- TODO: addCases unitors...
