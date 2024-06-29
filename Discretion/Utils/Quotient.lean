@@ -7,9 +7,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset
 import Mathlib.Data.Quot
 import Mathlib.Data.Fintype.Quotient
 
-open Classical
-
-theorem Quotient.finChoice_eq_choice {ι : Type u} [Fintype ι] {α : ι → Type v}
+theorem Quotient.finChoice_eq_choice {ι : Type u} [Fintype ι] [DecidableEq ι] {α : ι → Type v}
   [S : (i : ι) → Setoid (α i)] (f : (i : ι) → Quotient (S i))
   : Quotient.finChoice f = Quotient.choice f := by
   rw [choice, <-Quotient.finChoice_eq]
@@ -26,7 +24,7 @@ theorem Quotient.forall_of_choice_eq {ι : Type u} {α : ι → Type v} [S : (i 
   simp only [out_eq] at h
   exact h
 
-theorem Quotient.forall_of_finChoice_eq {ι : Type u} [Fintype ι] {α : ι → Type v}
+theorem Quotient.forall_of_finChoice_eq {ι : Type u} [Fintype ι] [DecidableEq ι] {α : ι → Type v}
   [S : (i : ι) → Setoid (α i)] {f : (i : ι) → Quotient (S i)} {g : (i : ι) → α i}
   : Quotient.finChoice f = ⟦g⟧ → ∀i, f i = ⟦g i⟧ := by
   rw [finChoice_eq_choice]
