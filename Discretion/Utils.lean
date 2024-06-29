@@ -4,7 +4,17 @@ import Discretion.Utils.Perm
 import Discretion.Utils.Equiv
 import Discretion.Utils.Multiset
 
+@[simp]
+def Nat.swap01 : ℕ → ℕ | 0 => 1 | 1 => 0 | n => n
 
+@[simp]
+theorem Nat.swap01_swap01 : ∀n, Nat.swap01 (Nat.swap01 n) = n
+  | 0 => rfl
+  | 1 => rfl
+  | _ + 2 => rfl
+
+@[simp]
+theorem Nat.swap01_comp_swap01 : Nat.swap01 ∘ Nat.swap01 = id := funext Nat.swap01_swap01
 
 theorem Function.comp_update_apply {α β γ} [DecidableEq α] {f : β → γ} {g : α → β}
   (a : _) (b : _) (c : _) : f (Function.update g a b c) = Function.update (f ∘ g) a (f b) c

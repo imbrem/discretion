@@ -49,3 +49,8 @@ theorem Set.eqOn_comp_left_iff_of_injective
   {s : Set α} {f₁ f₂ : α → β} {g : β → γ} (hf : Function.Injective g)
   : s.EqOn (g ∘ f₁) (g ∘ f₂) ↔ s.EqOn f₁ f₂
   := eqOn_comp_left_iff_of_injOn_image (injOn_of_injective hf)
+
+theorem Set.iUnion_applied
+  {s : Set α} {f : β → Set γ} {g : α → β}
+  : ⋃ a ∈ s, f (g a) = ⋃ b ∈ g '' s, f b
+  := by simp
