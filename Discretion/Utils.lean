@@ -3,6 +3,7 @@ import Discretion.Utils.Tuple
 import Discretion.Utils.Perm
 import Discretion.Utils.Equiv
 import Discretion.Utils.Multiset
+import Discretion.Utils.Quotient
 
 def Nat.swap0 (n : ℕ) : ℕ → ℕ
   | 0 => n
