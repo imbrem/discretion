@@ -4,6 +4,7 @@ import Discretion.Utils.Perm
 import Discretion.Utils.Equiv
 import Discretion.Utils.Multiset
 import Discretion.Utils.Quotient
+import Discretion.Utils.List
 
 def Nat.swap0 (n : ℕ) : ℕ → ℕ
   | 0 => n
