@@ -89,7 +89,7 @@ theorem Fin.toNatWk_comp {n m k} (ρ : Fin m -> Fin k) (σ : Fin n -> Fin m)
   unfold toNatWk
   simp only [Function.comp_apply]
   split
-  simp only [is_lt, ↓reduceDite, Fin.eta]
+  simp only [is_lt, ↓reduceDIte, Fin.eta]
   simp_arith [Nat.add_sub_cancel]
 
 theorem Fin.toNatWk_comp_lower_bound {n m} (ρ : Fin n -> Fin m) (σ : ℕ → ℕ) (hσ : ∀k, n ≤ σ k)

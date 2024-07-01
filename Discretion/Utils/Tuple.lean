@@ -308,7 +308,7 @@ theorem Fin.addCases_zero {n} {α : Fin n → Type _}
   (l : (i : Fin n) → α i) (r : (i : Fin 0) → α (Fin.natAdd n i))
   : @addCases n 0 _ l r = l := by
   funext i
-  simp only [addCases, Nat.add_zero, is_lt, ↓reduceDite]
+  simp only [addCases, Nat.add_zero, is_lt]
   rfl
 
 theorem Fin.addCases_zero_right {n} (l : Fin 0 → α) (r : Fin n → α)
@@ -366,10 +366,10 @@ theorem Set.iUnion_addCases {n m} (l : Fin n → Set α) (r : Fin m → Set α)
   constructor
   intro ⟨i, hi⟩
   if h : i < n then
-    simp only [Fin.addCases, h, ↓reduceDite] at hi
+    simp only [Fin.addCases, h] at hi
     exact Or.inl ⟨_, hi⟩
   else
-    simp only [Fin.addCases, h, ↓reduceDite, eq_rec_constant] at hi
+    simp only [Fin.addCases, h, eq_rec_constant] at hi
     exact Or.inr ⟨_, hi⟩
   intro h
   cases h with

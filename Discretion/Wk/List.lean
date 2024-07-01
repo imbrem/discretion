@@ -13,6 +13,9 @@ def List.FWkn (Γ Δ : List α) (ρ : Fin Δ.length → Fin Γ.length) : Prop
 theorem List.FWkn.get {Γ Δ : List α} {ρ : Fin Δ.length → Fin Γ.length} (h : List.FWkn Γ Δ ρ)
   : ∀i, Γ.get (ρ i) ≤ Δ.get i := h
 
+theorem List.FWkn.getElem {Γ Δ : List α} {ρ : Fin Δ.length → Fin Γ.length} (h : List.FWkn Γ Δ ρ)
+  : ∀i, Γ[ρ i] ≤ Δ[i] := h
+
 theorem List.FWkn.id (Γ : List α) : List.FWkn Γ Γ id := le_refl _
 
 theorem List.FWkn.comp {ρ : Fin Δ.length → Fin Γ.length} {σ : Fin Ξ.length → Fin Δ.length}
@@ -35,6 +38,9 @@ def List.FEWkn (Γ Δ : List α) (ρ : Fin Δ.length → Fin Γ.length) : Prop
 theorem List.FEWkn.get {Γ Δ : List α} {ρ : Fin Δ.length → Fin Γ.length} (h : List.FEWkn Γ Δ ρ)
   : ∀i, Γ.get (ρ i) = Δ.get i := h.apply
 
+theorem List.FEWkn.getElem {Γ Δ : List α} {ρ : Fin Δ.length → Fin Γ.length} (h : List.FEWkn Γ Δ ρ)
+  : ∀i, Γ[ρ i] = Δ[i] := h.apply
+
 theorem List.FEWkn.comp {ρ : Fin Δ.length → Fin Γ.length} {σ : Fin Ξ.length → Fin Δ.length}
   (hρ : List.FEWkn Γ Δ ρ) (hσ : List.FEWkn Δ Ξ σ) : List.FEWkn Γ Ξ (ρ ∘ σ)
   := Fin.FEWkn.comp hρ hσ
@@ -43,7 +49,10 @@ theorem List.FEWkn.lift {ρ : Fin Δ.length → Fin Γ.length} (hρ : List.FEWkn
     : List.FEWkn (A :: Γ) (A :: Δ) (Fin.liftWk ρ)
   := by funext i; cases i using Fin.cases with
   | zero => rfl
-  | succ i => simp [hρ.get, Fin.liftWk]
+  | succ i =>
+    simp only [length_cons, Function.comp_apply, Fin.liftWk, Fin.cases_succ, Fin.val_succ,
+      get_eq_getElem, getElem_cons_succ]
+    apply hρ.getElem
 
 /-- The list `Γ` weakens to `Δ` -/
 def List.FWkns (Γ Δ : List α) : Prop := ∃ρ, List.FWkn Γ Δ ρ ∧ StrictMono ρ

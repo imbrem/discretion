@@ -44,7 +44,7 @@ theorem Multiset.count_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
   : count k (liftnFv n s) = count (k + n) s := by
   simp only [
     liftnFv, count_map, count_filter, count, countP_map, filter_filter, countP_eq_card_filter,
-    map_filter, card_map]
+    filter_map, card_map]
   congr
   funext i
   simp only [Function.comp_apply, eq_iff_iff]
@@ -59,7 +59,7 @@ theorem Multiset.count_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
 @[simp]
 theorem Multiset.liftnFv_of_map_add (n : ℕ) (s : Multiset ℕ)
   : (s.map (· + n)).liftnFv n = s := by
-  simp only [liftnFv, map_filter, map_map]
+  simp only [liftnFv, filter_map, map_map]
   rw [Multiset.filter_eq_self.mpr (by simp)]
   simp
 
@@ -74,13 +74,13 @@ theorem Multiset.liftFv_cons_zero {s : Multiset ℕ}
 
 theorem Multiset.liftFv_of_map_add_one (s : Multiset ℕ)
   : (s.map (· + 1)).liftFv = s := by
-  simp only [liftFv, liftnFv, map_map, map_filter]
+  simp only [liftFv, liftnFv, map_map, filter_map]
   rw [filter_eq_self.mpr (by simp)]
   simp
 
 theorem Multiset.liftFv_of_map_succ (s : Multiset ℕ)
   : (s.map Nat.succ).liftFv = s := by
-  simp only [liftFv, liftnFv, map_map, map_filter]
+  simp only [liftFv, liftnFv, map_map, filter_map]
   rw [filter_eq_self.mpr (by simp)]
   simp
 
