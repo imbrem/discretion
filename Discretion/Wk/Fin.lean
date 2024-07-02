@@ -78,6 +78,10 @@ def Fin.toNatWk {n m} (ρ : Fin n → Fin m) : Nat → Nat
   := λk => if h : k < n then ρ ⟨k, h⟩ else (k - n) + m
 
 @[simp]
+theorem Fin.toNatWk_coe {n m} (ρ : Fin n → Fin m) (k : Fin n) : toNatWk ρ k = ρ k := by
+  simp [toNatWk]
+
+@[simp]
 theorem Fin.toNatWk_id (n) : toNatWk (@id (Fin n)) = id := by
   funext k
   unfold toNatWk
