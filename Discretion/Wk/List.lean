@@ -222,7 +222,7 @@ theorem List.NWkn.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.leng
 
 /-- The function `ρ` sends `Γ` to `Δ` -/
 def List.NEWkn (Γ Δ : List α) (ρ : ℕ → ℕ) : Prop
-  := ∀n, (hΔ : n < Δ.length) → ∃hΓ : ρ n < Γ.length, Γ.get ⟨ρ n , hΓ⟩ = Δ.get ⟨n, hΔ⟩
+  := ∀n, (hΔ : n < Δ.length) → ∃hΓ : ρ n < Γ.length, Γ[ρ n] = Δ[n]
 
 theorem List.NEWkn.bounded {ρ : ℕ → ℕ} (h : List.NEWkn Γ Δ ρ) (n : ℕ) (hΔ : n < Δ.length)
   : ρ n < Γ.length := match h n hΔ with | ⟨hΓ, _⟩ => hΓ
