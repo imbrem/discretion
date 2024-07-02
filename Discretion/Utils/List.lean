@@ -38,6 +38,23 @@ theorem List.getElem_append_addNat (l r : List α) (i : Fin r.length)
   : (l ++ r)[(i.addNat l.length).cast (by rw [Nat.add_comm])] = r[i]
   := by simp [Fin.addNat, List.getElem_append_right]
 
+theorem List.getElem_append_add_left (l r : List α) (i : ℕ)
+  (hi : i + l.length < (l ++ r).length)
+  : (l ++ r)[i + l.length]
+  = r[i]'(by
+    simp only [length_append, Nat.add_comm l.length, Nat.add_lt_add_iff_right] at hi;
+    exact hi)
+  := by rw [List.getElem_append_right]; simp; simp; simp only [length_append, Nat.add_comm l.length,
+    Nat.add_lt_add_iff_right, Nat.add_sub_cancel] at *; exact hi
+
+theorem List.getElem_append_add_right (l r : List α) (i : ℕ)
+  (hi : l.length + i < (l ++ r).length)
+  : (l ++ r)[l.length + i]
+  = r[i]'(by
+    simp only [length_append, Nat.add_lt_add_iff_left] at hi;
+    exact hi)
+  := by simp [Nat.add_comm l.length, List.getElem_append_add_left]
+
 theorem List.getElem_append_right_fin (l r : List α) (i : Fin (l ++ r).length) (h : l.length ≤ i)
   : (l ++ r)[i] = r[(i.cast (by rw [List.length_append, Nat.add_comm])).subNat l.length h]
   := by rw [<-List.getElem_append_addNat l r]; simp
