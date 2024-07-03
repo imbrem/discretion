@@ -289,10 +289,16 @@ theorem Nat.liftnWk_add (m n : ℕ) : liftnWk (m + n) = liftnWk m ∘ liftnWk n
 theorem Nat.liftnWk_add_apply (m n : ℕ) (ρ) : liftnWk (m + n) ρ = liftnWk m (liftnWk n ρ)
   := by rw [liftnWk_eq_iterate_liftWk, Function.iterate_add_apply]
 
+theorem Nat.liftnWk_add' (m n : ℕ) : liftnWk (n + m) = liftnWk m ∘ liftnWk n
+  := by rw [add_comm, Nat.liftnWk_add]
+
+theorem Nat.liftnWk_add_apply' (m n : ℕ) (ρ) : liftnWk (n + m) ρ = liftnWk m (liftnWk n ρ)
+  := by rw [add_comm, Nat.liftnWk_add_apply]
+
 theorem Nat.liftnWk_comm_liftnWk (m n) : liftnWk m ∘ liftnWk n = liftnWk n ∘ liftnWk m
   := by rw [<-Nat.liftnWk_add, add_comm, Nat.liftnWk_add]
 
-theorem Nat.liftnWk_comm_liftnWK_apply (m n ρ) : liftnWk m (liftnWk n ρ) = liftnWk n (liftnWk m ρ)
+theorem Nat.liftnWk_comm_liftnWk_apply (m n ρ) : liftnWk m (liftnWk n ρ) = liftnWk n (liftnWk m ρ)
   := by rw [<-Nat.liftnWk_add_apply, add_comm, Nat.liftnWk_add_apply]
 
 theorem Nat.stepnWk_add (m n : ℕ) : stepnWk (m + n) = stepnWk m ∘ stepnWk n
