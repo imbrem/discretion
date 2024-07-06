@@ -113,6 +113,16 @@ theorem Fin.toNatWk_comp_add {n m} (ρ : Fin n -> Fin m)
   funext k
   simp
 
+theorem Fin.toNatWk_comp_liftnWk {n m} (σ : ℕ → ℕ) (ρ : Fin n -> Fin m)
+  : Fin.toNatWk ρ ∘ Nat.liftnWk n σ = Nat.liftnWk m σ ∘ Fin.toNatWk ρ := by
+  funext i
+  simp only [Function.comp_apply, Nat.liftnWk, toNatWk]
+  split <;> simp_arith
+
+theorem Fin.liftnWk_comp_toNatWk {n m} (σ : ℕ → ℕ) (ρ : Fin n -> Fin m)
+  : Nat.liftnWk m σ ∘ Fin.toNatWk ρ = Fin.toNatWk ρ ∘ Nat.liftnWk n σ
+  := by rw [toNatWk_comp_liftnWk]
+
 theorem Fin.toNatWk_swapAdd_comp_liftnWk_add_apply (n m i : ℕ)
   : toNatWk (swapAdd n m) (n.liftnWk (· + m) i) = i + m := by
   simp [toNatWk, Nat.liftnWk, swapAdd, addCases]
