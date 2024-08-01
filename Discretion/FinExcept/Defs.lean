@@ -397,7 +397,7 @@ theorem mem_support_single (z : M) (a a' : α) (b : M)
 
 theorem eq_single_iff {f : α →ᶠ[{z}] M} {a b}
   : f = single z a b ↔ f.support ⊆ {a} ∧ f a = b := by
-  refine' ⟨fun h => h.symm ▸ ⟨support_single_subset, single_eq_same⟩, _⟩
+  refine ⟨fun h => h.symm ▸ ⟨support_single_subset, single_eq_same⟩, ?x⟩
   rintro ⟨h, rfl⟩
   ext x
   by_cases hx : a = x <;> simp only [hx, single_eq_same, single_eq_of_ne, Ne, not_false_iff]
@@ -408,7 +408,7 @@ theorem single_eq_single_iff (z : M) (a₁ a₂ : α) (b₁ b₂ : M) :
   constructor
   · intro eq
     by_cases h : a₁ = a₂
-    · refine' Or.inl ⟨h, _⟩
+    · refine Or.inl ⟨h, ?x⟩
       rwa [h, (single_injective z a₂).eq_iff] at eq
     · rw [DFunLike.ext_iff] at eq
       have h₁ := eq a₁
@@ -769,8 +769,8 @@ theorem mapRange_single {f : M → N} {hf} {a : α} {b : M} :
   ext
   simp only [mapRange_apply, single_apply]
   split
-  . rfl
-  . exact hf _ rfl
+  · rfl
+  · exact hf _ rfl
 
 theorem support_mapRange_of_injective {e : M → N} (he0) (f : ι →ᶠ[{z}] M)
     (he : Function.Injective e) : (mapRange _ {z'} e he0 f).support = f.support := by
@@ -848,14 +848,14 @@ theorem embDomain_apply (f : α ↪ β) (v : α →ᶠ[{z}] M) (a : α) : embDom
   classical
     change dite _ _ _ = _
     split_ifs with h <;> rw [Finset.mem_map' f] at h
-    · refine' congr_arg (v : α → M) (f.inj' _)
+    · refine congr_arg (v : α → M) (f.inj' ?x)
       exact Finset.choose_property (fun a₁ => f a₁ = f a) _ _
     · exact (not_mem_support_iff.1 h).symm
 
 theorem embDomain_notin_range (f : α ↪ β) (v : α →ᶠ[{z}] M) (a : β) (h : a ∉ Set.range f) :
     embDomain f v a = z := by
   classical
-    refine' dif_neg (mt (fun h => _) h)
+    refine dif_neg (mt (fun h => ?x) h)
     rcases Finset.mem_map.1 h with ⟨a, _h, rfl⟩
     exact Set.mem_range_self a
 

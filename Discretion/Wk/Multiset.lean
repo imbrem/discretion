@@ -130,8 +130,8 @@ theorem Multiset.liftnFv_map_liftnWk (n) (s : Multiset ℕ) (ρ)
   ext a
   simp only [Nat.liftnWk]
   split
-  . simp_arith [*]
-  . rename_i h
+  · simp_arith [*]
+  · rename_i h
     simp [le_of_not_lt h]
 
 @[simp]

@@ -155,10 +155,10 @@ theorem Fin.numMissedBefore_cast_succ_above (ρ : Fin (n + 1) → Fin m) (k : �
     if h : ρ 0 = k then
       cases h
       rw [numMissedBefore_cast_succ_below ρ _ (le_refl _), ite_cond_eq_false, ite_cond_eq_true]
-      . simp_arith
-      . rw [eq_iff_iff, iff_true]
+      · simp_arith
+      · rw [eq_iff_iff, iff_true]
         exact ⟨0, rfl⟩
-      . simp only [Function.comp_apply, eq_iff_iff, iff_false, not_exists]
+      · simp only [Function.comp_apply, eq_iff_iff, iff_false, not_exists]
         intro i hi
         cases hρ (Fin.eq_of_val_eq hi.symm)
     else
@@ -226,8 +226,8 @@ theorem Fin.lastHitBefore_le_numMissedBefore_add_n (ρ : Fin n → Fin m) (k : �
     split
     case isTrue h =>
       split
-      . exact (Nat.le_of_lt h).trans (Nat.le_add_left _ _)
-      . exact I
+      · exact (Nat.le_of_lt h).trans (Nat.le_add_left _ _)
+      · exact I
     case _ => exact I
 
 def Fin.lastHit (ρ : Fin n → Fin m) (k : ℕ) : ℕ

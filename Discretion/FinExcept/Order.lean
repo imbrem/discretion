@@ -47,7 +47,6 @@ lemma lt_def : f < g ↔ f ≤ g ∧ ∃ i, f i < g i := Pi.lt_def
 @[simp, norm_cast] lemma coe_lt_coe : ⇑f < g ↔ f < g := Iff.rfl
 
 lemma coe_mono : Monotone (toFun : (ι →ᶠ[[Zf]] α) → ι → α) := fun _ _ ↦ id
-#align finsupp.monotone_to_fun FinExcept.coe_mono
 
 lemma coe_strictMono : Monotone (FinExcept.toFun : (ι →ᶠ[[Zf]] α) → ι → α) := fun _ _ ↦ id
 

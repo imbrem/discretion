@@ -104,8 +104,8 @@ theorem Fin.max_eq_bot' [LinearOrder α] [OrderBot α] (f : Fin n → α) (hf : 
 theorem Fin.max_eq_bot_iff [LinearOrder α] [OrderBot α] (f : Fin n → α)
   : max f = ⊥ ↔ ∀i, f i = ⊥ := by
   apply Iff.intro
-  . apply Fin.max_eq_bot
-  . intro hf
+  · apply Fin.max_eq_bot
+  · intro hf
     cases (funext hf : f = ⊥)
     rw [max_bot]
 
@@ -199,9 +199,9 @@ theorem Fin.sup_addCases [SemilatticeSup α] [OrderBot α] (f : Fin n → α) (g
     (Fin.sup_le _ _ (λi => by
       simp only [addCases, eq_rec_constant]
       split
-      . apply le_sup_of_le_left
+      · apply le_sup_of_le_left
         apply elem_le_sup
-      . apply le_sup_of_le_right
+      · apply le_sup_of_le_right
         apply elem_le_sup))
     (sup_le_iff.mpr ⟨sup_left_le_sup_addCases f g, sup_right_le_sup_addCases f g⟩)
 

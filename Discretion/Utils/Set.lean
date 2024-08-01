@@ -30,15 +30,15 @@ theorem Set.eqOn_comp_left_iff_of_eqOn_injOn_image
   intro a
   apply propext
   simp only [Function.comp_apply]
-  . constructor
-    . intro h ha
+  · constructor
+    · intro h ha
       apply hf₁
-      . exact mem_union_left _ (mem_image_of_mem _ ha)
-      . exact mem_union_right _ (mem_image_of_mem _ ha)
-      . rw [<-hg] at h
-        . exact h ha
-        . exact mem_union_right _ (mem_image_of_mem _ ha)
-    . intro h ha; rw [h ha, hg];  exact mem_union_right _ (mem_image_of_mem _ ha)
+      · exact mem_union_left _ (mem_image_of_mem _ ha)
+      · exact mem_union_right _ (mem_image_of_mem _ ha)
+      · rw [<-hg] at h
+        · exact h ha
+        · exact mem_union_right _ (mem_image_of_mem _ ha)
+    · intro h ha; rw [h ha, hg];  exact mem_union_right _ (mem_image_of_mem _ ha)
 
 theorem Set.eqOn_comp_left_iff_of_injOn_image
   {s : Set α} {f₁ f₂ : α → β} {g : β → γ} (hf : (f₁ '' s ∪ f₂ '' s).InjOn g)
