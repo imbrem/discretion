@@ -232,7 +232,7 @@ noncomputable def _root_.Equiv.finExceptUnique {ι : Type*} [Unique ι]
 theorem unique_ext [Unique α] {f g : α →ᶠ[[Zf]] M} (h : f default = g default) : f = g :=
   ext fun a => by rwa [Unique.eq_default a]
 
-theorem unique_ext_iff [Unique α] {f g : α →ᶠ[[Zf]] M} : f = g ↔ f default = g default :=
+theorem unique_ext_iff' [Unique α] {f g : α →ᶠ[[Zf]] M} : f = g ↔ f default = g default :=
   ⟨fun h => h ▸ rfl, unique_ext⟩
 
 /--
@@ -446,7 +446,7 @@ theorem unique_single [Unique α] (x : α →ᶠ[{z}] M) : x = single z default 
 
 @[simp]
 theorem unique_single_eq_iff [Unique α] {b' : M} : single z a b = single z a' b' ↔ b = b' := by
-  rw [unique_ext_iff, Unique.eq_default a, Unique.eq_default a', single_eq_same, single_eq_same]
+  rw [unique_ext_iff', Unique.eq_default a, Unique.eq_default a', single_eq_same, single_eq_same]
 
 theorem support_eq_singleton {f : α →ᶠ[{z}] M} {a : α} :
     f.support = {a} ↔ f a ≠ z ∧ f = single z a (f a) :=

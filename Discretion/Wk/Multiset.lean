@@ -19,7 +19,7 @@ theorem Multiset.liftnFv_cons_zero {s : Multiset ℕ} {n}
 theorem Multiset.liftnFv_cons_n {s : Multiset ℕ} {n}
   : (n::ₘs).liftnFv n = 0::ₘ(s.liftnFv n) := by simp [liftnFv]
 
-theorem Multiset.mem_liftnFv_of_add_mem (n : ℕ) (s : Multiset ℕ) (k : ℕ)
+theorem Multiset.add_mem_of_mem_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
     : k ∈ s.liftnFv n → k + n ∈ s := by
   simp only [liftnFv, mem_map, mem_filter, forall_exists_index, and_imp]
   intro x hx hn hk
@@ -27,14 +27,14 @@ theorem Multiset.mem_liftnFv_of_add_mem (n : ℕ) (s : Multiset ℕ) (k : ℕ)
   rw [Nat.sub_add_cancel hn]
   exact hx
 
-theorem Multiset.add_mem_of_mem_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ) (h : k + n ∈ s)
+theorem Multiset.mem_liftnFv_of_add_mem (n : ℕ) (s : Multiset ℕ) (k : ℕ) (h : k + n ∈ s)
     : k ∈ s.liftnFv n := by
   simp only [liftnFv, mem_map, mem_filter]
   exact ⟨k + n, ⟨h, by simp⟩, by simp⟩
 
 theorem Multiset.mem_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
   : k ∈ liftnFv n s ↔ k + n ∈ s
-  := ⟨mem_liftnFv_of_add_mem n s k, add_mem_of_mem_liftnFv n s k⟩
+  := ⟨add_mem_of_mem_liftnFv n s k, mem_liftnFv_of_add_mem n s k⟩
 
 theorem Multiset.not_mem_liftnFv (n : ℕ) (s : Multiset ℕ) (k : ℕ)
   : k ∉ liftnFv n s ↔ k + n ∉ s
@@ -87,11 +87,11 @@ theorem Multiset.liftFv_of_map_succ (s : Multiset ℕ)
 theorem Multiset.count_liftFv (s : Multiset ℕ) (k : ℕ)
   : count k s.liftFv = count (k + 1) s := count_liftnFv 1 s k
 
-theorem Multiset.mem_liftFv_of_succ_mem (s : Multiset ℕ) (k : ℕ)
-    : k ∈ s.liftFv → k + 1 ∈ s := mem_liftnFv_of_add_mem 1 s k
-
 theorem Multiset.succ_mem_of_mem_liftFv (s : Multiset ℕ) (k : ℕ)
-    : k + 1 ∈ s → k ∈ s.liftFv := add_mem_of_mem_liftnFv 1 s k
+    : k ∈ s.liftFv → k + 1 ∈ s := add_mem_of_mem_liftnFv 1 s k
+
+theorem Multiset.mem_liftFv_of_succ_mem (s : Multiset ℕ) (k : ℕ)
+    : k + 1 ∈ s → k ∈ s.liftFv := mem_liftnFv_of_add_mem 1 s k
 
 theorem Multiset.mem_liftFv (s : Multiset ℕ) (k : ℕ)
   : k ∈ s.liftFv ↔ k + 1 ∈ s := mem_liftnFv 1 s k

@@ -74,7 +74,7 @@ theorem Set.liftnFv_singleton_le {k n} (h : n ≤ k) : ({k} : Set ℕ).liftnFv n
   cases hk
   exact ⟨k, ⟨rfl, h⟩, rfl⟩
 
-theorem Set.mem_liftnFv_of_add_mem (n : ℕ) (s : Set ℕ) (k : ℕ)
+theorem Set.add_mem_of_mem_liftnFv (n : ℕ) (s : Set ℕ) (k : ℕ)
     : k ∈ s.liftnFv n → k + n ∈ s := by
   simp only [liftnFv, forall_exists_index, and_imp]
   intro ⟨x, ⟨hx, hn⟩, hk⟩
@@ -82,12 +82,12 @@ theorem Set.mem_liftnFv_of_add_mem (n : ℕ) (s : Set ℕ) (k : ℕ)
   rw [Nat.sub_add_cancel hn]
   exact hx
 
-theorem Set.add_mem_of_mem_liftnFv (n : ℕ) (s : Set ℕ) (k : ℕ) (h : k + n ∈ s)
+theorem Set.mem_liftnFv_of_add_mem (n : ℕ) (s : Set ℕ) (k : ℕ) (h : k + n ∈ s)
     : k ∈ s.liftnFv n := ⟨k + n, ⟨h, by simp⟩, by simp⟩
 
 theorem Set.mem_liftnFv (n : ℕ) (s : Set ℕ) (k : ℕ)
   : k ∈ liftnFv n s ↔ k + n ∈ s
-  := ⟨mem_liftnFv_of_add_mem n s k, add_mem_of_mem_liftnFv n s k⟩
+  := ⟨add_mem_of_mem_liftnFv n s k, mem_liftnFv_of_add_mem n s k⟩
 
 theorem Set.not_mem_liftnFv (n : ℕ) (s : Set ℕ) (k : ℕ)
   : k ∉ liftnFv n s ↔ k + n ∉ s
@@ -109,11 +109,11 @@ theorem Set.liftFv_insert_succ {s : Set ℕ}
   : (insert (n + 1) s).liftFv = insert n s.liftFv
     := by simp
 
-theorem Set.mem_liftFv_of_succ_mem (s : Set ℕ) (k : ℕ)
-    : k ∈ s.liftFv → k + 1 ∈ s := mem_liftnFv_of_add_mem 1 s k
-
 theorem Set.succ_mem_of_mem_liftFv (s : Set ℕ) (k : ℕ)
-    : k + 1 ∈ s → k ∈ s.liftFv := add_mem_of_mem_liftnFv 1 s k
+    : k ∈ s.liftFv → k + 1 ∈ s := add_mem_of_mem_liftnFv 1 s k
+
+theorem Set.mem_liftFv_of_succ_mem (s : Set ℕ) (k : ℕ)
+    : k + 1 ∈ s → k ∈ s.liftFv := mem_liftnFv_of_add_mem 1 s k
 
 theorem Set.mem_liftFv (s : Set ℕ) (k : ℕ)
   : k ∈ s.liftFv ↔ k + 1 ∈ s := mem_liftnFv 1 s k
