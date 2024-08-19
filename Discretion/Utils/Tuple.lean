@@ -148,7 +148,7 @@ theorem Fin.elem_le_supD [SemilatticeSup α] (f : Fin n → α) (b : α)
     | zero => simp [supD_succ]
     | succ i =>
       rw [supD_succ]
-      exact le_sup_of_le_right $ I (f ∘ succ) _ i
+      exact le_sup_of_le_right <| I (f ∘ succ) _ i
 
 theorem Fin.supD_le [SemilatticeSup α] (f : Fin n → α) (b : α)
   : (∀i, f i ≤ c) → b ≤ c → supD f b ≤ c := by

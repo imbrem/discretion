@@ -64,7 +64,7 @@ theorem Multiset.liftnFv_of_map_add (n : ℕ) (s : Multiset ℕ)
   simp
 
 theorem Multiset.liftnFv_mono {lo hi : Multiset ℕ} (n) (h : lo ≤ hi)
-  : lo.liftnFv n ≤ hi.liftnFv n := map_le_map $ filter_le_filter _ h
+  : lo.liftnFv n ≤ hi.liftnFv n := map_le_map <| filter_le_filter _ h
 
 /-- Compute the free variable set of a term under a binder -/
 abbrev Multiset.liftFv := Multiset.liftnFv 1

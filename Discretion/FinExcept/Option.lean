@@ -22,8 +22,7 @@ theorem WithDefault.undefault_eq_iff {α : Type _} {a b : WithDefault α}
 
 section GetSet
 
-variable [DecidableEq α] [DecidableEq M]
-  {f g : α →ᶠ[{none}] (Option M)} {x y : α} {a : M}
+variable {f g : α →ᶠ[{none}] (Option M)} {x y : α} {a : M}
 
 theorem not_mem_support_iff_none : x ∉ f.support ↔ f x = none := not_mem_support_iff
 
@@ -52,6 +51,8 @@ theorem get_eq_iff_eq_at (hx : x ∈ f.support) (hy : y ∈ f.support)
   : f.get x hx = f.get y hy ↔ f x = f y := by
   simp only [get, Option.get]; split; split; simp [*]
 
+variable [DecidableEq α]
+
 /-- This is the same as `f.update x ↑a`, but with nicer defeqs for the support -/
 def cons (x : α) (a : M) (f : α →ᶠ[{none}] (Option M)) : α →ᶠ[{none}] (Option M) where
   support := insert x f.support
@@ -71,7 +72,7 @@ theorem cons_tail (h : y ≠ x) : (f.cons x a) y = f y
 theorem coe_cons : (f.cons x a : α → Option M) = Function.update f x a := rfl
 
 @[simp]
-theorem default_cons : cons x a default = single none x ↑a := by
+theorem default_cons [DecidableEq M] : cons x a default = single none x ↑a := by
   ext
   rw [single_eq_update]
   rfl
@@ -79,21 +80,22 @@ theorem default_cons : cons x a default = single none x ↑a := by
 theorem support_cons :
     support (f.cons x a) = insert x f.support := rfl
 
-theorem cons_eq_update (x : α) (a : M) (f : α →ᶠ[{none}] (Option M))
+theorem cons_eq_update [DecidableEq M] (x : α) (a : M) (f : α →ᶠ[{none}] (Option M))
   : cons x a f = f.update x a :=
   rfl
 
 @[simp]
 theorem cons_eq_self (h : x ∈ f.support)
-  : f.cons x (f.get x h) = f := by simp [cons_eq_update]
+  : f.cons x (f.get x h) = f := by open Classical in simp [cons_eq_update]
 
 theorem cons_comm (f : α →ᶠ[{none}] (Option M)) (h : x ≠ y) (a b : M) :
-  cons x a (cons y b f) = cons y b (cons x a f) := by simp only [cons_eq_update, f.update_comm h]
+  cons x a (cons y b f) = cons y b (cons x a f)
+  := by open Classical in simp only [cons_eq_update, f.update_comm h]
 
 @[simp]
 theorem cons_idem (x : α) (a : M) (f : α →ᶠ[{none}] (Option M))
   : cons x a (cons x a f) = cons x a f :=
-  by simp only [cons_eq_update, f.update_idem]
+  by open Classical in simp only [cons_eq_update, f.update_idem]
 
 theorem eq_at_of_cons_eq_self (h : cons x a f = f) : a = f x := by
   have h : cons x a f x = f x := by rw [h];
@@ -153,8 +155,7 @@ theorem not_mem_support_iff_top [Top M] {f : α →ᶠ[{⊤}] M}
 theorem mem_support_iff_ne_top [Top M] {f : α →ᶠ[{⊤}] M}
   : x ∈ f.support ↔ f x ≠ ⊤ := by simp [not_mem_support_iff_top]
 
-variable [DecidableEq α] [DecidableEq M]
-  {f g : α →ᶠ[{⊤}] (WithTop M)} {x y : α} {a : M}
+variable {f g : α →ᶠ[{⊤}] (WithTop M)} {x y : α} {a : M}
 
 theorem mem_support_of_eq_coe_top : f x = ↑a → x ∈ f.support := mem_support_of_eq_coe
 
@@ -186,6 +187,8 @@ theorem untop_eq_iff_eq_at (hx : x ∈ f.support) (hy : y ∈ f.support)
   : f.untop x hx = f.untop y hy ↔ f x = f y
   := untop_eq_get.symm ▸ untop_eq_get.symm ▸ get_eq_iff_eq_at hx hy
 
+variable [DecidableEq α]
+
 /-- This is the same as `f.update x ↑a`, but with nicer defeqs for the support -/
 def cons_top (x : α) (a : M) (f : α →ᶠ[{⊤}] (WithTop M)) : α →ᶠ[{⊤}] (WithTop M) where
   support := insert x f.support
@@ -204,33 +207,33 @@ theorem cons_top_tail : y ≠ x → (f.cons_top x a) y = f y := cons_tail
 theorem coe_cons_top : (f.cons_top x a : α → WithTop M) = Function.update f x a := rfl
 
 @[simp]
-theorem top_cons_top : cons_top x a ⊤ = single ⊤ x ↑a := by
+theorem top_cons_top [DecidableEq M] : cons_top x a ⊤ = single ⊤ x ↑a := by
   ext
   rw [single_eq_update]
   rfl
 
 @[simp]
-theorem default_cons_top : cons_top x a default = single ⊤ x ↑a := top_cons_top
+theorem default_cons_top [DecidableEq M] : cons_top x a default = single ⊤ x ↑a := top_cons_top
 
 theorem support_cons_top :
     support (f.cons_top x a) = insert x f.support := rfl
 
-theorem cons_top_eq_update (x : α) (a : M) (f : α →ᶠ[{⊤}] (WithTop M))
+theorem cons_top_eq_update [DecidableEq M] (x : α) (a : M) (f : α →ᶠ[{⊤}] (WithTop M))
   : cons_top x a f = f.update x a :=
   rfl
 
 @[simp]
 theorem cons_top_eq_self (h : x ∈ f.support)
-  : f.cons_top x (f.untop x h) = f := by simp [cons_top_eq_update]
+  : f.cons_top x (f.untop x h) = f := by open Classical in simp [cons_top_eq_update]
 
 theorem cons_top_comm (f : α →ᶠ[{none}] (Option M)) (h : x ≠ y) (a b : M) :
   cons_top x a (cons_top y b f) = cons_top y b (cons_top x a f)
-  := by simp only [cons_top_eq_update, f.update_comm h]
+  := by open Classical in simp only [cons_top_eq_update, f.update_comm h]
 
 @[simp]
 theorem cons_top_idem (x : α) (a : M) (f : α →ᶠ[{none}] (Option M))
   : cons_top x a (cons_top x a f) = cons_top x a f :=
-  by simp only [cons_top_eq_update, f.update_idem]
+  by open Classical in simp only [cons_top_eq_update, f.update_idem]
 
 theorem eq_at_of_cons_top_eq_self (h : cons_top x a f = f) : a = f x := by
   have h : cons_top x a f x = f x := by rw [h];
@@ -283,8 +286,7 @@ theorem not_mem_support_iff_bot [Bot M] {f : α →ᶠ[{⊥}] M}
 theorem mem_support_iff_ne_bot [Bot M] {f : α →ᶠ[{⊥}] M}
   : x ∈ f.support ↔ f x ≠ ⊥ := by simp [not_mem_support_iff_bot]
 
-variable [DecidableEq α] [DecidableEq M]
-  {f g : α →ᶠ[{⊥}] (WithBot M)} {x y : α} {a : M}
+variable {f g : α →ᶠ[{⊥}] (WithBot M)} {x y : α} {a : M}
 
 theorem mem_support_of_eq_coe_bot : f x = ↑a → x ∈ f.support := mem_support_of_eq_coe
 
@@ -309,6 +311,8 @@ theorem unbot_eq_iff_eq_at (hx : x ∈ f.support) (hy : y ∈ f.support)
   : f.unbot x hx = f.unbot y hy ↔ f x = f y
   := untop_eq_iff_eq_at hx hy
 
+variable [DecidableEq α]
+
 /-- This is the same as `f.update x ↑a`, but with nicer defeqs for the support -/
 def cons_bot (x : α) (a : M) (f : α →ᶠ[{⊥}] (WithBot M)) : α →ᶠ[{⊥}] (WithBot M) where
   support := insert x f.support
@@ -325,15 +329,15 @@ theorem cons_bot_tail : y ≠ x → (f.cons_bot x a) y = f y := cons_tail
 theorem coe_cons_bot : (f.cons_bot x a : α → WithBot M) = Function.update f x a := rfl
 
 @[simp]
-theorem bot_cons_bot : cons_bot x a ⊥ = single ⊥ x ↑a := top_cons_top
+theorem bot_cons_bot [DecidableEq M] : cons_bot x a ⊥ = single ⊥ x ↑a := top_cons_top
 
 @[simp]
-theorem default_cons_bot : cons_bot x a default = single ⊥ x ↑a := bot_cons_bot
+theorem default_cons_bot [DecidableEq M] : cons_bot x a default = single ⊥ x ↑a := bot_cons_bot
 
 theorem support_cons_bot :
     support (f.cons_bot x a) = insert x f.support := rfl
 
-theorem cons_bot_eq_update (x : α) (a : M) (f : α →ᶠ[{⊥}] (WithBot M))
+theorem cons_bot_eq_update [DecidableEq M] (x : α) (a : M) (f : α →ᶠ[{⊥}] (WithBot M))
   : cons_bot x a f = f.update x a :=
   rfl
 
@@ -392,8 +396,7 @@ theorem not_mem_support_iff_default [Inhabited M] {f : α →ᶠ[{default}] M}
 theorem mem_support_iff_ne_default [Inhabited M] {f : α →ᶠ[{default}] M}
   : x ∈ f.support ↔ f x ≠ default := mem_support_iff_ne
 
-variable [DecidableEq α] [DecidableEq M]
-  {f g : α →ᶠ[{default}] (WithDefault M)} {x y : α} {a : M}
+variable {f g : α →ᶠ[{default}] (WithDefault M)} {x y : α} {a : M}
 
 theorem mem_support_of_eq_coe_default : f x = ↑a → x ∈ f.support := mem_support_of_eq_coe
 
@@ -418,6 +421,8 @@ theorem undefault_eq_iff_eq_at (hx : x ∈ f.support) (hy : y ∈ f.support)
   : f.undefault x hx = f.undefault y hy ↔ f x = f y
   := untop_eq_iff_eq_at hx hy
 
+variable [DecidableEq α]
+
 /-- This is the same as `f.update x ↑a`, but with nicer defeqs for the support -/
 def cons_default (x : α) (a : M) (f : α →ᶠ[{default}] (WithDefault M))
   : α →ᶠ[{default}] (WithDefault M) where
@@ -435,12 +440,13 @@ theorem cons_default_tail : y ≠ x → (f.cons_default x a) y = f y := cons_tai
 theorem coe_cons_default : (f.cons_default x a : α → WithDefault M) = Function.update f x a := rfl
 
 @[simp]
-theorem default_cons_default : cons_default x a default = single default x ↑a := bot_cons_bot
+theorem default_cons_default [DecidableEq M]
+  : cons_default x a default = single default x ↑a := bot_cons_bot
 
 theorem support_cons_default :
     support (f.cons_default x a) = insert x f.support := rfl
 
-theorem cons_default_eq_update (x : α) (a : M) (f : α →ᶠ[{default}] (WithDefault M))
+theorem cons_default_eq_update [DecidableEq M] (x : α) (a : M) (f : α →ᶠ[{default}] (WithDefault M))
   : cons_default x a f = f.update x a :=
   rfl
 

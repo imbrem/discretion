@@ -6,10 +6,6 @@ open Finset
 
 namespace FinExcept
 
-section DecEq
-
-variable [DecidableEq ι] [DecidableEq α]
-
 section LE
 variable [LE α] {f g : ι →ᶠ[[Zf]] α}
 
@@ -62,7 +58,7 @@ instance partialorder [PartialOrder α] : PartialOrder (ι →ᶠ[[Zf]] α) :=
 --       this would have to be a low-priority instance to avoid conflict... as should the above,
 --       for that matter
 
-instance semilatticeInf
+instance semilatticeInf [DecidableEq ι]
   {Zf : ι → Set α} [hZ: ∀a, Subsingleton (Zf a)] [∀a, DecidablePred (· ∈ Zf a)] [SemilatticeInf α]
   : SemilatticeInf (ι →ᶠ[[Zf]] α) :=
   { partialorder with
@@ -75,10 +71,11 @@ instance semilatticeInf
     le_inf := fun _f _g _i h1 h2 s => le_inf (h1 s) (h2 s) }
 
 @[simp]
-theorem inf_apply [SemilatticeInf α] {i : ι} {f g : ι →ᶠ[{z}] α} : (f ⊓ g) i = f i ⊓ g i :=
+theorem inf_apply [SemilatticeInf α] [DecidableEq α] [DecidableEq ι]
+  {i : ι} {f g : ι →ᶠ[{z}] α} : (f ⊓ g) i = f i ⊓ g i :=
   rfl
 
-instance semilatticeSup
+instance semilatticeSup [DecidableEq ι]
   {Zf : ι → Set α} [hZ: ∀a, Subsingleton (Zf a)] [∀a, DecidablePred (· ∈ Zf a)] [SemilatticeSup α]
   : SemilatticeSup (ι →ᶠ[[Zf]] α) :=
   { partialorder with
@@ -91,10 +88,11 @@ instance semilatticeSup
     sup_le := fun _f _g _h hf hg i => sup_le (hf i) (hg i) }
 
 @[simp]
-theorem sup_apply [SemilatticeSup α] {i : ι} {f g : ι →ᶠ[{z}] α} : (f ⊔ g) i = f i ⊔ g i :=
+theorem sup_apply [SemilatticeSup α] [DecidableEq α] [DecidableEq ι]
+  {i : ι} {f g : ι →ᶠ[{z}] α} : (f ⊔ g) i = f i ⊔ g i :=
   rfl
 
-instance lattice
+instance lattice [DecidableEq ι]
   {Zf : ι → Set α} [∀a, Subsingleton (Zf a)] [∀a, DecidablePred (· ∈ Zf a)] [Lattice α]
   : Lattice (ι →ᶠ[[Zf]] α) :=
   { semilatticeInf, semilatticeSup with }
@@ -103,7 +101,7 @@ instance lattice
 
 section Lattice
 
-variable [Lattice α] (f g : ι →ᶠ[{z}] α)
+variable [DecidableEq ι] [DecidableEq α] [Lattice α] (f g : ι →ᶠ[{z}] α)
 
 theorem support_inf_union_support_sup : (f ⊓ g).support ∪ (f ⊔ g).support = f.support ∪ g.support :=
   coe_injective <| compl_injective <| by ext; simp [inf_eq_and_sup_eq_iff]
@@ -113,10 +111,8 @@ theorem support_sup_union_support_inf : (f ⊔ g).support ∪ (f ⊓ g).support 
 
 end Lattice
 
-end DecEq
-
 section OrderTop
-variable [DecidableEq α] [LE α] [OrderTop α]
+variable [LE α] [OrderTop α]
 
 instance orderTop : OrderTop (ι →ᶠ[{⊤}] α) where
   le_top := by simp [le_def, top_apply]
@@ -137,7 +133,8 @@ instance decidableLETop [DecidableRel (@LE.le α _)]
 variable [DecidableEq ι]
 
 @[simp]
-theorem le_single_iff_top {i : ι} {x : α} {f : ι →ᶠ[{⊤}] α} : f ≤ single ⊤ i x ↔ f i ≤ x :=
+theorem le_single_iff_top [DecidableEq α] {i : ι} {x : α} {f : ι →ᶠ[{⊤}] α}
+  : f ≤ single ⊤ i x ↔ f i ≤ x :=
   (le_iff_top' _ _ support_single_subset).trans <| by simp
 
 end OrderTop
@@ -152,18 +149,18 @@ end Preorder
 
 section PartialOrder
 
-variable [DecidableEq α] [PartialOrder α] [OrderTop α]
+variable [PartialOrder α] [OrderTop α]
 
 lemma support_antitone : Antitone (support (α := ι) (M := α) (Zf := λ_ => {⊤})) :=
   fun f g h a ha ↦ by
     rw [mem_support_iff] at ha ⊢
     intro hg
-    exact ha $ le_antisymm le_top (le_trans (le_of_eq hg.symm) (h a))
+    exact ha <| le_antisymm le_top (le_trans (le_of_eq hg.symm) (h a))
 
 end PartialOrder
 
 section OrderBot
-variable [DecidableEq α] [LE α] [OrderBot α]
+variable [LE α] [OrderBot α]
 
 instance orderBot : OrderBot (ι →ᶠ[{⊥}] α) where
   bot_le := by simp [le_def, bot_apply]
@@ -180,7 +177,7 @@ theorem le_iff_bot (f g : ι →ᶠ[{⊥}] α) : f ≤ g ↔ ∀ i ∈ f.support
 instance decidableLEBot [DecidableRel (@LE.le α _)] : DecidableRel (@LE.le (ι →ᶠ[{⊥}] α) _)
   := fun f g => decidable_of_iff _ (le_iff_bot f g).symm
 
-variable [DecidableEq ι]
+variable [DecidableEq α] [DecidableEq ι]
 
 @[simp]
 theorem single_le_iff_bot {i : ι} {x : α} {f : ι →ᶠ[{⊥}] α} : single ⊥ i x ≤ f ↔ x ≤ f i :=
@@ -198,12 +195,12 @@ end Preorder
 
 section PartialOrder
 
-variable [DecidableEq α] [PartialOrder α] [OrderBot α]
+variable [PartialOrder α] [OrderBot α]
 
 lemma support_monotone : Monotone (support (α := ι) (M := α) (Zf := λ_ => {⊥})) :=
   fun f g h a ha ↦ by
     rw [mem_support_iff] at ha ⊢
     intro hg
-    exact ha $ le_antisymm (le_trans (h a) (le_of_eq hg)) bot_le
+    exact ha <| le_antisymm (le_trans (h a) (le_of_eq hg)) bot_le
 
 end PartialOrder

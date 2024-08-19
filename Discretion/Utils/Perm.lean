@@ -374,7 +374,7 @@ theorem Fin.missedBelow_not_hit
       split
       exact hj
       apply I
-      exact Nat.lt_of_succ_lt_succ $ Nat.lt_of_lt_of_le hi (numMissedBefore_le_succ ρ k)
+      exact Nat.lt_of_succ_lt_succ <| Nat.lt_of_lt_of_le hi (numMissedBefore_le_succ ρ k)
 
 def Fin.missed (ρ : Fin n → Fin m) (i : Fin (numMissed ρ)) : Fin m
   := ⟨missedBelow ρ i.rev m, missedBelow_bounded ρ i.rev m i.rev.prop (le_refl m)⟩

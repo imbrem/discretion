@@ -321,6 +321,71 @@ theorem support_of_subset [DecidablePred (· ∈ Z')] {hZ : Z ⊆ Z'} {f : α �
 
 end Basic
 
+/-! ### Declarations about `update` -/
+
+
+section Update
+
+variable
+  {Z : Set M} [DecidablePred (· ∈ Z)] {z : M}
+  {Zf : α → Set M} [∀a, DecidablePred (· ∈ Zf a)]
+  [DecidableEq α] [DecidableEq β]
+  (f : α →ᶠ[[Zf]] M) (fz : α →ᶠ[{z}] M) (a : α) (b : M) (i : α)
+
+/-- Replace the value of a `α →ᶠ[Z] M` at a given point `a : α` by a given value `b : M`.
+If `b ∈ Z`, this amounts to removing `a` from the `Finsupp.support`.
+Otherwise, if `a` was not in the `Finsupp.support`, it is added to it.
+
+This is the finitely-supported version of `Function.update`. -/
+def update (f : α →ᶠ[[Zf]] M) (a : α) (b : M) : α →ᶠ[[Zf]] M where
+  support := if b ∈ Zf a then f.support.erase a else insert a f.support
+  toFun := Function.update f a b
+  mem_support_toFun i := by
+    classical
+    rw [Function.update]
+    simp only [eq_rec_constant, dite_eq_ite, ne_eq]
+    split_ifs with hb ha ha <;>
+      try simp only [*, not_false_iff, iff_true, not_true, iff_false]
+    · rw [Finset.mem_erase]
+      simp
+    · rw [Finset.mem_erase]
+      simp [ha]
+    · rw [Finset.mem_insert]
+      simp [ha]
+    · rw [Finset.mem_insert]
+      simp [ha]
+
+@[simp, norm_cast]
+theorem coe_update : (f.update a b : α → M) = Function.update f a b := rfl
+
+@[simp]
+theorem update_self : f.update a (f a) = f := by ext; simp
+
+theorem support_update :
+    support (f.update a b) = if b ∈ Zf a then f.support.erase a else insert a f.support := rfl
+
+theorem support_update_not_mem (h : b ∉ Zf a) :
+    support (f.update a b) = insert a f.support := by simp [update, h]
+
+theorem support_update_subset :
+    support (f.update a b) ⊆ insert a f.support := by
+  rw [support_update]
+  split_ifs
+  · exact (erase_subset _ _).trans (subset_insert _ _)
+  · rfl
+
+theorem update_comm (f : α →ᶠ[[Zf]] M) {a₁ a₂ : α} (h : a₁ ≠ a₂) (m₁ m₂ : M) :
+    update (update f a₁ m₁) a₂ m₂ = update (update f a₂ m₂) a₁ m₁ :=
+  DFunLike.coe_injective <| Function.update_comm h _ _ _
+
+@[simp] theorem update_idem (f : α →ᶠ[[Zf]] M) (a : α) (b c : M) :
+    update (update f a b) a c = update f a c :=
+  DFunLike.coe_injective <| Function.update_idem _ _ _
+
+end Update
+
+
+
 -- TODO: can have more generic "default" variants
 
 /-! ### Declarations about `single` -/
@@ -350,7 +415,7 @@ theorem single_eq_of_ne (h : a ≠ a') : (single z a b : α →ᶠ[{z}] M) a' = 
   := by simp [single_apply, h.symm]
 
 theorem single_eq_update (z : M) (a : α) (b : M) :
-    ⇑(single z a b) = Function.update (λ_ => z) a b := by funext x; simp [update, single]
+    ⇑(single z a b) = Function.update (λ_ => z) a b := by funext x; simp [Function.update, single]
 
 @[simp]
 theorem single_null (z : M) (a : α) : (single z a z : α →ᶠ[{z}] M) = null z :=
@@ -487,93 +552,29 @@ theorem card_support_le_one' [Nonempty α] {f : α →ᶠ[{z}] M} :
     card f.support ≤ 1 ↔ ∃ a b, f = single z a b := by
   simp only [card_le_one_iff_subset_singleton, support_subset_singleton']
 
-end Single
-
-
-/-! ### Declarations about `update` -/
-
-
-section Update
-
-variable
-  {Z : Set M} [DecidablePred (· ∈ Z)] {z : M}
-  {Zf : α → Set M} [∀a, DecidablePred (· ∈ Zf a)]
-  [DecidableEq α] [DecidableEq β] [DecidableEq M]
-  (f : α →ᶠ[[Zf]] M) (fz : α →ᶠ[{z}] M) (a : α) (b : M) (i : α)
-
-/-- Replace the value of a `α →ᶠ[Z] M` at a given point `a : α` by a given value `b : M`.
-If `b ∈ Z`, this amounts to removing `a` from the `Finsupp.support`.
-Otherwise, if `a` was not in the `Finsupp.support`, it is added to it.
-
-This is the finitely-supported version of `Function.update`. -/
-def update (f : α →ᶠ[[Zf]] M) (a : α) (b : M) : α →ᶠ[[Zf]] M where
-  support := if b ∈ Zf a then f.support.erase a else insert a f.support
-  toFun := Function.update f a b
-  mem_support_toFun i := by
-    classical
-    rw [Function.update]
-    simp only [eq_rec_constant, dite_eq_ite, ne_eq]
-    split_ifs with hb ha ha <;>
-      try simp only [*, not_false_iff, iff_true, not_true, iff_false]
-    · rw [Finset.mem_erase]
-      simp
-    · rw [Finset.mem_erase]
-      simp [ha]
-    · rw [Finset.mem_insert]
-      simp [ha]
-    · rw [Finset.mem_insert]
-      simp [ha]
-
-@[simp, norm_cast]
-theorem coe_update [DecidableEq α] : (f.update a b : α → M) = Function.update f a b := rfl
-
-@[simp]
-theorem update_self : f.update a (f a) = f := by ext; simp
-
 @[simp]
 theorem null_update : update (null z) a b = single z a b := by
   ext
   rw [single_eq_update]
   rfl
 
-theorem support_update :
-    support (f.update a b) = if b ∈ Zf a then f.support.erase a else insert a f.support := rfl
-
 @[simp]
-theorem support_update_null : support (fz.update a z) = fz.support.erase a := by
+theorem support_update_null {fz : α →ᶠ[{z}] M} : support (fz.update a z) = fz.support.erase a := by
   simp [update]
 
-variable {b}
-
-theorem support_update_not_mem (h : b ∉ Zf a) :
-    support (f.update a b) = insert a f.support := by simp [update, h]
-
-theorem support_update_ne_null (h : b ≠ z) :
+theorem support_update_ne_null {fz : α →ᶠ[{z}] M} (h : b ≠ z) :
     support (fz.update a b) = insert a fz.support := by simp [update, h]
 
-theorem support_update_subset :
-    support (f.update a b) ⊆ insert a f.support := by
-  rw [support_update]
-  split_ifs
-  · exact (erase_subset _ _).trans (subset_insert _ _)
-  · rfl
-
-theorem update_comm (f : α →ᶠ[[Zf]] M) {a₁ a₂ : α} (h : a₁ ≠ a₂) (m₁ m₂ : M) :
-    update (update f a₁ m₁) a₂ m₂ = update (update f a₂ m₂) a₁ m₁ :=
-  DFunLike.coe_injective <| Function.update_comm h _ _ _
-
-@[simp] theorem update_idem (f : α →ᶠ[[Zf]] M) (a : α) (b c : M) :
-    update (update f a b) a c = update f a c :=
-  DFunLike.coe_injective <| Function.update_idem _ _ _
-
-end Update
+end Single
 
 /-! ### Declarations about `erase` -/
 
 section Erase
 
-variable {Zf : α → Set M} [hZ : ∀a, Inhabited (Zf a)] [∀a, DecidablePred (· ∈ Zf a)]
-  {z : M} [DecidableEq α] [DecidableEq M]
+variable {Zf : α → Set M} [hZ : ∀a, Inhabited (Zf a)]
+  --[∀a, DecidablePred (· ∈ Zf a)]
+  {z : M} [DecidableEq α]
+  --[DecidableEq M]
 
 /--
 `erase a f` is the finitely supported function equal to `f` except at `a` where it is equal to
@@ -589,7 +590,7 @@ def erase (a : α) (f : α →ᶠ[[Zf]] M) : α →ᶠ[[Zf]] M where
     exact and_iff_right h
 
 @[simp]
-theorem support_erase [DecidableEq α] {a : α} {f : α →ᶠ[{z}] M} :
+theorem support_erase {a : α} {f : α →ᶠ[{z}] M} :
   (f.erase a).support = f.support.erase a := rfl
 
 @[simp]
@@ -609,14 +610,16 @@ theorem erase_apply_eq {a a' : α} {f : α →ᶠ[{z}] M} : f.erase a a' = if a'
   := erase_apply
 
 @[simp]
-theorem erase_single {a : α} {b : M} : erase a (single z a b) = null z := by
+theorem erase_single [DecidableEq M] {a : α} {b : M}
+  : erase a (single z a b) = null z := by
   ext s; by_cases hs : s = a
   · rw [hs, erase_same]
     rfl
   · rw [erase_ne hs]
     exact single_eq_of_ne (Ne.symm hs)
 
-theorem erase_single_ne {a a' : α} {b : M} (h : a ≠ a') : erase a (single z a' b) = single z a' b
+theorem erase_single_ne [DecidableEq M] {a a' : α} {b : M} (h : a ≠ a')
+  : erase a (single z a' b) = single z a' b
   := by
   ext s; by_cases hs : s = a
   · rw [hs, erase_same_eq, single_eq_of_ne h.symm]
@@ -633,27 +636,30 @@ theorem erase_of_not_mem_support {f : α →ᶠ[{z}] M} {a} (haf : a ∉ f.suppo
 theorem erase_null (a : α) : erase a (null z : α →ᶠ[{z}] M) = null z := by
   rw [← support_eq_empty, support_erase, support_null, erase_empty]
 
-theorem erase_eq_update_null (f : α →ᶠ[{z}] M) (a : α) : f.erase a = update f a z := by
+theorem erase_eq_update_null [DecidableEq M] (f : α →ᶠ[{z}] M) (a : α)
+  : f.erase a = update f a z := by
   ext; simp [erase_apply, update_apply]
 
-theorem erase_eq_update_default (f : α →ᶠ[[Zf]] M) (a : α) : f.erase a = update f a (hZ a).default
+theorem erase_eq_update_default [∀a, DecidablePred (· ∈ Zf a)] (f : α →ᶠ[[Zf]] M) (a : α)
+  : f.erase a = update f a (hZ a).default
   := by ext; simp [erase_apply, update_apply]
 
 -- The name matches `Finset.erase_insert_of_ne`
-theorem erase_update_of_ne (f : α →ᶠ[[Zf]] M) {a a' : α} (ha : a ≠ a') (b : M) :
+theorem erase_update_of_ne [∀a, DecidablePred (· ∈ Zf a)]
+  (f : α →ᶠ[[Zf]] M) {a a' : α} (ha : a ≠ a') (b : M) :
     erase a (update f a' b) = update (erase a f) a' b := by
   rw [erase_eq_update_default, erase_eq_update_default, update_comm _ ha]
 
 -- not `simp` as `erase_of_not_mem_support` can prove this
-theorem erase_idem (f : α →ᶠ[{z}] M) (a : α) :
+theorem erase_idem [DecidableEq M] (f : α →ᶠ[{z}] M) (a : α) :
     erase a (erase a f) = erase a f := by
   rw [erase_eq_update_null, erase_eq_update_null, update_idem]
 
-@[simp] theorem update_erase_eq_update (f : α →ᶠ[{z}] M) (a : α) (b : M) :
+@[simp] theorem update_erase_eq_update [DecidableEq M] (f : α →ᶠ[{z}] M) (a : α) (b : M) :
     update (erase a f) a b = update f a b := by
   rw [erase_eq_update_null, update_idem]
 
-@[simp] theorem erase_update_eq_erase (f : α →ᶠ[{z}] M) (a : α) (b : M) :
+@[simp] theorem erase_update_eq_erase [DecidableEq M] (f : α →ᶠ[{z}] M) (a : α) (b : M) :
     erase a (update f a b) = erase a f := by
   rw [erase_eq_update_null, erase_eq_update_null, update_idem]
 
@@ -669,7 +675,6 @@ section OnFinset
 
 variable
   {Zf : α → Set M} [∀a, DecidablePred (· ∈ Zf a)]
-  [DecidableEq α] [DecidableEq M] [Top M]
 
 /-- `FinsuppTop.onFinset s f hf` is the finsupp function representing `f` restricted to the finset
 `s`. The function must satisfy `∀x ∉ s, f s ∈ Zf x`. Use this when the set needs to be filtered
@@ -728,9 +733,7 @@ section MapRange
 -- TODO: standardize notation
 
 variable {Z : Set M} {Z' : Set N} {Z'' : Set P}
-  [DecidablePred (· ∈ Z)] [DecidablePred (· ∈ Z')] [DecidablePred (· ∈ Z'')]
-  [DecidableEq α] [DecidableEq β]
-  [DecidableEq M] [DecidableEq N] [DecidableEq P]
+  [DecidableEq β]
 
 /-- The composition of `f : M → N` and `g : α →ᶠ[Z] M` is `mapRange f hf g : α →ᶠ[Z'] N`,
 which is well-defined when `∀z ∈ Z, f z ∈ Z'`.
@@ -742,29 +745,33 @@ def mapRange (Z : Set M) (Z' : Set N) [DecidablePred (· ∈ Z')]
     exact λ H => hf _ H
 
 @[simp]
-theorem mapRange_apply {f : M → N} {hf : ∀z ∈ Z, f z ∈ Z'} {g : α →ᶠ[Z] M} {a : α} :
+theorem mapRange_apply [DecidablePred (· ∈ Z')]
+  {f : M → N} {hf : ∀z ∈ Z, f z ∈ Z'} {g : α →ᶠ[Z] M} {a : α} :
     mapRange Z Z' f hf g a = f (g a) :=
   rfl
 
 @[simp]
-theorem mapRange_null {f : M → N} {hf}
+theorem mapRange_null [DecidableEq N] {f : M → N} {hf}
   : mapRange {z} {z'} f hf (null z : α →ᶠ[{z}] M) = null z' :=
   ext λ _ => hf _ rfl
 
 @[simp]
-theorem mapRange_id (g : α →ᶠ[Z] M) : mapRange Z Z id (λ_ hz => hz) g = g :=
+theorem mapRange_id [DecidablePred (· ∈ Z)] (g : α →ᶠ[Z] M)
+  : mapRange Z Z id (λ_ hz => hz) g = g :=
   ext fun _ => rfl
 
-theorem mapRange_comp (f : N → P) (hf) (f₂ : M → N) (hf₂) (h)
-    (g : α →ᶠ[Z] M) : mapRange _ _ (f ∘ f₂) h g = mapRange _ Z'' f hf (mapRange _ Z' f₂ hf₂ g) :=
+theorem mapRange_comp [DecidablePred (· ∈ Z')] [DecidablePred (· ∈ Z'')]
+  (f : N → P) (hf) (f₂ : M → N) (hf₂) (h) (g : α →ᶠ[Z] M)
+  : mapRange _ _ (f ∘ f₂) h g = mapRange _ Z'' f hf (mapRange _ Z' f₂ hf₂ g) :=
   ext fun _ => rfl
 
-theorem support_mapRange {f : M → N} {hf} {g : α →ᶠ[Z] M} :
+theorem support_mapRange [DecidablePred (· ∈ Z')] {f : M → N} {hf} {g : α →ᶠ[Z] M} :
     (mapRange _ Z' f hf g).support ⊆ g.support :=
   by simp [mapRange, support_onFinset]
 
 @[simp]
-theorem mapRange_single {f : M → N} {hf} {a : α} {b : M} :
+theorem mapRange_single [DecidableEq α] [DecidableEq M] [DecidableEq N]
+  {f : M → N} {hf} {a : α} {b : M} :
     mapRange {z} {z'} f hf (single z a b) = single z' a (f b) := by
   ext
   simp only [mapRange_apply, single_apply]
@@ -772,7 +779,7 @@ theorem mapRange_single {f : M → N} {hf} {a : α} {b : M} :
   · rfl
   · exact hf _ rfl
 
-theorem support_mapRange_of_injective {e : M → N} (he0) (f : ι →ᶠ[{z}] M)
+theorem support_mapRange_of_injective [DecidableEq N] {e : M → N} (he0) (f : ι →ᶠ[{z}] M)
     (he : Function.Injective e) : (mapRange _ {z'} e he0 f).support = f.support := by
   ext
   simp only [mem_support_iff, Ne, mapRange_apply, Set.mem_singleton_iff]
@@ -781,26 +788,27 @@ theorem support_mapRange_of_injective {e : M → N} (he0) (f : ι →ᶠ[{z}] M)
 /-- The composition of `f : M → N` and `g : α →ᶠ[{z}] M` is `mapRange f hf g : α →ᶠ[{z'}] N`,
 which is well-defined when `f z = z'`.
 -/
-def mapRange' (f : M → N) (hf : f z = z') (g : α →ᶠ[{z}] M) : α →ᶠ[{z'}] N :=
+def mapRange' [DecidableEq N] (f : M → N) (hf : f z = z') (g : α →ᶠ[{z}] M) : α →ᶠ[{z'}] N :=
   mapRange {z} {z'} f (by intro x hx; cases hx; exact hf) g
 
-theorem mapRange'_eq_mapRange {f : M → N} {hf} {g : α →ᶠ[{z}] M} :
+theorem mapRange'_eq_mapRange [DecidableEq N] {f : M → N} {hf} {g : α →ᶠ[{z}] M} :
     mapRange' f hf g = mapRange {z} {z'} f (by intro x hx; cases hx; exact hf) g :=
   rfl
 
-theorem mapRange'_apply {f : M → N} {hf : f z = z'} {g : α →ᶠ[{z}] M} {a : α} :
+theorem mapRange'_apply [DecidableEq N] {f : M → N} {hf : f z = z'} {g : α →ᶠ[{z}] M} {a : α} :
     mapRange' f hf g a = f (g a) :=
   rfl
 
 @[simp]
-theorem mapRange'_id (g : α →ᶠ[{z}] M) : mapRange' id rfl g = g :=
+theorem mapRange'_id [DecidableEq M] (g : α →ᶠ[{z}] M) : mapRange' id rfl g = g :=
   ext fun _ => rfl
 
-theorem mapRange'_comp (f : N → P) (hf : f z' = z'') (f₂ : M → N) (hf₂ : f₂ z = z') (h)
-    (g : α →ᶠ[{z}] M) : mapRange' (f ∘ f₂) h g = mapRange' f hf (mapRange' f₂ hf₂ g) :=
+theorem mapRange'_comp [DecidableEq N] [DecidableEq P]
+  (f : N → P) (hf : f z' = z'') (f₂ : M → N) (hf₂ : f₂ z = z') (h) (g : α →ᶠ[{z}] M)
+  : mapRange' (f ∘ f₂) h g = mapRange' f hf (mapRange' f₂ hf₂ g) :=
   ext fun _ => rfl
 
-theorem support_mapRange' {f : M → N} {hf : f z = z'} {g : α →ᶠ[{z}] M} :
+theorem support_mapRange' [DecidableEq N] {f : M → N} {hf : f z = z'} {g : α →ᶠ[{z}] M} :
     (mapRange' f hf g).support ⊆ g.support :=
   by simp [mapRange', mapRange, support_onFinset]
 
@@ -811,7 +819,7 @@ end MapRange
 
 section EmbDomain
 
-variable [DecidableEq α] [DecidableEq β] [DecidableEq M] [DecidableEq N]
+variable [DecidableEq β]
 
 /-- Given `f : α ↪ β` and `v : α →ᶠ[{z}] M`, `Finsupp.embDomain f v : β →ᶠ[{z}] M`
 is the finitely supported function whose value at `f a : β` is `v a`.
@@ -871,7 +879,8 @@ theorem embDomain_inj {f : α ↪ β} {l₁ l₂ : α →ᶠ[{z}] M} : embDomain
 theorem embDomain_eq_null {f : α ↪ β} {l : α →ᶠ[{z}] M} : embDomain f l = null z ↔ l = null z :=
   (embDomain_injective f).eq_iff' <| embDomain_null f
 
-theorem embDomain_mapRange' (f : α ↪ β) (g : M → N) (p : α →ᶠ[{z}] M) (hg : g z = z') :
+theorem embDomain_mapRange' [DecidableEq N]
+  (f : α ↪ β) (g : M → N) (p : α →ᶠ[{z}] M) (hg : g z = z') :
     embDomain f (mapRange' g hg p) = mapRange' g hg (embDomain f p) := by
   ext a
   by_cases h : a ∈ Set.range f
@@ -879,7 +888,8 @@ theorem embDomain_mapRange' (f : α ↪ β) (g : M → N) (p : α →ᶠ[{z}] M)
     rw [mapRange'_apply, embDomain_apply, embDomain_apply, mapRange'_apply]
   · rw [mapRange'_apply, embDomain_notin_range, embDomain_notin_range, ← hg] <;> assumption
 
-theorem single_of_embDomain_single (l : α →ᶠ[{z}] M) (f : α ↪ β) (a : β) (b : M) (hb : b ≠ z)
+theorem single_of_embDomain_single [DecidableEq α] [DecidableEq M]
+  (l : α →ᶠ[{z}] M) (f : α ↪ β) (a : β) (b : M) (hb : b ≠ z)
     (h : l.embDomain f = single z a b) : ∃ x, l = single z x b ∧ f x = a := by
   classical
     have h_map_support : Finset.map f l.support = {a} := by
@@ -905,8 +915,7 @@ end EmbDomain
 section ZipWith
 
 variable {ZM : α → Set M} {ZN : α → Set N} {ZP : α → Set P} [∀a, DecidablePred (· ∈ ZP a)]
-  [Dα : DecidableEq α] [DecidableEq M]
-  [DecidableEq N] [DecidableEq P] [Top M] [Top N] [Top P]
+  [Dα : DecidableEq α]
 
 /-- Given finitely supported functions `g₁ : α →ᶠ[ZM] M` and `g₂ : α →ᶠ[ZN] N` and
 function `f : M → N → P`, `Finsupp.zipWith f hf g₁ g₂` is the finitely supported function
@@ -935,7 +944,8 @@ theorem support_zipWith {f : M → N → P} {hf} {g₁ : α →ᶠ[[ZM]] M} {g�
 function `f : M → N → P`, `Finsupp.zipWith' f hf g₁ g₂` is the finitely supported function
 `α →ᵀ P` satisfying `zipWith' f hf g₁ g₂ a = f (g₁ a) (g₂ a)`, which is well-defined when
 `f m n = p`. -/
-def zipWith' (f : M → N → P) (hf : f m n = p) (g₁ : α →ᶠ[{m}] M) (g₂ : α →ᶠ[{n}] N) : α →ᶠ[{p}] P :=
+def zipWith' [DecidableEq P]
+  (f : M → N → P) (hf : f m n = p) (g₁ : α →ᶠ[{m}] M) (g₂ : α →ᶠ[{n}] N) : α →ᶠ[{p}] P :=
   onFinset _
     (g₁.support ∪ g₂.support)
     (fun a => f (g₁ a) (g₂ a))
@@ -946,19 +956,23 @@ def zipWith' (f : M → N → P) (hf : f m n = p) (g₁ : α →ᶠ[{m}] M) (g�
       exact H (Set.mem_singleton p)
 
 @[simp]
-theorem zipWith'_apply {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N} {a : α}
+theorem zipWith'_apply [DecidableEq P]
+  {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N} {a : α}
   : zipWith' f hf g₁ g₂ a = f (g₁ a) (g₂ a) :=
   rfl
 
-theorem zipWith'_eq_zipWith {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N} :
-    zipWith' f hf g₁ g₂ = zipWith _ f (by intro _ m hm n hn; cases hm; cases hn; exact hf) g₁ g₂
-    := rfl
+theorem zipWith'_eq_zipWith [DecidableEq P]
+  {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N}
+  : zipWith' f hf g₁ g₂ = zipWith _ f (by intro _ m hm n hn; cases hm; cases hn; exact hf) g₁ g₂ :=
+  rfl
 
-theorem support_zipWith' {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N}
+theorem support_zipWith' [DecidableEq P]
+  {f : M → N → P} {hf : f m n = p} {g₁ : α →ᶠ[{m}] M} {g₂ : α →ᶠ[{n}] N}
   : (zipWith' f hf g₁ g₂).support ⊆ g₁.support ∪ g₂.support := by simp [zipWith', support_onFinset]
 
 @[simp]
-theorem zipWith'_single_single (f : M → N → P) (hf : f zm zn = zp) (a : α) (m : M) (n : N) :
+theorem zipWith'_single_single [DecidableEq M] [DecidableEq N] [DecidableEq P]
+  (f : M → N → P) (hf : f zm zn = zp) (a : α) (m : M) (n : N) :
     zipWith' f hf (single zm a m) (single zn a n) = single zp a (f m n) := by
   ext a'
   rw [zipWith'_apply]
@@ -967,10 +981,11 @@ theorem zipWith'_single_single (f : M → N → P) (hf : f zm zn = zp) (a : α) 
   · rw [single_eq_of_ne ha', single_eq_of_ne ha', single_eq_of_ne ha', hf]
 
 @[simp]
-theorem zipWith_single_single (f : M → N → P) (hf) (a : α) (m : M) (n : N) :
-    zipWith _ f hf (single zm a m) (single zn a n) = single zp a (f m n) := by
-    rw [← zipWith'_eq_zipWith, zipWith'_single_single]
-    exact hf a _ rfl _ rfl
+theorem zipWith_single_single [DecidableEq M] [DecidableEq N] [DecidableEq P]
+  (f : M → N → P) (hf) (a : α) (m : M) (n : N)
+  : zipWith _ f hf (single zm a m) (single zn a n) = single zp a (f m n) := by
+  rw [← zipWith'_eq_zipWith, zipWith'_single_single]
+  exact hf a _ rfl _ rfl
 
 end ZipWith
 

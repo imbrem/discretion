@@ -46,7 +46,8 @@ theorem Fin.strictMono_id_le {n} {f : Fin n → Fin m} (h : StrictMono f)
   | zero => exact i.elim0
   | succ n => induction i using Fin.induction with
     | zero => simp
-    | succ i I => exact Nat.succ_le_of_lt $ lt_of_le_of_lt I $ Fin.lt_def.mp $ h i.castSucc_lt_succ
+    | succ i I =>
+      exact Nat.succ_le_of_lt <| lt_of_le_of_lt I <| Fin.lt_def.mp <| h i.castSucc_lt_succ
 
 theorem Fin.strictMono_eq_id {n} {f : Fin n → Fin n} (h : StrictMono f) : f = id := by
   induction n with

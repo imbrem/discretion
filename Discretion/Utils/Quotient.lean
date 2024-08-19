@@ -20,7 +20,7 @@ theorem Quotient.forall_of_choice_eq {ι : Type u} {α : ι → Type v} [S : (i 
   rw [Quotient.choice] at h
   simp only [eq] at h
   intro i
-  have h := Quotient.sound $ h i
+  have h := Quotient.sound <| h i
   simp only [out_eq] at h
   exact h
 
