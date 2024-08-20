@@ -15,3 +15,7 @@ import Discretion.Wk.Order
 import Discretion.Correspondence.Definitions
 import Discretion.OrderOrder
 import Discretion.Elgot.Monad
+import Discretion.Stream.Action
+import Discretion.Submonad.Basic
+import Discretion.Trace.Basic
+import Discretion.Nonempty.Set
