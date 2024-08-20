@@ -38,7 +38,7 @@ theorem LE.le_le_of_le {α : Type u} {h1 h2 : LE α} (h : h1 ≤ h2) : h1.le ≤
 instance LE.instPartialOrder {α : Type u} : PartialOrder (LE α) where
   le_refl _ := @le_refl (α → α → Prop) _ _
   le_trans _ _ _ := @le_trans (α → α → Prop) _ _ _ _
-  le_antisymm _ _ h h' := LE.ext _ _ (le_antisymm h h')
+  le_antisymm _ _ h h' := LE.ext (le_antisymm h h')
 
 -- TODO: `LE` is a distributive, complete semilattice, with empty as ⊥ and indiscrete as ⊤
 

@@ -13,3 +13,5 @@ import Discretion.Wk.Multiset
 import Discretion.Wk.Set
 import Discretion.Wk.Order
 import Discretion.Correspondence.Definitions
+import Discretion.OrderOrder
+import Discretion.Elgot.Monad
