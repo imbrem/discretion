@@ -59,6 +59,24 @@ theorem pure_kleisli {α β : Type u} {f : α → m β}
 theorem comp_pure_kleisli {α β γ : Type u} (f : α → β) (g : β → m γ)
   : pure ∘ f >=> g = g ∘ f := by funext a; simp [Bind.kleisliRight]
 
+theorem inl_kleisli {α β γ : Type u} (f : α ⊕ β → m γ)
+  : pure ∘ inl >=> f = f ∘ inl := by rw [comp_pure_kleisli]
+
+theorem inr_kleisli {α β γ : Type u} (f : α ⊕ β → m γ)
+  : pure ∘ inr >=> f = f ∘ inr := by rw [comp_pure_kleisli]
+
+theorem pure_inl_elim {α β γ : Type u} (f : α → m γ) (g : β → m γ)
+  : pure ∘ inl >=> Sum.elim f g = f := by funext a; simp [Bind.kleisliRight]
+
+theorem pure_inr_elim {α β γ : Type u} (f : α → m γ) (g : β → m γ)
+  : pure ∘ inr >=> Sum.elim f g = g := by funext a; simp [Bind.kleisliRight]
+
+theorem inl_sumM {α β α' β' : Type u} (f : α → m α') (g : β → m β')
+  : pure ∘ inl >=> sumM f g = f >=> pure ∘ inl := by rw [sumM, pure_inl_elim, kleisli_comp_pure]
+
+theorem inr_sumM {α β α' β' : Type u} (f : α → m α') (g : β → m β')
+  : pure ∘ inr >=> sumM f g = g >=> pure ∘ inr := by rw [sumM, pure_inr_elim, kleisli_comp_pure]
+
 theorem kleisli_comp_map {α β γ γ' : Type u} (f : α → m β) (g : β → m γ) (h : γ → γ')
   : f >=> (map h ∘ g) = map h ∘ (f >=> g) := by simp [<-kleisli_comp_pure, kleisli_assoc]
 
@@ -136,47 +154,66 @@ class ElgotMonad extends LawfulMonad m, MonadIterate m where
 -- Based on proof of lemma 31 of Goncharov and Schröder (2018, Guarded Traced Categories)
 theorem ElgotMonad.squaring [ElgotMonad m]
   {α β : Type u} (f : α → m (β ⊕ α))
-  : iterate (f >=> Sum.elim (pure ∘ inl) f) = iterate f
-  :=
-  by
-    generalize hw : (Sum.elim
-              (f >=> sumM pure (pure ∘ inr) >=> pure ∘ inl)
-              (f >=> sumM (pure ∘ inl) (pure ∘ inl)) : _ → m ((β ⊕ (α ⊕ α)) ⊕ (α ⊕ α))) = w;
-    have hwl : iterate (f >=> Sum.elim (pure ∘ inl) f) = iterate (iterate w) ∘ inr := by
-      rw [uniformity]
-      conv =>
-        lhs
-        rw [
-          <-fixpoint, <-hw, elim_kleisli, elim_comp_inr, hw, <-kleisli_assoc, elim_sumM, <-fixpoint,
-          <-hw, elim_kleisli, hw, kleisli_pure, comp_pure_kleisli, elim_comp_inl, kleisli_comp_pure,
-          kleisli_comp_map, comp_map_kleisli, elim_comp_inl, kleisli_pure
-        ]
+  : iterate (f >=> Sum.elim (pure ∘ inl) f) = iterate f := by
+  generalize hw : (Sum.elim
+            (f >=> sumM pure (pure ∘ inr) >=> pure ∘ inl)
+            (f >=> sumM (pure ∘ inl) (pure ∘ inl)) : _ → m ((β ⊕ (α ⊕ α)) ⊕ (α ⊕ α))) = w;
+  have hwl : iterate (f >=> Sum.elim (pure ∘ inl) f) = iterate (iterate w) ∘ inr := by
+    rw [uniformity]
+    conv =>
+      lhs
       rw [
-        <-kleisli_assoc, elim_kleisli, comp_pure_kleisli, sumM_comp_inl, map_comp_pure
+        <-fixpoint, <-hw, elim_kleisli, elim_comp_inr, hw, <-kleisli_assoc, elim_sumM, <-fixpoint,
+        <-hw, elim_kleisli, hw, kleisli_pure, comp_pure_kleisli, elim_comp_inl, kleisli_comp_pure,
+        kleisli_comp_map, comp_map_kleisli, elim_comp_inl, kleisli_pure
       ]
-    have hwi : Sum.elim (f >=> sumM pure (pure ∘ inr)) (f >=> sumM pure (pure ∘ inl))
-                >=> sumM pure (pure ∘ Sum.elim id id)
-              = f ∘ Sum.elim id id := by
-      simp [elim_kleisli, <-kleisli_assoc, sumM_sumM, comp_pure_kleisli, sumM_pure_pure, comp_elim]
-    have hwr : iterate (w >=> Sum.elim pure (pure ∘ inr)) ∘ inr = iterate f := by
-      have hwi' := uniformity _ _ _ hwi.symm
-      have hwf' : iterate f = (iterate f ∘ Sum.elim id id) ∘ inr := by simp [Function.comp.assoc]
-      rw [
-        <-hw, elim_kleisli, kleisli_comp_pure, kleisli_comp_map, comp_map_kleisli, elim_comp_inl,
-        kleisli_pure, <-kleisli_assoc, elim_sumM, kleisli_pure, hwf', hwi', kleisli_comp_pure,
-        <-map_comp_pure (f := inl)
-      ]
-      rfl
-    cases hw
-    apply Eq.trans hwl (Eq.trans _ hwr)
-    rw [codiagonal]
+    rw [
+      <-kleisli_assoc, elim_kleisli, comp_pure_kleisli, sumM_comp_inl, map_comp_pure
+    ]
+  have hwi : Sum.elim (f >=> sumM pure (pure ∘ inr)) (f >=> sumM pure (pure ∘ inl))
+              >=> sumM pure (pure ∘ Sum.elim id id)
+            = f ∘ Sum.elim id id := by
+    simp [elim_kleisli, <-kleisli_assoc, sumM_sumM, comp_pure_kleisli, sumM_pure_pure, comp_elim]
+  have hwr : iterate (w >=> Sum.elim pure (pure ∘ inr)) ∘ inr = iterate f := by
+    have hwi' := uniformity _ _ _ hwi.symm
+    have hwf' : iterate f = (iterate f ∘ Sum.elim id id) ∘ inr := by simp [Function.comp.assoc]
+    rw [
+      <-hw, elim_kleisli, kleisli_comp_pure, kleisli_comp_map, comp_map_kleisli, elim_comp_inl,
+      kleisli_pure, <-kleisli_assoc, elim_sumM, kleisli_pure, hwf', hwi', kleisli_comp_pure,
+      <-map_comp_pure (f := inl)
+    ]
+    rfl
+  cases hw
+  apply Eq.trans hwl (Eq.trans _ hwr)
+  rw [codiagonal]
 
--- -- Derivable from fixpoint + naturality + codiagonal + uniformity
--- -- by lemma 31 of Goncharov and Schröder (2018, Guarded Traced Categories)
--- theorem ElgotMonad.dinaturality [ElgotMonad m]
---   {α β γ δ : Type u} (g : α → m (β ⊕ γ)) (h : γ → m (β ⊕ α))
---   : iterate (g >=> Sum.elim (pure ∘ inl) h)
---     = g >=> Sum.elim pure (iterate (h >=> Sum.elim (pure ∘ inl) g))
---   := sorry
+-- Based on proof of lemma 31 of Goncharov and Schröder (2018, Guarded Traced Categories)
+theorem ElgotMonad.dinaturality [ElgotMonad m]
+  {α β γ : Type u} (f : α → m (β ⊕ γ)) (g : γ → m (β ⊕ α))
+  : iterate (f >=> Sum.elim (pure ∘ inl) g)
+    = f >=> Sum.elim pure (iterate (g >=> Sum.elim (pure ∘ inl) f)) := by
+  generalize hh : Sum.elim (g >=> sumM pure (pure ∘ inr)) (f >=> sumM pure (pure ∘ inl)) = h
+  have hhl : pure ∘ inl >=> iterate h = iterate (g >=> Sum.elim (pure ∘ inl) f) := by
+    rw [comp_pure_kleisli, <-hh, <-squaring, uniformity]
+    funext k
+    simp only [Function.comp_apply, Bind.kleisliRight, elim_inl, bind_assoc]
+    congr
+    funext x
+    cases x <;> simp [sumM, Bind.kleisliRight]
+  have hhr : pure ∘ inr >=> iterate h = iterate (f >=> Sum.elim (pure ∘ inl) g) := by
+    rw [comp_pure_kleisli, <-hh, <-squaring, uniformity]
+    funext k
+    simp only [Function.comp_apply, Bind.kleisliRight, elim_inr, bind_assoc]
+    congr
+    funext x
+    cases x <;> simp [sumM, Bind.kleisliRight]
+  rw [
+    <-hhl, <-fixpoint (f := h), <-hh, kleisli_assoc, pure_inl_elim, <-kleisli_assoc,
+    elim_sumM, kleisli_pure, hh, hhr
+  ]
+  conv =>
+    lhs
+    rw [<-fixpoint]
+  rw [<-kleisli_assoc, elim_kleisli, pure_inl_elim]
 
 end Fixpoints
