@@ -300,7 +300,7 @@ theorem infiniteTraces_nonempty_of_finiteTrace_empty [StreamProd ε τ]
   simp only [infiniteTraces, Set.image_nonempty]
   apply infiniteResults_nonempty_of_finiteTrace_empty hstep a hfin
 
-theorem iterateTraces_nonempty_of_step_nonempty [StreamProd ε τ]
+theorem iterateTraces_nonempty [StreamProd ε τ]
   (hstep : ∀a, Set.Nonempty (step a)) (a) : (iterateTraces step a).Nonempty := by
   simp only [iterateTraces, Set.union_nonempty]
   if h : (finiteTraces step a).Nonempty then
@@ -345,25 +345,61 @@ end Trace
 -- variable {ε τ} [Monoid ε] [MulAction ε τ]
 
 -- noncomputable instance instMonadIterate : MonadIterate (Trace ε τ) where
---   iterate f x := sorry
+--   iterate f x := ⟨sorry, sorry⟩
 
 -- end Trace
 
 open Trace
 
+namespace Traces?
+
+variable {ε : Type u} {τ : Type v} [Monoid ε] [MulAction ε τ] [StreamMulAction ε τ]
+
+open MonadIterate
+
+instance instMonadIterate : MonadIterate.{w, max u v w} (Traces? ε τ) where
+  iterate f x := iterateTraces f x
+
+-- instance instElgotMonad : ElgotMonad (Traces? ε τ) where
+--   fixpoint f := by
+--     ext x
+--     simp [Bind.kleisliRight, iterate, bind]
+--     sorry
+--   naturality f g := sorry
+--   codiagonal f := sorry
+--   uniformity f g h H := sorry
+
+end Traces?
+
 namespace Traces
 
-variable {ε τ} [Monoid ε] [MulAction ε τ]
+variable {ε τ} [Monoid ε] [MulAction ε τ] [StreamMulAction ε τ]
 
--- def isFiniteTrace (f : α → Traces ε τ (β ⊕ α)) (a : α) : List (α × ε) → Trace ε τ β → Prop
---   | [], b => Sum.inl <$> b ∈ f a
---   | (a', e)::t, b => done (Sum.inr a') e ∈ f a ∧ isFiniteTrace f a' t b
+open MonadIterate
 
--- def isEffectTrace (f : α → Traces ε τ (β ⊕ α)) (a : α) : List ε → Trace ε τ β → Prop
---   | [], b => Sum.inl <$> b ∈ f a
---   | e::t, b => ∃a', done (Sum.inr a') e ∈ f a ∧ isEffectTrace f a' t b
+instance instMonadIterate : MonadIterate (Traces ε τ) where
+  iterate f x := ⟨
+    iterateTraces (λa => (f a).val) x,
+    iterateTraces_nonempty (λa => (f a).prop) x
+  ⟩
 
--- instance instMonadIterate : MonadIterate (Traces ε τ) where
---   iterate f x := sorry
+-- instance instElgotMonad : ElgotMonad (Traces ε τ) where
+--   fixpoint f := by
+--     ext x
+--     apply NSet.ext
+--     have h := (Traces?.instElgotMonad (ε := ε) (τ := τ)).fixpoint (λx => (f x).val)
+--     have h := congrFun h x
+--     apply Eq.trans _ h
+--     apply Set.ext
+--     intro t
+--     simp [Bind.kleisliRight, bind]
+--     apply exists_congr
+--     intro t
+--     simp
+--     intro h
+--     cases t <;> sorry
+--   naturality f g := sorry
+--   codiagonal f := sorry
+--   uniformity f g h H := sorry
 
 end Traces
