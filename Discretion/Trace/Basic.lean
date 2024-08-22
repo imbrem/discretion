@@ -215,8 +215,52 @@ end Lawful
 
 end TraceT
 
-def PTraces (ε: Type ue) (τ: Type ut) := TraceT ε τ SetM
+def Traces? (ε: Type ue) (τ: Type ut) := TraceT ε τ Set
 
--- Note: the nonempty traces are a submonad of PTraces
+namespace Traces?
+
+instance instMembership : Membership (Trace ε τ α) (Traces? ε τ α) where
+  mem t ts := Set.instMembership.mem t ts
+
+attribute [local instance] Set.monad
+
+instance instFunctor : Functor (Traces? ε τ) := TraceT.instFunctor
+
+instance instMonad [One ε] [Mul ε] [SMul ε τ] : Monad (Traces? ε τ) := TraceT.instMonad
+
+instance instLawfulFunctor : LawfulFunctor (Traces? ε τ) := TraceT.instLawfulFunctor
+
+instance instLawfulMonad [Monoid ε] [MulAction ε τ] : LawfulMonad (Traces? ε τ)
+  := TraceT.instLawfulMonad
+
+instance instSMul [Mul ε] [SMul ε τ] : SMul ε (Traces? ε τ α) := TraceT.instSMul
+
+instance instMulAction [Monoid ε] [MulAction ε τ] : MulAction ε (Traces? ε τ α)
+  := TraceT.instMulAction
+
+-- Note: the nonempty traces are a submonad of Traces?
+
+end Traces?
 
 def Traces (ε: Type ue) (τ: Type ut) := TraceT ε τ NSet
+
+namespace Traces
+
+instance instMembership {ε τ α} : Membership (Trace ε τ α) (Traces ε τ α) where
+  mem t ts := NSet.instMembership.mem t ts
+
+instance instFunctor : Functor (Traces ε τ) := TraceT.instFunctor
+
+instance instMonad [One ε] [Mul ε] [SMul ε τ] : Monad (Traces ε τ) := TraceT.instMonad
+
+instance instLawfulFunctor : LawfulFunctor (Traces ε τ) := TraceT.instLawfulFunctor
+
+instance instLawfulMonad [Monoid ε] [MulAction ε τ] : LawfulMonad (Traces ε τ)
+  := TraceT.instLawfulMonad
+
+instance instSMul [Mul ε] [SMul ε τ] : SMul ε (Traces ε τ α) := TraceT.instSMul
+
+instance instMulAction [Monoid ε] [MulAction ε τ] : MulAction ε (Traces ε τ α)
+  := TraceT.instMulAction
+
+end Traces

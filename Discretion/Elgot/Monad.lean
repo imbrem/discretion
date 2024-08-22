@@ -113,17 +113,17 @@ theorem ElgotMonad.dinaturality [ElgotMonad m]
 
 end Fixpoints
 
-attribute [local instance] Set.monad
+-- attribute [local instance] Set.monad
 
-instance Set.instMonadIterate : MonadIterate Set where
-  iterate f a := sorry
+-- instance Set.instMonadIterate : MonadIterate Set where
+--   iterate f a := sorry
 
-instance Set.instElgotMonad : ElgotMonad Set where
-  fixpoint f := sorry
-  naturality f g := sorry
-  codiagonal f := sorry
-  uniformity f g h := sorry
+-- instance Set.instElgotMonad : ElgotMonad Set where
+--   fixpoint f := sorry
+--   naturality f g := sorry
+--   codiagonal f := sorry
+--   uniformity f g h := sorry
 
-instance SetM.instMonadIterate : MonadIterate SetM := Set.instMonadIterate
+-- instance SetM.instMonadIterate : MonadIterate SetM := Set.instMonadIterate
 
-instance SetM.instElgotMonad : ElgotMonad SetM := Set.instElgotMonad
+-- instance SetM.instElgotMonad : ElgotMonad SetM := Set.instElgotMonad
