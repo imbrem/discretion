@@ -6,6 +6,7 @@ import Mathlib.Data.Set.Functor
 import Mathlib.Control.Functor
 
 import Discretion.Utils.Action
+import Discretion.Utils.Kleisli
 import Discretion.Nonempty.Set
 
 open Functor
@@ -219,8 +220,18 @@ def Traces? (ε: Type ue) (τ: Type ut) := TraceT ε τ Set
 
 namespace Traces?
 
-instance instMembership : Membership (Trace ε τ α) (Traces? ε τ α) where
-  mem t ts := Set.instMembership.mem t ts
+instance instMembership : Membership (Trace ε τ α) (Traces? ε τ α) := Set.instMembership
+
+instance instSingleton : Singleton (Trace ε τ α) (Traces? ε τ α) := Set.instSingletonSet
+
+instance instHasSubset : HasSubset (Traces? ε τ α) := Set.instHasSubset
+
+instance instEmptyCollection : EmptyCollection (Traces? ε τ α) := Set.instEmptyCollection
+
+instance instInsert : Insert (Trace ε τ α) (Traces? ε τ α) := Set.instInsert
+
+instance instLawfulSingleton : LawfulSingleton (Trace ε τ α) (Traces? ε τ α)
+  := Set.instLawfulSingleton
 
 attribute [local instance] Set.monad
 
@@ -249,6 +260,8 @@ namespace Traces
 instance instMembership {ε τ α} : Membership (Trace ε τ α) (Traces ε τ α) where
   mem t ts := NSet.instMembership.mem t ts
 
+instance instSingleton {ε τ α} : Singleton (Trace ε τ α) (Traces ε τ α) := NSet.instSingleton
+
 instance instFunctor : Functor (Traces ε τ) := TraceT.instFunctor
 
 instance instMonad [One ε] [Mul ε] [SMul ε τ] : Monad (Traces ε τ) := TraceT.instMonad
@@ -263,4 +276,74 @@ instance instSMul [Mul ε] [SMul ε τ] : SMul ε (Traces ε τ α) := TraceT.in
 instance instMulAction [Monoid ε] [MulAction ε τ] : MulAction ε (Traces ε τ α)
   := TraceT.instMulAction
 
+instance instCoeTraces? {ε τ α} : Coe (Traces ε τ α) (Traces? ε τ α) where
+  coe ts := ts.val
+
+-- TODO: this induces a submonad
+
+theorem coe_inj {ε τ α} {ts ts': Traces ε τ α}
+  (h: (ts : Traces? ε τ α) = (ts' : Traces? ε τ α)) : ts = ts' := NSet.ext h
+
+def kcoe {ε τ α β} (ts: α → Traces ε τ β) (a : α) : Traces? ε τ β := ts a
+
+theorem kcoe_inj {ε τ α β} {ts ts': α → Traces ε τ β}
+  (h: kcoe ts = kcoe ts') : ts = ts' := funext (λa => coe_inj (congrFun h a))
+
+theorem kcoe_elim {f: α → Traces ε τ γ} {g: β → Traces ε τ γ}
+  : kcoe (Sum.elim f g) = Sum.elim (kcoe f) (kcoe g) := funext (λx => by cases x <;> rfl)
+
+variable [One ε] [Mul ε] [SMul ε τ]
+
+theorem coe_bind {ts: Traces ε τ α} {f: α → Traces ε τ β}
+  : (bind (m := Traces ε τ) ts f : Traces? ε τ β)
+  = bind (m := Traces? ε τ) (ts : Traces? ε τ α) (kcoe f) := by
+  simp only [bind, NSet.coe_iUnion, Set.iUnion_coe_set, Set.pure_def, Set.bind_def]
+  apply congrArg; funext i; cases i <;> rfl
+
+theorem kcoe_kleisli {f: α → Traces ε τ β} {g: β → Traces ε τ γ}
+  : kcoe (f >=> g) = kcoe f >=> kcoe g := funext (λ_ => coe_bind)
+
+theorem kcoe_sumM {f: α → Traces ε τ α'} {g: β → Traces ε τ β'}
+  : kcoe (sumM f g) = sumM (kcoe f) (kcoe g) := funext (λx => by cases x <;> rfl)
+
 end Traces
+
+def Trace? (ε: Type ue) (τ: Type ut) := TraceT ε τ Option
+
+namespace Trace?
+
+instance instMembership {ε τ α} : Membership (Trace ε τ α) (Trace? ε τ α) where
+  mem t ts := ts = some t
+
+instance instEmptyCollection {ε τ α} : EmptyCollection (Trace? ε τ α) where
+  emptyCollection := none
+
+instance instSingleton {ε τ α} : Singleton (Trace ε τ α) (Trace? ε τ α) where
+  singleton x := some x
+
+theorem mem_singleton {ε τ α} {x: Trace ε τ α} : x ∈ ({x} : Trace? ε τ α) := rfl
+
+theorem mem_singleton_iff {ε τ α} {x y: Trace ε τ α} : x ∈ ({y} : Trace? ε τ α) ↔ x = y :=
+  by constructor <;> intro p <;> cases p <;> rfl
+
+instance instCoeTraces? {ε τ α} : Coe (Trace? ε τ α) (Traces? ε τ α) where
+  coe ts := {x | x ∈ ts}
+
+-- TODO: this induces a submonad
+
+@[simp]
+theorem coe_empty {ε τ α} : (∅ : Trace? ε τ α) = (∅ : Traces? ε τ α) := by simp [Membership.mem]
+
+@[simp]
+theorem coe_singleton {ε τ α} {x: Trace ε τ α} : ({x} : Trace? ε τ α) = ({x} : Traces? ε τ α)
+  := Set.ext (λa => by
+    simp only [mem_singleton_iff, Set.setOf_eq_eq_singleton, Set.mem_singleton_iff]
+    apply Set.mem_singleton_iff
+  )
+
+-- theorem coe_inj {ε τ α} {ts ts': Trace? ε τ α}
+--   (h: (ts : Traces? ε τ α) = (ts' : Traces? ε τ α)) : ts = ts' := by sorry
+
+def kcoe {ε τ α β} (ts: α → Trace? ε τ β) (a : α) : Traces? ε τ β := ts a
+
+end Trace?

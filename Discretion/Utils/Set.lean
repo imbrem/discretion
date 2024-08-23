@@ -6,6 +6,9 @@ import Mathlib.Data.Finset.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset
 import Mathlib.Init.Data.Quot
 
+theorem Set.iUnion_union_iUnion {α β : Type _} {f g : α → Set β} :
+  Set.iUnion f ∪ Set.iUnion g = ⋃x, f x ∪ g x := by ext x; simp [exists_or]
+
 @[simp]
 theorem Set.eqOn_insert {s : Set α} {f₁ f₂ : α → β}
   : (insert a s).EqOn f₁ f₂ ↔ s.EqOn f₁ f₂ ∧ f₁ a = f₂ a := by
