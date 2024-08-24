@@ -18,4 +18,5 @@ import Discretion.Elgot.Monad
 import Discretion.Stream.Action
 import Discretion.Submonad.Basic
 import Discretion.Trace.Basic
+import Discretion.Trace.Elgot
 import Discretion.Nonempty.Set

@@ -72,6 +72,9 @@ theorem smul_inf {e: ε} {t: τ}
   : e • (inf (α := α) (ε := ε) t) = inf (e • t)
   := rfl
 
+theorem smul_map {e: ε} {x: Trace ε τ α} {f: α → β}
+  : e • (f <$> x) = f <$> (e • x) := by cases x <;> simp [mul_smul]
+
 variable [One ε]
 
 instance instMonad : Monad (Trace ε τ) where
@@ -174,6 +177,11 @@ instance instLawfulFunctor : LawfulFunctor (TraceT ε τ m) where
   comp_map f g x := by simp [map_def, <-Functor.map_comp_map]
   map_const := rfl
 
+theorem smul_map [Mul ε] [SMul ε τ] {e: ε} {x: TraceT ε τ m α} {f: α → β}
+  : e • (f <$> x) = f <$> (e • x) := by
+  simp only [smul_def, map_def, <-comp_map]
+  congr; funext x; cases x <;> simp [pure, smul]
+
 instance instMulAction [Monoid ε] [MulAction ε τ] : MulAction ε (TraceT ε τ m α) where
   one_smul x := by simp [smul_def, smul_one]
   mul_smul e e' x := by simp [smul_def, smul_mul, comp_map]
@@ -226,6 +234,10 @@ instance instSingleton : Singleton (Trace ε τ α) (Traces? ε τ α) := Set.in
 
 instance instHasSubset : HasSubset (Traces? ε τ α) := Set.instHasSubset
 
+instance instUnion : Union (Traces? ε τ α) := Set.instUnion
+
+instance instInter : Inter (Traces? ε τ α) := Set.instInter
+
 instance instEmptyCollection : EmptyCollection (Traces? ε τ α) := Set.instEmptyCollection
 
 instance instInsert : Insert (Trace ε τ α) (Traces? ε τ α) := Set.instInsert
@@ -241,15 +253,29 @@ instance instMonad [One ε] [Mul ε] [SMul ε τ] : Monad (Traces? ε τ) := Tra
 
 instance instLawfulFunctor : LawfulFunctor (Traces? ε τ) := TraceT.instLawfulFunctor
 
-instance instLawfulMonad [Monoid ε] [MulAction ε τ] : LawfulMonad (Traces? ε τ)
-  := TraceT.instLawfulMonad
-
 instance instSMul [Mul ε] [SMul ε τ] : SMul ε (Traces? ε τ α) := TraceT.instSMul
 
-instance instMulAction [Monoid ε] [MulAction ε τ] : MulAction ε (Traces? ε τ α)
-  := TraceT.instMulAction
+theorem smul_map [Mul ε] [SMul ε τ] {e: ε} {x: Traces? ε τ α} {f: α → β}
+  : e • (f <$> x) = f <$> (e • x) := TraceT.smul_map
+
+theorem smul_def [Mul ε] [SMul ε τ] {e: ε} {x: Traces? ε τ α}
+  : e • x = map (f := Set) (smul e) x := rfl
+
+theorem smul_empty [Mul ε] [SMul ε τ] {e : ε} : e • (∅ : Traces? ε τ α) = ∅
+  := by simp only [smul_def]; exact Set.image_empty _
 
 -- Note: the nonempty traces are a submonad of Traces?
+
+variable [Monoid ε] [MulAction ε τ]
+
+instance instLawfulMonad : LawfulMonad (Traces? ε τ)
+  := TraceT.instLawfulMonad
+
+instance instMulAction : MulAction ε (Traces? ε τ α)
+  := TraceT.instMulAction
+
+theorem smul_bind {e: ε} {x: Traces? ε τ α} {f: α → Traces? ε τ β}
+  : e • (x >>= f) = (e • x) >>= f := TraceT.smul_bind
 
 end Traces?
 
@@ -268,16 +294,28 @@ instance instMonad [One ε] [Mul ε] [SMul ε τ] : Monad (Traces ε τ) := Trac
 
 instance instLawfulFunctor : LawfulFunctor (Traces ε τ) := TraceT.instLawfulFunctor
 
-instance instLawfulMonad [Monoid ε] [MulAction ε τ] : LawfulMonad (Traces ε τ)
-  := TraceT.instLawfulMonad
-
 instance instSMul [Mul ε] [SMul ε τ] : SMul ε (Traces ε τ α) := TraceT.instSMul
 
-instance instMulAction [Monoid ε] [MulAction ε τ] : MulAction ε (Traces ε τ α)
-  := TraceT.instMulAction
+theorem smul_map [Mul ε] [SMul ε τ] {e: ε} {x: Traces? ε τ α} {f: α → β}
+  : e • (f <$> x) = f <$> (e • x) := TraceT.smul_map
 
 instance instCoeTraces? {ε τ α} : Coe (Traces ε τ α) (Traces? ε τ α) where
   coe ts := ts.val
+
+section Lawful
+
+variable [Monoid ε] [MulAction ε τ]
+
+instance instLawfulMonad : LawfulMonad (Traces ε τ)
+  := TraceT.instLawfulMonad
+
+instance instMulAction : MulAction ε (Traces ε τ α)
+  := TraceT.instMulAction
+
+theorem smul_bind {e: ε} {x: Traces ε τ α} {f: α → Traces ε τ β}
+  : e • (x >>= f) = (e • x) >>= f := TraceT.smul_bind
+
+end Lawful
 
 -- TODO: this induces a submonad
 

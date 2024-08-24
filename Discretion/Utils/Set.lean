@@ -9,6 +9,13 @@ import Mathlib.Init.Data.Quot
 theorem Set.iUnion_union_iUnion {α β : Type _} {f g : α → Set β} :
   Set.iUnion f ∪ Set.iUnion g = ⋃x, f x ∪ g x := by ext x; simp [exists_or]
 
+theorem Set.biUnion_union_biUnion {α β : Type _} {s : Set α} {f g : α → Set β}:
+  (⋃x ∈ s, f x) ∪ (⋃x ∈ s, g x) = ⋃x ∈ s, f x ∪ g x := by
+  rw [iUnion_union_iUnion]
+  apply congrArg
+  ext a
+  simp [and_or_left]
+
 @[simp]
 theorem Set.eqOn_insert {s : Set α} {f₁ f₂ : α → β}
   : (insert a s).EqOn f₁ f₂ ↔ s.EqOn f₁ f₂ ∧ f₁ a = f₂ a := by
