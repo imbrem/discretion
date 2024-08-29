@@ -238,3 +238,15 @@ theorem Set.liftnFv_two_lift_succ_image (s : Set ℕ)
 -- TODO: liftnFv (and therefore liftFv) commute with multiset to set
 
 -- TODO: liftnFv and friends for Finset, Sometime Later (TM)
+
+theorem Set.liftnFv_subset_Iio_of_subset_Iio {n} {s : Set ℕ} {m}
+  (h : s ⊆ Set.Iio m) : s.liftnFv n ⊆ Set.Iio (m - n) := by
+  intro k
+  simp only [mem_liftnFv, mem_Iio]
+  intro hk
+  have hk := h hk
+  simp only [mem_Iio] at hk
+  omega
+
+theorem Set.liftFv_subset_Iio_of_subset_Iio {s : Set ℕ} {m}
+  (h : s ⊆ Set.Iio m) : s.liftFv ⊆ Set.Iio (m - 1) := liftnFv_subset_Iio_of_subset_Iio h
