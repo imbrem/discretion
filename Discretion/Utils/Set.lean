@@ -64,3 +64,18 @@ theorem Set.iUnion_applied
   {s : Set α} {f : β → Set γ} {g : α → β}
   : ⋃ a ∈ s, f (g a) = ⋃ b ∈ g '' s, f b
   := by simp
+
+theorem Set.Iio_intersect_Iio [LinearOrder α] {a b : α} : Iio a ∩ Iio b = Iio (a ⊓ b) := by
+  ext x; simp
+
+theorem Set.Iio_inf [LinearOrder α] {a b : α} : Iio (a ⊓ b) = Iio a ∩ Iio b := by
+  ext x; simp
+
+theorem Set.Iio_sup [LinearOrder α] {a b : α} : Iio (a ⊔ b) = Iio a ∪ Iio b := by
+  ext x; simp
+
+theorem Set.Iio_min [LinearOrder α] {a b : α} : Iio (min a b) = Iio a ∩ Iio b := by
+  ext x; simp
+
+theorem Set.Iio_max [LinearOrder α] {a b : α} : Iio (max a b) = Iio a ∪ Iio b := by
+  ext x; simp
