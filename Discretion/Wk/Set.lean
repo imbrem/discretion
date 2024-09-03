@@ -229,6 +229,18 @@ theorem Set.liftnFv_iUnion (n) (s : α → Set ℕ)
   : (iUnion s).liftnFv n = iUnion (λi => (s i).liftnFv n)
   := by ext k; simp [mem_liftnFv]
 
+theorem Set.liftFv_iUnion (s : α → Set ℕ)
+  : (iUnion s).liftFv = iUnion (λi => (s i).liftFv)
+  := liftnFv_iUnion 1 s
+
+theorem Set.liftnFv_biUnion (n) (s : Set α) (f : α → Set ℕ)
+  : (⋃x ∈ s, f x).liftnFv n = ⋃x ∈ s, (f x).liftnFv n
+  := by ext k; simp [mem_liftnFv]
+
+theorem Set.liftFv_biUnion (s : Set α) (f : α → Set ℕ)
+  : (⋃x ∈ s, f x).liftFv = ⋃x ∈ s, (f x).liftFv
+  := liftnFv_biUnion 1 s f
+
 @[simp]
 theorem Set.liftnFv_two_lift_succ_image (s : Set ℕ)
   : (Nat.liftWk Nat.succ '' s).liftnFv 2 = s.liftFv := by
