@@ -78,3 +78,7 @@ theorem Set.Iio_min [LinearOrder α] {a b : α} : Iio (min a b) = Iio a ∩ Iio 
 
 theorem Set.Iio_max [LinearOrder α] {a b : α} : Iio (max a b) = Iio a ∪ Iio b := by
   ext x; simp
+
+theorem Set.Iio_finset_sup [LinearOrder β] [OrderBot β] (s : Finset α) (f : α → β)
+  : Iio (s.sup f) = ⋃x ∈ s, Set.Iio (f x)
+  := by open Classical in induction s using Finset.induction <;> simp [Iio_sup, *]
