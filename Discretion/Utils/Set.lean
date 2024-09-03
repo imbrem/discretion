@@ -21,6 +21,19 @@ theorem Set.eqOn_insert {s : Set α} {f₁ f₂ : α → β}
   rw [<-union_singleton, eqOn_union]
   simp [*]
 
+theorem Set.eqOn_iUnion {f : α → Set β} {g h : β → γ}
+  : (Set.iUnion f).EqOn g h ↔ ∀a, (f a).EqOn g h := by
+  simp only [EqOn, mem_iUnion, forall_exists_index]
+  rw [forall_comm]
+
+theorem Set.eqOn_biUnion {s : Set α} {f : α → Set β} {g h : β → γ}
+  : ((⋃x ∈ s, f x).EqOn g h) ↔ (∀x ∈ s, (f x).EqOn g h) := by
+  simp only [EqOn, mem_iUnion, exists_prop', nonempty_prop, forall_exists_index, and_imp]
+  rw [forall_comm]
+  apply forall_congr'
+  intro _
+  rw [forall_comm]
+
 -- TODO: think about this...
 @[simp]
 theorem Set.eqOn_insert' {s : Set α} {f₁ f₂ : α → β}
