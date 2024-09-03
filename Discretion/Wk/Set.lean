@@ -118,6 +118,13 @@ theorem Set.mem_liftFv_of_succ_mem (s : Set ℕ) (k : ℕ)
 theorem Set.mem_liftFv (s : Set ℕ) (k : ℕ)
   : k ∈ s.liftFv ↔ k + 1 ∈ s := mem_liftnFv 1 s k
 
+theorem Set.liftFv_def' {s : Set ℕ}
+  : s.liftFv = (· - 1) '' (s \ {0}) := by
+  ext k; simp only [mem_liftFv, mem_image, mem_diff, mem_singleton_iff]
+  constructor
+  · intro h; exact ⟨k + 1, ⟨h, by simp⟩, by simp⟩
+  · intro ⟨x, ⟨hx, hx'⟩, ex⟩; cases ex; rw [Nat.sub_one_add_one]; exact hx; exact hx'
+
 theorem Set.not_mem_liftFv (s : Set ℕ) (k : ℕ)
   : k ∉ s.liftFv ↔ k + 1 ∉ s := not_mem_liftnFv 1 s k
 
@@ -250,3 +257,18 @@ theorem Set.liftnFv_subset_Iio_of_subset_Iio {n} {s : Set ℕ} {m}
 
 theorem Set.liftFv_subset_Iio_of_subset_Iio {s : Set ℕ} {m}
   (h : s ⊆ Set.Iio m) : s.liftFv ⊆ Set.Iio (m - 1) := liftnFv_subset_Iio_of_subset_Iio h
+
+theorem Nat.liftWk_eqOn_iff {s : Set ℕ}
+  : s.EqOn (liftWk ρ) (liftWk σ) ↔ s.liftFv.EqOn ρ σ := by
+  apply Iff.trans _ Nat.liftWk_eqOn_succ_iff
+  rw [<-Nat.liftWk_eqOn_remove_zero_iff]
+  apply Iff.of_eq
+  congr
+  simp [Set.image_image]
+  ext k; cases k <;> simp
+
+theorem Nat.liftnWk_eqOn_iff {n} {s : Set ℕ}
+  : s.EqOn (liftnWk n ρ) (liftnWk n σ) ↔ (s.liftnFv n).EqOn ρ σ
+  := by induction n generalizing s ρ σ with
+  | zero => simp [liftnWk_zero]
+  | succ n I => simp [liftnWk_succ', liftWk_eqOn_iff, I, <-Set.liftnFv_succ]

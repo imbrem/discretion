@@ -175,14 +175,22 @@ theorem Nat.eqOn_of_liftWk_eqOn_succ {s : Set ℕ} (hs : (succ '' s).EqOn (liftW
 theorem Nat.liftWk_eqOn_succ_iff {s : Set ℕ} : (succ '' s).EqOn (liftWk ρ) (liftWk σ) ↔ s.EqOn ρ σ
   := ⟨eqOn_of_liftWk_eqOn_succ, liftWk_eqOn_succ_of_eqOn⟩
 
-theorem Nat.liftWk_eqOn_iff {s : Set ℕ}
+theorem Nat.liftWk_eqOn_insert_succ_iff {s : Set ℕ}
   : (insert 0 (succ '' s)).EqOn (liftWk ρ) (liftWk σ) ↔ s.EqOn ρ σ := by
   rw [<-@liftWk_eqOn_succ_iff _ _ s]
   simp
 
+theorem Nat.liftWk_eqOn_insert_zero_iff {s : Set ℕ}
+  : (insert 0 s).EqOn (liftWk ρ) (liftWk σ) ↔ s.EqOn (liftWk ρ) (liftWk σ) := by
+  simp
+
+theorem Nat.liftWk_eqOn_remove_zero_iff {s : Set ℕ}
+  : (s \ {0}).EqOn (liftWk ρ) (liftWk σ) ↔ s.EqOn (liftWk ρ) (liftWk σ) := by
+  rw [<-Nat.liftWk_eqOn_insert_zero_iff]; simp
+
 theorem Nat.liftWk_eqOn_Iio_iff {M : ℕ}
   : (Set.Iio (M + 1)).EqOn (liftWk ρ) (liftWk σ) ↔ (Set.Iio M).EqOn ρ σ := by
-  rw [<-@liftWk_eqOn_iff _ _ (Set.Iio M), iff_iff_eq]
+  rw [<-@liftWk_eqOn_insert_succ_iff _ _ (Set.Iio M), iff_iff_eq]
   congr
   ext x
   cases x <;> simp [Nat.succ_lt_succ_iff]
