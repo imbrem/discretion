@@ -24,7 +24,7 @@ instance instTop [Nonempty α] : Top (NSet α) where
 instance instInhabited [Nonempty α] : Inhabited (NSet α) where
   default := ⊤
 
-instance instMembership : Membership α (NSet α) := ⟨fun a s => a ∈ s.val⟩
+instance instMembership : Membership α (NSet α) := ⟨fun s a => a ∈ s.val⟩
 
 theorem coe_mem_iff {a : α} {s : NSet α} : a ∈ s ↔ a ∈ s.val := Iff.rfl
 

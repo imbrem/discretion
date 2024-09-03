@@ -600,43 +600,52 @@ theorem rightResults_finiteTraces_empty_of_finiteTraces_empty
   intro (a, e) hr
   apply h.2 a e hr
 
+theorem exists_rightResult_of_finiteTrace_empty
+  (hstep : ∀a, Set.Nonempty (step a)) (a) (hfin : finiteTraces step a = ∅)
+    : ∃r : α × ε, r ∈ rightResults (step a) := by
+  let ⟨t, ht⟩ := hstep a;
+  cases t with
+  | done d e => cases d with
+    | inl b =>
+      apply False.elim (Set.Nonempty.ne_empty _ hfin)
+      exact ⟨done b e, leftTraces?_subset_finiteTraces ht⟩
+    | inr a => exact ⟨(a, e), ht⟩
+  | inf t =>
+    apply False.elim (Set.Nonempty.ne_empty _ hfin)
+    exact ⟨inf t, leftTraces?_subset_finiteTraces ht⟩;
+
+noncomputable def choose_rightResult_of_finiteTrace_empty
+  (hstep : ∀a, Set.Nonempty (step a)) (a) (hfin : finiteTraces step a = ∅) : α × ε
+  := Classical.choose (exists_rightResult_of_finiteTrace_empty hstep a hfin)
+
+theorem choose_rightResult_of_finiteTrace_empty_spec
+  (hstep : ∀a, Set.Nonempty (step a)) (a) (hfin : finiteTraces step a = ∅)
+  : choose_rightResult_of_finiteTrace_empty hstep a hfin ∈ rightResults (step a) := by
+  apply Classical.choose_spec (exists_rightResult_of_finiteTrace_empty hstep a hfin)
+
+theorem finiteTrace_choose_rightResult_empty
+  (hstep : ∀a, Set.Nonempty (step a)) (a) (hfin : finiteTraces step a = ∅)
+  : finiteTraces step (choose_rightResult_of_finiteTrace_empty hstep a hfin).1 = ∅
+  := (rightResults_finiteTraces_empty_of_finiteTraces_empty hfin _
+        (choose_rightResult_of_finiteTrace_empty_spec hstep a hfin))
+
 noncomputable def choose_action_finiteTrace_empty
   (hstep : ∀a, Set.Nonempty (step a)) (a) (hfin : finiteTraces step a = ∅) : Stream' α
   := λn =>
-    have h : ∃r : α × ε, r ∈ rightResults (step a) := by
-      let ⟨t, ht⟩ := hstep a;
-      cases t with
-      | done d e => cases d with
-        | inl b =>
-          apply False.elim (Set.Nonempty.ne_empty _ hfin)
-          exact ⟨done b e, leftTraces?_subset_finiteTraces ht⟩
-        | inr a => exact ⟨(a, e), ht⟩
-      | inf t =>
-        apply False.elim (Set.Nonempty.ne_empty _ hfin)
-        exact ⟨inf t, leftTraces?_subset_finiteTraces ht⟩;
     match n with
-    | 0 => (Classical.choose h).1
-    | n + 1 => choose_action_finiteTrace_empty hstep (Classical.choose h).1
-      (rightResults_finiteTraces_empty_of_finiteTraces_empty hfin _ (Classical.choose_spec h)) n
+    | 0 => (choose_rightResult_of_finiteTrace_empty hstep a hfin).1
+    | n + 1 => choose_action_finiteTrace_empty
+      hstep (choose_rightResult_of_finiteTrace_empty hstep a hfin).1
+      (finiteTrace_choose_rightResult_empty hstep a hfin) n
 
 noncomputable def choose_effect_finiteTrace_empty
   (hstep : ∀a, Set.Nonempty (step a)) (a) (hfin : finiteTraces step a = ∅) : Stream' ε
   := λn =>
-    have h : ∃r : α × ε, r ∈ rightResults (step a) := by
-      let ⟨t, ht⟩ := hstep a;
-      cases t with
-      | done d e => cases d with
-        | inl b =>
-          apply False.elim (Set.Nonempty.ne_empty _ hfin)
-          exact ⟨done b e, leftTraces?_subset_finiteTraces ht⟩
-        | inr a => exact ⟨(a, e), ht⟩
-      | inf t =>
-        apply False.elim (Set.Nonempty.ne_empty _ hfin)
-        exact ⟨inf t, leftTraces?_subset_finiteTraces ht⟩;
     match n with
-    | 0 => (Classical.choose h).2
-    | n + 1 => choose_effect_finiteTrace_empty hstep (Classical.choose h).1
-      (rightResults_finiteTraces_empty_of_finiteTraces_empty hfin _ (Classical.choose_spec h)) n
+    | 0 => (choose_rightResult_of_finiteTrace_empty hstep a hfin).2
+    | n + 1 => choose_effect_finiteTrace_empty hstep
+      (choose_rightResult_of_finiteTrace_empty hstep a hfin).1
+      (finiteTrace_choose_rightResult_empty hstep a hfin) n
 
 def _root_.Classical.choose_spec_p {p : α → Prop} {h :  ∃ (x : α), p x} {c : α}
   (_ : Classical.choose h = c) : α → Prop := p
@@ -656,8 +665,8 @@ theorem choose_finiteTrace_empty_spec
   induction n generalizing step a with
   | zero =>
     simp only [choose_action_finiteTrace_empty, choose_effect_finiteTrace_empty, Stream'.get]
-    generalize hc : Classical.choose _ = c;
-    exact hc ▸ Classical.choose_spec (Classical.choose_spec_h hc)
+    apply choose_rightResult_of_finiteTrace_empty_spec hstep
+    apply finiteTrace_choose_rightResult_empty
   | succ n I =>
     simp only [choose_action_finiteTrace_empty, choose_effect_finiteTrace_empty, Stream'.get] at *
     apply I
@@ -668,8 +677,7 @@ theorem choose_action_finiteTrace_empty_spec
   := ⟨choose_effect_finiteTrace_empty hstep a hfin,
     by
       simp only [choose_action_finiteTrace_empty, choose_effect_finiteTrace_empty]
-      generalize hc : Classical.choose _ = c;
-      exact hc ▸ Classical.choose_spec (Classical.choose_spec_h hc)
+      apply choose_rightResult_of_finiteTrace_empty_spec hstep a hfin
     ,
     choose_finiteTrace_empty_spec hstep a hfin⟩
 
@@ -679,8 +687,7 @@ theorem choose_effect_finiteTrace_empty_spec
   := ⟨choose_action_finiteTrace_empty hstep a hfin,
     by
       simp only [choose_action_finiteTrace_empty, choose_effect_finiteTrace_empty]
-      generalize hc : Classical.choose _ = c;
-      exact hc ▸ Classical.choose_spec (Classical.choose_spec_h hc)
+      apply choose_rightResult_of_finiteTrace_empty_spec hstep a hfin
     ,
     choose_finiteTrace_empty_spec hstep a hfin⟩
 

@@ -837,9 +837,9 @@ def embDomain (f : α ↪ β) (v : α →ᶠ[{z}] M) : β →ᶠ[{z}] M where
   mem_support_toFun a₂ := by
     dsimp
     split_ifs with h
-    · simp only [h, true_iff_iff, Ne]
-      rw [← not_mem_support_iff, not_not]
-      classical apply Finset.choose_mem
+    · simp only [h, Set.mem_singleton_iff, true_iff]
+      apply (mem_support_iff (Zf := λ_ => {z})).mp
+      apply Finset.choose_mem
     · simp [h]
 
 @[simp]

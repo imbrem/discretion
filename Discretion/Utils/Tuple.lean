@@ -4,7 +4,7 @@ import Mathlib.Data.List.Basic
 import Mathlib.Data.Multiset.Basic
 import Mathlib.Data.Finset.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset
-import Mathlib.Init.Data.Quot
+import Batteries.Data.Fin.Lemmas
 
 theorem Fin.foldl_eq_foldr {α} {f : α → α → α} (hcomm : Commutative f) (hassoc : Associative f)
   (x : α) (xs : Fin n → α)

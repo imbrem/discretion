@@ -4,7 +4,6 @@ import Mathlib.Data.List.Basic
 import Mathlib.Data.Multiset.Basic
 import Mathlib.Data.Finset.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset
-import Mathlib.Init.Data.Quot
 
 import Discretion.Utils.Multiset
 
@@ -17,25 +16,25 @@ instance topIsEquiv {α} : IsEquiv α ⊤ where
 
 -- TODO: IsEquiv for sup, inf, sSup, sInf?
 
-theorem EqvGen.monotone {α} : Monotone (EqvGen (α := α))
+theorem Relation.EqvGen.monotone {α} : Monotone (EqvGen (α := α))
   := λ_ _ hr _ _ h => EqvGen.mono hr h
 
-theorem EqvGen.increasing {r : α → α → Prop} : r ≤ EqvGen r := EqvGen.rel
+theorem Relation.EqvGen.increasing {r : α → α → Prop} : r ≤ EqvGen r := EqvGen.rel
 
-instance eqvGen_isEquiv {r : α → α → Prop} : IsEquiv α (EqvGen r) where
+instance Relation.eqvGen_isEquiv {r : α → α → Prop} : IsEquiv α (EqvGen r) where
   refl := EqvGen.refl
   symm := EqvGen.symm
   trans := EqvGen.trans
 
-theorem equivalence_isEquiv (r : α → α → Prop) [IsEquiv α r] : Equivalence r where
+theorem Relation.equivalence_isEquiv (r : α → α → Prop) [IsEquiv α r] : Equivalence r where
   refl := IsRefl.refl
   symm := IsSymm.symm _ _
   trans := IsTrans.trans _ _ _
 
-theorem eqvGen_of_isEquiv {r : α → α → Prop} [IsEquiv α r]
+theorem Relation.eqvGen_of_isEquiv {r : α → α → Prop} [IsEquiv α r]
   : EqvGen r = r := (equivalence_isEquiv r).eqvGen_eq
 
-theorem eqvGen_le_of_le_isEquiv {r s : α → α → Prop} [IsEquiv α s]
+theorem Relation.eqvGen_le_of_le_isEquiv {r s : α → α → Prop} [IsEquiv α s]
   (hr : r ≤ s) : EqvGen r ≤ s
   := eqvGen_of_isEquiv (r := s) ▸ EqvGen.monotone hr
 
@@ -84,7 +83,7 @@ instance elementwise_isIrrefl {β} [b : Nonempty β] {r : α → α → Prop} [I
     : IsIrrefl (β → α) (Relation.Elementwise β r) where
   irrefl _ h := b.elim (λb => IsIrrefl.irrefl _ (h b))
 
-theorem EqvGen.elementwise
+theorem Relation.EqvGen.elementwise
   {β : Type u} {r : α → α → Prop} {f g: β → α} (h : EqvGen (Relation.Elementwise β r) f g)
   : Relation.Elementwise β (EqvGen r) f g
   := by induction h with
@@ -93,7 +92,7 @@ theorem EqvGen.elementwise
   | symm f g _ I => exact λx => EqvGen.symm _ _ (I x)
   | trans f g h _ _ Il Ir => exact λx => EqvGen.trans _ _ _ (Il x) (Ir x)
 
-theorem EqvGen.le_elementwise
+theorem Relation.EqvGen.le_elementwise
   {β : Type u} {r : α → α → Prop}
   : EqvGen (Relation.Elementwise β r) ≤ Relation.Elementwise β (EqvGen r)
   := λ_ _ => EqvGen.elementwise

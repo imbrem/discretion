@@ -351,7 +351,7 @@ def Trace? (ε: Type ue) (τ: Type ut) := TraceT ε τ Option
 namespace Trace?
 
 instance instMembership {ε τ α} : Membership (Trace ε τ α) (Trace? ε τ α) where
-  mem t ts := ts = some t
+  mem ts t := ts = some t
 
 instance instEmptyCollection {ε τ α} : EmptyCollection (Trace? ε τ α) where
   emptyCollection := none

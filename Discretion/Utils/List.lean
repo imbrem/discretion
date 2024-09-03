@@ -3,8 +3,6 @@ import Mathlib.Data.Fin.Tuple.Basic
 import Mathlib.Data.List.Basic
 import Mathlib.Data.Multiset.Basic
 import Mathlib.Data.Finset.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset
-import Mathlib.Init.Data.Quot
 
 theorem List.get_append_castLE (l r : List α) (i : Fin l.length)
   : (l ++ r).get (i.castLE (by simp)) = l.get i
