@@ -82,25 +82,82 @@ theorem Nat.stepWk_injective : Function.Injective stepWk := by
   have H': stepWk ρ n = stepWk σ n := by rw [H]
   exact Nat.succ_injective H'
 
-theorem Nat.liftWk_injective_iff : Function.Injective (liftWk ρ) ↔ Function.Injective ρ := ⟨
-  λhρ n m h => (by
-    apply Nat.succ_inj.mp
-    apply hρ
-    simp [h]
-  ),
-  λhρ n m h => (by
-    cases n <;> cases m
-    case zero.zero => rfl
-    case succ.succ => simp only [liftWk_succ, add_left_inj] at h; rw [hρ h]
-    all_goals cases h
-  )⟩
+theorem Nat.liftWk_injective_of_injective
+  (hρ : Function.Injective ρ) : Function.Injective (liftWk ρ) := λn m h => by
+  cases n <;> cases m
+  case zero.zero => rfl
+  case succ.succ => simp only [liftWk_succ, add_left_inj] at h; rw [hρ h]
+  all_goals cases h
+
+theorem Nat.injective_of_liftWk_injective
+  (hρ : Function.Injective (liftWk ρ)) : Function.Injective ρ := λn m h => by
+  apply Nat.succ_inj.mp
+  apply hρ
+  simp [h]
+
+theorem Nat.liftWk_injective_iff : Function.Injective (liftWk ρ) ↔ Function.Injective ρ
+  := ⟨injective_of_liftWk_injective, liftWk_injective_of_injective⟩
+
+theorem Nat.liftWk_surjective_of_surjective
+  (hρ : Function.Surjective ρ) : Function.Surjective (liftWk ρ)
+  | 0 => ⟨0, rfl⟩
+  | n + 1 => let ⟨k, hk⟩ := hρ n; ⟨k + 1, by simp [hk]⟩
+
+theorem Nat.sujective_of_liftWk_surjective
+  (hρ : Function.Surjective (liftWk ρ)) : Function.Surjective ρ := λn =>
+  let ⟨k, hk⟩ := hρ (n + 1);
+  ⟨k - 1, by
+    cases k with
+    | zero => cases hk
+    | succ k => simp only [liftWk_succ, add_left_inj] at hk; simp [hk]
+  ⟩
+
+theorem Nat.liftWk_surjective_iff : Function.Surjective (liftWk ρ) ↔ Function.Surjective ρ
+  := ⟨sujective_of_liftWk_surjective, liftWk_surjective_of_surjective⟩
+
+theorem Nat.liftWk_bijective_of_bijective
+  (hρ : Function.Bijective ρ) : Function.Bijective (liftWk ρ) :=
+  ⟨liftWk_injective_of_injective hρ.1, liftWk_surjective_of_surjective hρ.2⟩
+
+theorem Nat.bijective_of_liftWk_bijective
+  (hρ : Function.Bijective (liftWk ρ)) : Function.Bijective ρ :=
+  ⟨injective_of_liftWk_injective hρ.1, sujective_of_liftWk_surjective hρ.2⟩
+
+theorem Nat.liftWk_bijective_iff : Function.Bijective (liftWk ρ) ↔ Function.Bijective ρ
+  := ⟨bijective_of_liftWk_bijective, Nat.liftWk_bijective_of_bijective⟩
 
 theorem Nat.stepWk_injective_iff : Function.Injective (stepWk ρ) ↔ Function.Injective ρ
   := forall₂_congr (by simp)
 
--- TODO: liftWk and stepWk are (strict) monotone themselves
+theorem Nat.stepWk_injective_of_injective : Function.Injective ρ → Function.Injective (stepWk ρ)
+  := stepWk_injective_iff.mpr
 
-theorem Nat.liftWk_monotone_iff : Monotone (liftWk ρ) ↔ Monotone ρ := ⟨
+theorem Nat.injective_of_stepWk_injective : Function.Injective (stepWk ρ) → Function.Injective ρ
+  := stepWk_injective_iff.mp
+
+theorem Nat.stepWk_not_surjective : ¬Function.Surjective (stepWk ρ)
+  := λc => let ⟨k, hk⟩ := c 0; by cases hk
+
+theorem Nat.stepWk_not_bijective : ¬Function.Bijective (stepWk ρ)
+  := λc => stepWk_not_surjective (c.2)
+
+theorem Nat.liftWk_mono : Monotone liftWk := λρ ρ' h k => by cases k <;> simp [h _]
+
+theorem Nat.stepWk_mono : Monotone stepWk := λρ ρ' h k => by simp [h k]
+
+@[simp]
+theorem Nat.liftWk_strictMono : StrictMono liftWk := λρ ρ' h => by
+  rw [Pi.lt_def] at *
+  let ⟨hle, ⟨i, hi⟩⟩ := h
+  exact ⟨liftWk_mono hle, ⟨i + 1, by simp [hi]⟩⟩
+
+@[simp]
+theorem Nat.stepWk_strictMono : StrictMono stepWk := λρ ρ' h => by
+  rw [Pi.lt_def] at *
+  let ⟨hle, ⟨i, hi⟩⟩ := h
+  exact ⟨stepWk_mono hle, ⟨i, by simp [hi]⟩⟩
+
+theorem Nat.liftWk_mono_iff : Monotone (liftWk ρ) ↔ Monotone ρ := ⟨
   λhρ n m h => (by
     apply Nat.le_of_succ_le_succ
     simp only [Nat.succ_eq_add_one, <-liftWk_succ]
@@ -112,10 +169,22 @@ theorem Nat.liftWk_monotone_iff : Monotone (liftWk ρ) ↔ Monotone ρ := ⟨
     all_goals simp at *
   )⟩
 
-theorem Nat.stepWk_monotone_iff : Monotone (stepWk ρ) ↔ Monotone ρ := by
+theorem Nat.liftWk_mono_of_mono (hρ : Monotone ρ)
+  : Monotone (liftWk ρ) := liftWk_mono_iff.mpr hρ
+
+theorem Nat.mono_of_liftWk_mono (hρ : Monotone (liftWk ρ))
+  : Monotone ρ := liftWk_mono_iff.mp hρ
+
+theorem Nat.stepWk_mono_iff : Monotone (stepWk ρ) ↔ Monotone ρ := by
   apply forall₂_congr
   intro n m
   simp [stepWk, Nat.succ_le_succ_iff]
+
+theorem Nat.stepWk_mono_of_mono (hρ : Monotone ρ)
+  : Monotone (stepWk ρ) := stepWk_mono_iff.mpr hρ
+
+theorem Nat.mono_of_stepWk_mono (hρ : Monotone (stepWk ρ))
+  : Monotone ρ := stepWk_mono_iff.mp hρ
 
 theorem Nat.liftWk_strictMono_iff : StrictMono (liftWk ρ) ↔ StrictMono ρ := ⟨
   λhρ n m h => (by
@@ -134,7 +203,7 @@ theorem Nat.stepWk_strictMono_iff : StrictMono (stepWk ρ) ↔ StrictMono ρ := 
   intro n m
   simp [stepWk, Nat.succ_lt_succ_iff]
 
--- TODO: monotoneOn iff
+-- TODO: monoOn iff
 
 -- TODO: strictMonoOn iff
 
@@ -351,6 +420,63 @@ theorem Nat.liftnWk_comp_add_right (n m ρ) : liftnWk (n + m) ρ ∘ (· + n) = 
 
 theorem Nat.liftnWk_comp_add (n ρ) : liftnWk n ρ ∘ (· + n) = (· + n) ∘ ρ
   := liftnWk_comp_add_right n 0 ρ
+
+theorem Nat.liftnWk_injective : Function.Injective (liftnWk n) := by induction n with
+  | zero => exact (λ_ _ h => h)
+  | succ n I => rw [liftnWk_succ']; exact Function.Injective.comp liftWk_injective I
+
+theorem Nat.liftnWk_surjective_iff_zero : Function.Surjective (liftnWk n) ↔ n = 0 := ⟨
+    λc => by cases n with
+      | zero => rfl
+      | succ n => have ⟨ρ, hρ⟩ := c (λ_ => 1); have hρ := congrFun hρ 0; simp [liftnWk] at hρ,
+    λh => by cases h; exact (λk => ⟨k, rfl⟩)
+  ⟩
+
+theorem Nat.liftnWk_bijective_iff_zero : Function.Bijective (liftnWk n) ↔ n = 0 := ⟨
+  λh => liftnWk_surjective_iff_zero.mp h.2,
+  λh => by cases h; exact ⟨liftnWk_injective, λk => ⟨k, rfl⟩⟩
+⟩
+
+theorem Nat.liftnWk_injective_iff : Function.Injective (liftnWk n ρ) ↔ Function.Injective ρ := by
+  induction n <;> simp [liftnWk_zero, liftnWk_succ', liftWk_injective_iff, *]
+
+theorem Nat.liftnWk_injective_of_injective
+  (hρ : Function.Injective ρ) : Function.Injective (liftnWk n ρ) := liftnWk_injective_iff.mpr hρ
+
+theorem Nat.injective_of_liftnWk_injective
+  (hρ : Function.Injective (liftnWk n ρ)) : Function.Injective ρ := liftnWk_injective_iff.mp hρ
+
+theorem Nat.liftnWk_surjective_iff : Function.Surjective (liftnWk n ρ) ↔ Function.Surjective ρ := by
+  induction n <;> simp [liftnWk_zero, liftnWk_succ', liftWk_surjective_iff, *]
+
+theorem Nat.liftnWk_surjective_of_surjective
+  (hρ : Function.Surjective ρ) : Function.Surjective (liftnWk n ρ) := liftnWk_surjective_iff.mpr hρ
+
+theorem Nat.sujective_of_liftnWk_surjective
+  (hρ : Function.Surjective (liftnWk n ρ)) : Function.Surjective ρ := liftnWk_surjective_iff.mp hρ
+
+theorem Nat.liftnWk_bijective_iff : Function.Bijective (liftnWk n ρ) ↔ Function.Bijective ρ := by
+  induction n <;> simp [liftnWk_zero, liftnWk_succ', liftWk_bijective_iff, *]
+
+theorem Nat.liftnWk_bijective_of_bijective
+  (hρ : Function.Bijective ρ) : Function.Bijective (liftnWk n ρ) := liftnWk_bijective_iff.mpr hρ
+
+theorem Nat.bijective_of_liftnWk_bijective
+  (hρ : Function.Bijective (liftnWk n ρ)) : Function.Bijective ρ := liftnWk_bijective_iff.mp hρ
+
+@[simp]
+theorem Nat.liftnWk_strictMono : StrictMono (liftnWk n) := by induction n with
+  | zero => exact (λ_ _ h => h)
+  | succ n I => rw [liftnWk_succ']; exact StrictMono.comp liftWk_strictMono I
+
+@[simp]
+theorem Nat.liftnWk_mono : Monotone (liftnWk n) := liftnWk_strictMono.monotone
+
+theorem Nat.liftnWk_mono_iff : Monotone (liftnWk n ρ) ↔ Monotone ρ := by
+  induction n <;> simp [liftnWk_zero, liftnWk_succ', liftWk_mono_iff, *]
+
+theorem Nat.liftnWk_strictMono_iff : StrictMono (liftnWk n ρ) ↔ StrictMono ρ := by
+  induction n <;> simp [liftnWk_zero, liftnWk_succ', liftWk_strictMono_iff, *]
 
 /-- Weaken the `n`th variable of a term -/
 def Nat.wkn (n: ℕ) := λ m => if m < n then m else m + 1
