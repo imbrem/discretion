@@ -7,6 +7,22 @@ import Discretion.Utils.Quotient
 import Discretion.Utils.List
 import Discretion.Utils.Fin
 
+def Nat.cases2 {motive : ℕ → Sort u}
+  (zero : motive 0) (one : motive 1) (rest : ∀n, motive (n + 2)) (n : ℕ) : motive n :=
+  match n with
+  | 0 => zero
+  | 1 => one
+  | n + 2 => rest n
+
+def Nat.cases3 {motive : ℕ → Sort u}
+  (zero : motive 0) (one : motive 1) (two : motive 2) (rest : ∀n, motive (n + 3)) (n : ℕ)
+  : motive n :=
+  match n with
+  | 0 => zero
+  | 1 => one
+  | 2 => two
+  | n + 3 => rest n
+
 def Nat.swap0 (n : ℕ) : ℕ → ℕ
   | 0 => n
   | k + 1 => if k < n then k else k + 1
