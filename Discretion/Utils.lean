@@ -23,6 +23,28 @@ def Nat.cases3 {motive : ℕ → Sort u}
   | 2 => two
   | n + 3 => rest n
 
+-- "engineering induction": it's actually cases3, but an engineer would say cases4 anyways
+def Nat.cases4 {motive : ℕ → Sort u}
+  (zero : motive 0) (one : motive 1) (two : motive 2) (three : motive 3) (rest : ∀n, motive (n + 4))
+  (n : ℕ) : motive n :=
+  match n with
+  | 0 => zero
+  | 1 => one
+  | 2 => two
+  | 3 => three
+  | n + 4 => rest n
+
+def Nat.cases5 {motive : ℕ → Sort u}
+  (zero : motive 0) (one : motive 1) (two : motive 2) (three : motive 3) (four : motive 4)
+  (rest : ∀n, motive (n + 5)) (n : ℕ) : motive n :=
+  match n with
+  | 0 => zero
+  | 1 => one
+  | 2 => two
+  | 3 => three
+  | 4 => four
+  | n + 5 => rest n
+
 def Nat.swap0 (n : ℕ) : ℕ → ℕ
   | 0 => n
   | k + 1 => if k < n then k else k + 1
