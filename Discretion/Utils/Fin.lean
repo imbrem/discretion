@@ -8,6 +8,11 @@ def Fin.elim1
 theorem Fin.elim1_zero
   {motive : Fin 1 → Sort u} {zero : motive 0} : Fin.elim1 zero 0 = zero := rfl
 
+@[simp]
+theorem Fin.elim1_const
+  {motive : Sort u} {zero : motive} {i} : Fin.elim1 (motive := λ_ => motive) zero i = zero
+  := by cases i using Fin.elim1; rfl
+
 theorem Fin.dapply_elim1
   {motive' : Fin 1 → Sort v}
   {motive : Fin 1 → Sort u} {f : ∀{i : Fin 1}, motive i → motive' i}
