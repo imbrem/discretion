@@ -6,13 +6,13 @@ import Mathlib.Data.Finset.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset
 import Batteries.Data.Fin.Lemmas
 
-theorem Fin.foldl_eq_foldr {α} {f : α → α → α} (hcomm : Commutative f) (hassoc : Associative f)
+theorem Fin.foldl_eq_foldr {α : Type u} {f : α → α → α} [Std.Commutative f] [Std.Associative f]
   (x : α) (xs : Fin n → α)
   : foldl n (λa i => f a (xs i)) x = foldr n (λi a => f (xs i) a) x := by
   rw [
     foldr_eq_foldr_list, foldl_eq_foldl_list,
     <-List.foldl_map, <-List.foldr_map,
-    List.foldl_eq_foldr hcomm hassoc
+    List.foldl_eq_foldr
   ]
 
 -- TODO: foldl_eq_foldr'...
@@ -39,7 +39,7 @@ theorem Fin.maxD_succ [Max α] (f : Fin (n+1) → α) (b : α)
 
 theorem Fin.maxD_succ' [LinearOrder α] (f : Fin (n+1) → α) (b : α)
     : maxD f b = maxD (f ∘ Fin.succ) (max b (f 0)) := by
-  simp [maxD, <-foldl_eq_foldr max_commutative max_associative, Fin.foldl_succ]
+  simp [maxD, <-foldl_eq_foldr, Fin.foldl_succ]
 
 theorem Fin.base_le_maxD [LinearOrder α] (f : Fin n → α) (b : α)
   : b ≤ maxD f b := by induction n generalizing b with
@@ -136,7 +136,7 @@ theorem Fin.supD_succ [Sup α] (f : Fin (n+1) → α) (b : α)
 
 theorem Fin.supD_succ' [SemilatticeSup α] (f : Fin (n+1) → α) (b : α)
     : supD f b = supD (f ∘ Fin.succ) (b ⊔ (f 0)) := by
-  simp [supD, <-foldl_eq_foldr sup_comm sup_assoc, Fin.foldl_succ]
+  simp [supD, <-foldl_eq_foldr, Fin.foldl_succ]
 
 theorem Fin.elem_le_supD [SemilatticeSup α] (f : Fin n → α) (b : α)
   : ∀(i : Fin n), f i ≤ supD f b := by
