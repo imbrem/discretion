@@ -1,5 +1,6 @@
 import Mathlib.Data.Sum.Basic
 import Mathlib.Data.Set.Functor
+import Mathlib.Control.Monad.Writer
 
 open Sum
 
@@ -25,6 +26,17 @@ theorem elim_kleisli {α β γ γ' : Type u}
   (f : α → m γ) (g : β → m γ) (h : γ → m γ')
   : Sum.elim f g >=> h = Sum.elim (f >=> h) (g >=> h) := by
   funext a; cases a <;> simp [Bind.kleisliRight]
+
+theorem readerT_kleisli_bind {α β γ : Type u} (f : α → ReaderT ρ m β) (g : β → ReaderT ρ m γ)
+  : f >=> g = λa r => f a r >>= (λb => g b r) := rfl
+
+-- theorem writerT_monoid_kleisli_bind {α β γ ω : Type u} [Monoid ω]
+--   (f : α → WriterT ω m β) (g : β → WriterT ω m γ)
+--   : f >=> g = λa => (f a).run >>= (λ(b, w) => (g b).run >>= λ(c, w') => pure (c, w * w'))
+--   := sorry
+
+theorem stateT_kleisli_bind {α β γ σ : Type u} (f : α → StateT σ m β) (g : β → StateT σ m γ)
+  : f >=> g = λa s => f a s >>= (λ(b, s) => g b s) := rfl
 
 variable [LawfulMonad m]
 

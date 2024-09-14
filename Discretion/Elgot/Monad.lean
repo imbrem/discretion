@@ -1,5 +1,6 @@
 import Mathlib.Data.Sum.Basic
 import Mathlib.Data.Set.Functor
+import Mathlib.Control.Monad.Writer
 
 import Discretion.Utils.Kleisli
 
@@ -110,6 +111,30 @@ theorem ElgotMonad.dinaturality [ElgotMonad m]
     lhs
     rw [<-fixpoint]
   rw [<-kleisli_assoc, elim_kleisli, pure_inl_elim]
+
+instance instIterateReaderT {m : Type u → Type v} [Monad m] [MonadIterate m] {ρ : Type u}
+  : MonadIterate (ReaderT ρ m) where
+  iterate f a := λr => iterate (λx => f x r) a
+
+-- instance instElgotReaderT {m : Type u → Type v} [Monad m] [E : ElgotMonad m] {α : Type u}
+--   : ElgotMonad (ReaderT α m) where
+--   fixpoint f := sorry
+--   naturality f g := sorry
+--   codiagonal f := sorry
+--   uniformity f g h := sorry
+
+instance instIterateWriterTOfMonoid
+  {m : Type u → Type v} [Monad m] [MonadIterate m] {ω : Type u} [Monoid ω]
+  : MonadIterate (WriterT ω m) where
+  iterate f a := (iterate (m := m) (λ(a, w) => (f a)
+    >>= λ| (Sum.inl b, w') => pure (Sum.inl (b, w * w'))
+         | (Sum.inr a, w') => pure (Sum.inr (a, w * w')))) (a, 1)
+
+instance instIterateStateT {m : Type u → Type v} [Monad m] [MonadIterate m] {σ : Type u}
+  : MonadIterate (StateT σ m) where
+  iterate f a s := (iterate (λ(a, s) => (f a s)
+    >>= λ| (Sum.inl b, s) => pure (Sum.inl (b, s))
+         | (Sum.inr a, s) => pure (Sum.inr (a, s)))) (a, s)
 
 end Fixpoints
 
