@@ -184,7 +184,7 @@ theorem Fin.FEWkn.id {n : Nat} (Γ : Fin n → α) : Fin.FEWkn Γ Γ id := rfl
 theorem Fin.FEWkn.comp {n m o : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {Ξ : Fin o → α}
   {ρ : Fin m → Fin n} {σ : Fin o → Fin m}
   (hρ : Fin.FEWkn Γ Δ ρ) (hσ : Fin.FEWkn Δ Ξ σ) : Fin.FEWkn Γ Ξ (ρ ∘ σ)
-  := by rw [FEWkn, <-Function.comp.assoc, hρ, hσ]
+  := by rw [FEWkn, <-Function.comp_assoc, hρ, hσ]
 
 theorem Fin.FEWkn.trg_eq {n m : Nat} {Γ : Fin n → α} {Δ Δ' : Fin m → α} {ρ : Fin m → Fin n}
   (h : Fin.FEWkn Γ Δ ρ) (h' : Fin.FEWkn Γ Δ' ρ) : Δ = Δ'
@@ -205,7 +205,7 @@ theorem Fin.FWkn.id {n : Nat} (Γ : Fin n → α) : Fin.FWkn Γ Γ id := le_refl
 theorem Fin.FWkn.comp {n m o : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {Ξ : Fin o → α}
   {ρ : Fin m → Fin n} {σ : Fin o → Fin m}
   (hρ : Fin.FWkn Γ Δ ρ) (hσ : Fin.FWkn Δ Ξ σ) : Fin.FWkn Γ Ξ (ρ ∘ σ)
-  := le_trans (by rw [<-Function.comp.assoc]; exact Function.comp_left_mono hρ) hσ
+  := le_trans (by rw [<-Function.comp_assoc]; exact Function.comp_left_mono hρ) hσ
 
 theorem Fin.FEWkn.toFWkn {n m : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {ρ : Fin m → Fin n}
   (h : Fin.FEWkn Γ Δ ρ) : Fin.FWkn Γ Δ ρ

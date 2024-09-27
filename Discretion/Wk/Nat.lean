@@ -412,7 +412,7 @@ theorem Nat.liftnWk_comp_add_left (n m ρ) : liftnWk (n + m) ρ ∘ (· + m) = (
   | zero => rfl
   | succ m I =>
     have h : (· + (m + 1)) = Nat.succ ∘ (· + m) := funext (λx => rfl)
-    rw [<-add_assoc, h, <-Function.comp.assoc, liftnWk_comp_succ, Function.comp.assoc, I]
+    rw [<-add_assoc, h, <-Function.comp_assoc, liftnWk_comp_succ, Function.comp_assoc, I]
     rfl
 
 theorem Nat.liftnWk_comp_add_right (n m ρ) : liftnWk (n + m) ρ ∘ (· + n) = (· + n) ∘ liftnWk m ρ
@@ -577,8 +577,8 @@ theorem Nat.unliftnWk_comp_liftnWk : unliftnWk n ∘ liftnWk n = id := by
     rw [
       unliftnWk_succ,
       liftnWk_succ',
-      Function.comp.assoc,
-      <-Function.comp.assoc unliftWk,
+      Function.comp_assoc,
+      <-Function.comp_assoc unliftWk,
       unliftWk_comp_liftWk
       ]
     simp [I]

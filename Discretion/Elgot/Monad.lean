@@ -72,7 +72,7 @@ theorem ElgotMonad.squaring [ElgotMonad m]
     simp [elim_kleisli, <-kleisli_assoc, sumM_sumM, comp_pure_kleisli, sumM_pure_pure, comp_elim]
   have hwr : iterate (w >=> Sum.elim pure (pure ∘ inr)) ∘ inr = iterate f := by
     have hwi' := uniformity _ _ _ hwi.symm
-    have hwf' : iterate f = (iterate f ∘ Sum.elim id id) ∘ inr := by simp [Function.comp.assoc]
+    have hwf' : iterate f = (iterate f ∘ Sum.elim id id) ∘ inr := by simp [Function.comp_assoc]
     rw [
       <-hw, elim_kleisli, kleisli_comp_pure, kleisli_comp_map, comp_map_kleisli, elim_comp_inl,
       kleisli_pure, <-kleisli_assoc, elim_sumM, kleisli_pure, hwf', hwi', kleisli_comp_pure,
