@@ -91,11 +91,11 @@ theorem comp_map_kleisli {α β β' γ : Type u} (f : α → m β) (g : β → �
 
 theorem map_inl_kleisli_elim {ι α β γ : Type u} (h : ι → m α) (f : α → m γ) (g : β → m γ)
   : map inl ∘ h >=> Sum.elim f g = h >=> f := by
-  funext a; simp [Bind.kleisliRight, map_eq_pure_bind]
+  funext a; simp [Bind.kleisliRight]
 
 theorem map_inr_kleisli_elim {ι α β γ : Type u} (h : ι → m β) (f : α → m γ) (g : β → m γ)
   : map inr ∘ h >=> Sum.elim f g = h >=> g := by
-  funext a; simp [Bind.kleisliRight, map_eq_pure_bind]
+  funext a; simp [Bind.kleisliRight]
 
 theorem map_inl_sumM {ι α β α' β' : Type u} (h : ι → m α) (f : α → m α') (g : β → m β')
   : map inl ∘ h >=> sumM f g = map inl ∘ (h >=> f)

@@ -202,7 +202,7 @@ theorem smul_bind {e: ε} {x: TraceT ε τ m α} {f: α → TraceT ε τ m β}
   : e • (x >>= f) = (e • x) >>= f := by
   simp only [smul_def, bind_def, map_eq_pure_bind, bind_assoc]
   congr; funext x; cases x with
-  | done a e => simp [smul_mul]
+  | done a e => simp only [bind_pure_comp, map_map, pure_bind, smul_mul]; rfl
   | inf t => simp [smul]
 
 instance instLawfulMonad : LawfulMonad (TraceT ε τ m) :=
