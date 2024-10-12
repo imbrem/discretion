@@ -148,6 +148,14 @@ theorem fun_support_eq (f : α →ᶠ[Z] M) : (f ⁻¹' Z)ᶜ = f.support :=
 theorem not_mem_support_iff {f : α →ᶠ[[Zf]] M} {a} : a ∉ f.support ↔ f a ∈ Zf a :=
   by simp
 
+theorem eq_of_not_mem_support {f g : α →ᶠ[[Zf]] M} {a} [h : Subsingleton (Zf a)]
+  (hf : a ∉ f.support) (hg : a ∉ g.support)
+  : f a = g a := by
+  rw [not_mem_support_iff] at *
+  have h := h.allEq ⟨_, hf⟩ ⟨_, hg⟩
+  rw [Subtype.mk.injEq] at h
+  exact h
+
 theorem mem_support_iff_ne {f : α →ᶠ[{z}] M} {a} : a ∈ f.support ↔ f a ≠ z :=
   by simp
 
@@ -163,6 +171,24 @@ theorem ext_iff' {f g : α →ᶠ[[Zf]] M} [hZ : ∀a, Subsingleton (Zf a)]
         have hf : f a ∈ Zf a := not_mem_support_iff.mp h
         have hg : g a ∈ Zf a := by rwa [h₁, not_mem_support_iff] at h
         exact (Zf a).subsingleton_coe.mp (hZ a) hf hg⟩
+
+def dalways (f : α → M) (always : ∀a, f a ∈ Zf a) : α →ᶠ[[Zf]] M where
+  support := ∅
+  toFun := f
+  mem_support_toFun := by simp [always]
+
+theorem support_eq_empty_iff {f : α →ᶠ[[Zf]] M} : f.support = ∅ ↔ ∀ a, f a ∈ Zf a :=
+  by simp [Finset.ext_iff, DFunLike.ext_iff]
+
+@[simp]
+theorem support_dalways {f : α → M} {always : ∀a, f a ∈ Zf a} : (dalways f always).support = ∅ :=
+  rfl
+
+@[simp]
+theorem dalways_coe {f : α →ᶠ[[Zf]] M} {always} : dalways f always = f := by ext; rfl
+
+theorem support_eq_empty_eq_dalways {f : α →ᶠ[[Zf]] M} (h : f.support = ∅)
+  : f = (dalways f (support_eq_empty_iff.mp h)) := by simp
 
 -- TODO: Subsingleton Z -> f.support = ∅ -> g.support = ∅ -> f = g
 
@@ -988,6 +1014,73 @@ theorem zipWith_single_single [DecidableEq M] [DecidableEq N] [DecidableEq P]
   exact hf a _ rfl _ rfl
 
 end ZipWith
+
+section Induction
+
+variable {Zf : α → Set M} [DecidableEq α] [∀a, DecidablePred (· ∈ Zf a)] [hZ : ∀a, Nonempty (Zf a)]
+
+theorem induction {motive : (α →ᶠ[[Zf]] M) -> Prop}
+  (dalways : ∀f : α → M, (always : ∀a, f a ∈ Zf a) → motive (dalways f always))
+  (update : ∀f : α →ᶠ[[Zf]] M, ∀a m, a ∉ f.support → m ∉ Zf a → motive f → motive (f.update a m))
+  : ∀f, motive f := λ⟨s, f, h⟩ => by induction s using Finset.induction generalizing f with
+  | empty => exact dalways f (by simp at h; exact h)
+  | insert ha I =>
+    rename_i a s
+    have ha' : f a ∉ Zf a := by apply (h _).mp; simp
+    let g := FinExcept.update ⟨insert a s, f, h⟩ a (Classical.choice (hZ a)).val
+    have hgs : g.support = s := by ext k; simp only [g, FinExcept.update]; simp [ha]
+    convert update g a (f a) (by simp [g]) ha' (by convert I g (λ_ => by simp [<-hgs]))
+    · simp [g, FinExcept.update, ha', ha]
+    · ext; simp [FinExcept.update, g]
+
+theorem induction₀ {motive : (α →ᶠ[{z}] M) -> Prop} [DecidableEq M]
+  (null : motive (null z))
+  (update : ∀f : α →ᶠ[{z}] M, ∀a m, a ∉ f.support → m ≠ z → motive f → motive (f.update a m))
+  : ∀f, motive f := λf => by induction f using induction with
+  | dalways f h => convert null; ext k; exact h k
+  | update f a m ha hm hf => exact update f a m ha hm hf
+
+end Induction
+
+section Setoid
+
+def EqSup (f g: α →ᶠ[[Zf]] M) := f.support = g.support ∧ (∀a ∈ f.support, f a = g a)
+
+theorem EqSup.refl {f : α →ᶠ[[Zf]] M} : EqSup f f := ⟨rfl, λ_ _ => rfl⟩
+
+theorem EqSup.of_eq {f g : α →ᶠ[[Zf]] M} (h : f = g) : EqSup f g := by cases h; apply refl
+
+theorem EqSup.symm {f g : α →ᶠ[[Zf]] M} (H : EqSup f g) : EqSup g f
+  := ⟨H.1.symm, λa ha => (H.2 a (H.1 ▸ ha)).symm⟩
+
+theorem EqSup.trans {f g h : α →ᶠ[[Zf]] M} (H1 : EqSup f g) (H2 : EqSup g h) : EqSup f h
+  := ⟨by rw [H1.1, H2.1], λa ha => by rw [H1.2 a ha, H2.2 a (H1.1 ▸ ha)]⟩
+
+instance instSetoid : Setoid (α →ᶠ[[Zf]] M) where
+  r := EqSup
+  iseqv := ⟨λ_ => EqSup.refl, EqSup.symm, EqSup.trans⟩
+
+-- TODO: single, update, erase are congruences --> definition on the quotient?
+
+theorem eq_of_eqv_subsingleton_support {f g : α →ᶠ[[Zf]] M}
+  (h : ∀a ∉ f.support, Subsingleton (Zf a)) (hfg : f ≈ g) : f = g := by
+  ext k
+  if hk : k ∈ f.support then exact hfg.2 k hk
+  else exact eq_of_not_mem_support (h := h _ hk) hk (hfg.1 ▸ hk)
+
+theorem eq_of_eqv_subsingleton {f g : α →ᶠ[[Zf]] M} [∀a, Subsingleton (Zf a)]
+  (h : f ≈ g) : f = g := eq_of_eqv_subsingleton_support (λ_ _ => inferInstance) h
+
+theorem eqv_subsingleton_iff {f g : α →ᶠ[[Zf]] M} [∀a, Subsingleton (Zf a)]
+  : f ≈ g ↔ f = g := ⟨eq_of_eqv_subsingleton, λh => h ▸ EqSup.refl⟩
+
+theorem eq_of_eqv_singleton {f g : α →ᶠ[{z}] M} (h : f ≈ g) : f = g := eq_of_eqv_subsingleton h
+
+theorem eqv_singleton_iff {f g : α →ᶠ[{z}] M} : f ≈ g ↔ f = g := eqv_subsingleton_iff
+
+def EqvSup [Setoid M] (f g: α →ᶠ[Zf] M) := f.support = g.support ∧ (∀a ∈ f.support, f a ≈ g a)
+
+end Setoid
 
 end FinExcept
 
