@@ -20,3 +20,4 @@ import Discretion.Submonad.Basic
 import Discretion.Trace.Basic
 import Discretion.Trace.Elgot
 import Discretion.Nonempty.Set
+import Discretion.Pom

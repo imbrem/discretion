@@ -64,6 +64,12 @@ instance PartialOrder.instLE {α : Type u} : LE (PartialOrder α) where
 theorem PartialOrder.le_of_le_le {α : Type u} {h1 h2 : LE α} (h : h1.le ≤ h2.le) : h1 ≤ h2 := h
 theorem PartialOrder.le_le_of_le {α : Type u} {h1 h2 : LE α} (h : h1 ≤ h2) : h1.le ≤ h2.le := h
 
+instance PartialOrder.instPartialOrder {α : Type u} : PartialOrder (PartialOrder α) where
+  le_refl _ := @le_refl (α → α → Prop) _ _
+  le_trans _ _ _ := @le_trans (α → α → Prop) _ _ _ _
+  le_antisymm _ _ h h'
+    := PartialOrder.ext (λ_ _ => _root_.le_antisymm (le_le_of_le h) (le_le_of_le h') ▸ Iff.rfl)
+
 -- TODO: `PartialOrder` is a `SemilatticeInf` and `OrderBot`, with discrete as ⊥
 -- It has no ⊤ if nontrivial.
 
