@@ -5,7 +5,6 @@ import Mathlib.Order.BoundedOrder
 import Mathlib.Tactic.Lift
 import Mathlib.Data.Option.Basic
 import Mathlib.Data.Option.NAry
-import Mathlib.Init.Algebra.Classes
 import Mathlib.Logic.Nontrivial.Basic
 
 /-- Attach `default` to a type. -/

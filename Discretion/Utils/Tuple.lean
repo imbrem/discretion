@@ -110,7 +110,7 @@ theorem Fin.max_eq_bot_iff [LinearOrder α] [OrderBot α] (f : Fin n → α)
     rw [max_bot]
 
 theorem Fin.max_eq_bot_iff' [LinearOrder α] [OrderBot α] (f : Fin n → α)
-  : max f = ⊥ ↔ f = ⊥ := (Fin.max_eq_bot_iff f).trans Function.funext_iff.symm
+  : max f = ⊥ ↔ f = ⊥ := (Fin.max_eq_bot_iff f).trans funext_iff.symm
 
 theorem Fin.max_nat_eq_zero (f : Fin n → ℕ) (hf : max f = 0)
   : ∀i, f i = 0 := max_eq_bot f hf

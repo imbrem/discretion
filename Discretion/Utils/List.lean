@@ -42,7 +42,7 @@ theorem List.getElem_append_add_left (l r : List α) (i : ℕ)
   = r[i]'(by
     simp only [length_append, Nat.add_comm l.length, Nat.add_lt_add_iff_right] at hi;
     exact hi)
-  := by rw [List.getElem_append_right]; simp; simp
+  := by rw [List.getElem_append_right] <;> simp
 
 theorem List.getElem_append_add_right (l r : List α) (i : ℕ)
   (hi : l.length + i < (l ++ r).length)
