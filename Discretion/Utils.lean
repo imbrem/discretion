@@ -6,6 +6,7 @@ import Discretion.Utils.Multiset
 import Discretion.Utils.Quotient
 import Discretion.Utils.List
 import Discretion.Utils.Fin
+import Discretion.Utils.Cast
 
 def Nat.cases2 {motive : ℕ → Sort u}
   (zero : motive 0) (one : motive 1) (rest : ∀n, motive (n + 2)) (n : ℕ) : motive n :=

@@ -4,7 +4,10 @@ import Mathlib.Data.List.Basic
 import Mathlib.Data.Multiset.Basic
 import Mathlib.Data.Finset.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset
+import Mathlib.Algebra.BigOperators.Fin
 import Batteries.Data.Fin.Lemmas
+
+import Discretion.Utils.Cast
 
 theorem Fin.foldl_eq_foldr {α : Type u} {f : α → α → α} [Std.Commutative f] [Std.Associative f]
   (x : α) (xs : Fin n → α)
@@ -304,8 +307,8 @@ theorem Fin.addCases_comp_swapAdd (l: Fin n → α) (r : Fin m → α)
 theorem Fin.addCases_comp_symm_swapAdd (l: Fin n → α) (r : Fin m → α)
   : addCases l r ∘ (swapAdd n m).symm = addCases r l := addCases_comp_addCases_natAdd_castAdd l r
 
-theorem Fin.addCases_zero {n} {α : Fin n → Type _}
-  (l : (i : Fin n) → α i) (r : (i : Fin 0) → α (Fin.natAdd n i))
+theorem Fin.addCases_zero {n} {motive : Fin n → Sort _}
+  (l : (i : Fin n) → motive i) (r : (i : Fin 0) → motive (Fin.natAdd n i))
   : @addCases n 0 _ l r = l := by
   funext i
   simp only [addCases, Nat.add_zero, is_lt]
@@ -382,6 +385,190 @@ theorem Set.iUnion_addCases {n m} (l : Fin n → Set α) (r : Fin m → Set α)
     exists i.natAdd _
     simp [hi]
 
+def Fin.addCases3
+  {motive : Fin (n + m + k) → Sort u}
+  (left : (i : Fin n) → motive ((i.castAdd _).castAdd _))
+  (mid : (i : Fin m) → motive ((i.natAdd n).castAdd _))
+  (right : (i : Fin k) → motive ((i.natAdd (n + m))))
+  (i : Fin (n + m + k)) : motive i
+  := i.addCases (λi => i.addCases left mid) right
+
+theorem Fin.cast_assoc_castAdd_castAdd
+  {n m k} {i : Fin n}
+  : ((i.castAdd m).castAdd k).cast (Nat.add_assoc n m k) = i.castAdd (m + k)
+  := Fin.ext rfl
+
+theorem Fin.cast_assoc_castAdd_natAdd
+  {n m k} {i : Fin m}
+  : ((i.natAdd n).castAdd k).cast (Nat.add_assoc n m k) = (i.castAdd k).natAdd n
+  := Fin.ext rfl
+
+theorem Fin.cast_assoc_natAdd
+  {n m k} {i : Fin k}
+  : (i.natAdd (n + m)).cast (Nat.add_assoc n m k) = (i.natAdd m).natAdd n
+  := Fin.ext (Nat.add_assoc n m i)
+
+theorem Fin.cast_assoc_castAdd
+  {n m k} {i : Fin n}
+  : (i.castAdd (m + k)).cast (Nat.add_assoc n m k).symm = (i.castAdd m).castAdd k
+  := Fin.ext rfl
+
+theorem Fin.cast_assoc_natAdd_castAdd
+  {n m k} {i : Fin m}
+  : ((i.castAdd k).natAdd n).cast (Nat.add_assoc n m k).symm = (i.natAdd n).castAdd k
+  := Fin.ext rfl
+
+theorem Fin.cast_assoc_natAdd_natAdd
+  {n m k} {i : Fin k}
+  : ((i.natAdd m).natAdd n).cast (Nat.add_assoc n m k).symm = i.natAdd (n + m)
+  := Fin.ext (Nat.add_assoc n m i).symm
+
+theorem Fin.addCases_cast_assoc
+  {motive : Fin (n + (m + k)) → Sort u}
+  {left : (i : Fin n) → motive (i.castAdd _)}
+  {mid : (i : Fin m) → motive (((i.castAdd _).natAdd n))}
+  {right : (i : Fin k) → motive ((i.natAdd m).natAdd n)}
+  (i : Fin ((n + m) + k))
+  : (i.cast (Nat.add_assoc n m k)).addCases (motive := motive) left (λi => i.addCases mid right)
+  = i.addCases (λi => i.addCases left mid)
+      (_root_.cast (pi_congr (λ_ => by rw [cast_assoc_natAdd])) right)
+  := by
+  cases i using Fin.addCases3 <;>
+  simp only [addCases_left, addCases_right]
+  case left => simp only [addCases, coe_cast, coe_castAdd, is_lt, ↓reduceDIte]; rfl
+  case mid i =>
+    apply Eq.trans
+    exact addCases_right (left := left) (i.castAdd k)
+    rw [addCases_left]
+  case right i =>
+    convert addCases_right (left := left) (i.natAdd m)
+    rw [cast_assoc_natAdd]
+    rw [cast_assoc_natAdd]
+    simp only [addCases_right]
+    apply heq_of_eq_cast (by rw [cast_assoc_natAdd])
+    exact cast_apply_uniform (by simp [cast_assoc_natAdd]) right i
+
+def Fin.addCases3'
+  {motive : Fin (n + (m + k)) → Sort u}
+  (left : (i : Fin n) → motive (i.castAdd _))
+  (mid : (i : Fin m) → motive (((i.castAdd _).natAdd n)))
+  (right : (i : Fin k) → motive ((i.natAdd m).natAdd n))
+  (i : Fin (n + (m + k))) : motive i
+  := i.addCases left (λi => i.addCases mid right)
+
+theorem Fin.addCases_cast_assoc'
+  {motive : Fin ((n + m) + k) → Sort u}
+  {left : (i : Fin n) → motive ((i.castAdd _).castAdd _)}
+  {mid : (i : Fin m) → motive ((i.natAdd n).castAdd _)}
+  {right : (i : Fin k) → motive ((i.natAdd (n + m)))}
+  (i : Fin (n + (m + k)))
+  : (i.cast (Nat.add_assoc n m k).symm).addCases (motive := motive)
+      (λi => i.addCases left mid) right
+  = i.addCases left (λi => i.addCases mid
+    (_root_.cast (pi_congr (λi => by rw [cast_assoc_natAdd_natAdd])) right))
+  := by
+  have hi : i = (i.cast (Nat.add_assoc n m k).symm).cast (Nat.add_assoc n m k) := by simp
+  rw [hi, addCases_cast_assoc]
+  simp
+
 -- TODO: addCases associator + inverse associator, to go with symmetry...
 
 -- TODO: addCases unitors...
+
+def Fin.flatten
+  {n}
+  {arity : Fin n → ℕ}
+  (tuples : ∀i, Fin (arity i) → α)
+  (i : Fin (∑i, arity i)) : α
+  := match n with
+  | 0 => i.elim0
+  | n + 1 =>
+    if h : i < arity 0
+    then tuples 0 ⟨i, h⟩
+    else flatten (arity := arity ∘ Fin.succ) (λi k => tuples i.succ k) ⟨i - arity 0, calc
+      _ < ∑i, arity i - arity 0 := by omega
+      _ = _ := by simp [Finset.sum]
+    ⟩
+
+@[simp]
+theorem Fin.flatten_zero : flatten (n := 0) (arity := arity) tuples = Fin.elim0 := rfl
+
+theorem Fin.flatten_succ_cast {arity tuples} (i : Fin (arity 0 + ∑i, arity (succ i)))
+  : flatten (n := n + 1) (α := α) (arity := arity) tuples (i.cast (by simp [Finset.sum]))
+  = i.addCases (tuples 0)
+    (flatten (n := n) (arity := arity ∘ Fin.succ) (λi => tuples i.succ))
+  := by
+  cases i using Fin.addCases <;>
+  simp [flatten]
+
+theorem Fin.flatten_succ {arity tuples} (i : Fin (∑i, arity i))
+  : flatten (n := n + 1) (α := α) (arity := arity) tuples i
+  = (i.cast (m := arity 0 + ∑i, arity (succ i)) (by simp [Finset.sum])).addCases (tuples 0)
+    (flatten (n := n) (arity := arity ∘ Fin.succ) (λi => tuples i.succ))
+  := flatten_succ_cast (i.cast (by simp [Finset.sum]))
+
+theorem Fin.flatten_cons {n m} {arity tuples} (head : Fin m → α) (i : Fin (∑i, cons m arity i))
+  : flatten (n := n + 1) (α := α) (arity := (cons m arity)) (cons head tuples) i
+  = (i.cast (m := m + ∑i, arity i) (by simp)).addCases head (flatten tuples)
+  := flatten_succ_cast (i.cast (by simp [Finset.sum]))
+
+-- TODO: flatten_snoc
+
+@[simp]
+theorem Fin.flatten_one : flatten (n := 1) (α := α) (arity := arity) tuples = tuples 0 := by
+  funext i; rw [flatten_succ, addCases_zero]; rfl
+
+-- theorem Fin.sum_castLE {m n} (h : m ≤ n) (f : Fin n → ℕ)
+--   : ∑i: Fin m, f (i.castLE h) = ∑i : {i : Fin n // i < m}, f i
+--   := by induction h with
+--   | refl =>
+--     have h : Finset.univ (α := Fin m)
+--       = (Finset.univ (α := {i : Fin m // i < m})).map ⟨Subtype.val, Subtype.val_injective⟩
+--       := Finset.ext (λ_ => by simp)
+--     simp only [castLE_rfl, id_eq, h, Finset.sum_map]
+--     rfl
+--   | step h I =>
+--     convert I (λi => f i) using 2
+--     sorry
+--     sorry
+--     sorry
+--     sorry
+
+-- theorem Fin.sum_castLE_le {m n} (h : m ≤ n) (f : Fin n → ℕ) : ∑i: Fin m, f (i.castLE h) ≤ ∑i, f i
+--   := sorry
+
+-- def Fin.partition {n} {arity : Fin n → ℕ}
+--   (tuple : Fin (∑i, arity i) → α) (i : Fin n) (j : Fin (arity i)) : α
+--   := tuple ⟨j + ∑k: Fin i, arity (k.castLT (lt_trans k.isLt i.isLt)), by
+--     clear tuple
+--     calc
+--     _ < ∑k: Fin (↑i + 1), snoc (λk => arity (k.castLT (lt_trans k.isLt i.isLt))) (arity i) k
+--       := by simp [Nat.add_comm]
+--     _ = ∑k: Fin (↑i + 1), arity (k.castLE (Nat.succ_le_of_lt i.isLt))
+--       := by congr; funext k; cases k using Fin.lastCases <;> simp only [snoc_last, snoc_castSucc,
+--         Nat.succ_eq_add_one, castLE_castSucc] <;> rfl
+--     _ ≤ _ := Fin.sum_castLE_le _ _
+--     ⟩
+
+def Fin.dflatten
+  {n}
+  {arity : Fin n → ℕ}
+  {motive : ∀i, Fin (arity i) → Sort u}
+  (tuples : ∀i k, motive i k)
+  (i : Fin (∑i, arity i))
+  : flatten motive i
+  := match n with
+  | 0 => i.elim0
+  | n + 1 =>
+    if h : i < arity 0
+    then _root_.cast (by simp [flatten, h]) (tuples 0 ⟨i, h⟩)
+    else _root_.cast (by simp [flatten, h]) (dflatten
+      (arity := arity ∘ Fin.succ)
+      (λi k => tuples i.succ k)
+      ⟨i - arity 0, calc
+        _ < ∑i, arity i - arity 0 := by omega
+        _ = ∑i, Fin.cons (arity 0) (arity ∘ Fin.succ) i - arity 0 := by
+          congr; funext i; cases i using Fin.cases <;> rfl
+        _ = _ := by simp
+      ⟩
+    )
