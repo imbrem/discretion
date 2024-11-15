@@ -33,7 +33,7 @@ theorem elim_mem_iff {α β γ} {f: α → m γ} {g : β → m γ}
 
 variable [Monad m] [IsSubmonad m s]
 
-instance univ : IsSubmonad m (λα => univ) where
+instance univ : IsSubmonad m (λ_ => univ) where
   pure_mem _ := by trivial
   bind_mem _ _ := by trivial
 

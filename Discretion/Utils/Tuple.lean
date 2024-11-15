@@ -129,12 +129,12 @@ theorem Fin.max_nat_eq_zero_iff' (f : Fin n → ℕ)
 
 instance singletonSetInhabited {a : α} : Inhabited ({a} : Set α) := ⟨⟨a, rfl⟩⟩
 
-def Fin.supD [Sup α] (f : Fin n → α) (b : α) : α := Fin.foldr n (λi v => (f i) ⊔ v) b
+def Fin.supD [Max α] (f : Fin n → α) (b : α) : α := Fin.foldr n (λi v => (f i) ⊔ v) b
 
 @[simp]
-theorem Fin.supD_zero [Sup α] (f : Fin 0 → α) (b : α) : supD f b = b := by simp [supD]
+theorem Fin.supD_zero [Max α] (f : Fin 0 → α) (b : α) : supD f b = b := by simp [supD]
 
-theorem Fin.supD_succ [Sup α] (f : Fin (n+1) → α) (b : α)
+theorem Fin.supD_succ [Max α] (f : Fin (n+1) → α) (b : α)
   : supD f b = (f 0) ⊔ (supD (f ∘ Fin.succ) b)  := by simp [supD, Fin.foldr_succ]
 
 theorem Fin.supD_succ' [SemilatticeSup α] (f : Fin (n+1) → α) (b : α)
@@ -162,12 +162,12 @@ theorem Fin.supD_le [SemilatticeSup α] (f : Fin n → α) (b : α)
     rw [supD_succ]
     exact sup_le (hf 0) (I _ _ (λi => hf i.succ) hb)
 
-def Fin.sup [Sup α] [Bot α] (f : Fin n → α) := supD f ⊥
+def Fin.sup [Max α] [Bot α] (f : Fin n → α) := supD f ⊥
 
 @[simp]
-theorem Fin.sup_zero [Sup α] [Bot α] (f : Fin 0 → α) : sup f = ⊥ := by simp [sup]
+theorem Fin.sup_zero [Max α] [Bot α] (f : Fin 0 → α) : sup f = ⊥ := by simp [sup]
 
-theorem Fin.sup_succ [Sup α] [Bot α] (f : Fin (n+1) → α)
+theorem Fin.sup_succ [Max α] [Bot α] (f : Fin (n+1) → α)
   : sup f = (f 0) ⊔ (sup (f ∘ Fin.succ)) := by simp [sup, supD_succ]
 
 theorem Fin.elem_le_sup [SemilatticeSup α] [Bot α] (f : Fin n → α) : ∀(i : Fin n), f i ≤ sup f
