@@ -14,7 +14,9 @@ import Discretion.Wk.Set
 import Discretion.Wk.Order
 import Discretion.Correspondence.Definitions
 import Discretion.OrderOrder
+import Discretion.MorphismProperty.BinaryProducts
 import Discretion.Elgot.Monad
+import Discretion.Elgot.Category
 import Discretion.Stream.Action
 import Discretion.Submonad.Basic
 import Discretion.Trace.Basic
