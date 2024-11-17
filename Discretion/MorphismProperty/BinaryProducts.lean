@@ -17,18 +17,18 @@ theorem fst_mem {W : MorphismProperty C} [ContainsProjections W] {X Y : C} [HasB
 theorem snd_mem {W : MorphismProperty C} [ContainsProjections W] {X Y : C} [HasBinaryProduct X Y]
   : W (prod.snd : X ⨯ Y ⟶ Y) := ContainsProjections.mem_mem
 
-class PreservedByProdLift (W : MorphismProperty C) : Prop where
+class ContainsProdLift (W : MorphismProperty C) : Prop where
   prod_lift_mem : ∀{X Y Z : C} {f : X ⟶ Y} {g : X ⟶ Z} [HasBinaryProduct Y Z],
     W f → W g → W (prod.lift f g)
 
-theorem prod_lift_mem {W : MorphismProperty C} [PreservedByProdLift W] {X Y Z : C}
+theorem prod_lift_mem {W : MorphismProperty C} [ContainsProdLift W] {X Y Z : C}
   {f : X ⟶ Y} {g : X ⟶ Z} [HasBinaryProduct Y Z] (hf : W f) (hg : W g) : W (prod.lift f g)
-  := PreservedByProdLift.prod_lift_mem hf hg
+  := ContainsProdLift.prod_lift_mem hf hg
 
-class PreservedByProd (W : MorphismProperty C)
-  extends ContainsProjections W, PreservedByProdLift W, IsMultiplicative W : Prop
+class ContainsProducts (W : MorphismProperty C)
+  extends ContainsProjections W, ContainsProdLift W, IsMultiplicative W : Prop
 
-theorem prod_map_mem {W : MorphismProperty C} [PreservedByProd W]
+theorem prod_map_mem {W : MorphismProperty C} [ContainsProducts W]
   {X Y X' Y' : C} {f : X ⟶ X'} {g : Y ⟶ Y'} [HasBinaryProduct X Y] [HasBinaryProduct X' Y']
   (hf : W f) (hg : W g) : W (prod.map f g) := by
   rw [<-prod.lift_fst_comp_snd_comp]
@@ -44,18 +44,22 @@ theorem inl_mem {W : MorphismProperty C} [ContainsInjections W] {X Y : C} [HasBi
 theorem inr_mem {W : MorphismProperty C} [ContainsInjections W] {X Y : C} [HasBinaryCoproduct X Y]
   : W (coprod.inr : Y ⟶ X ⨿ Y) := ContainsInjections.inr_mem
 
-class PreservedByCoprodDesc (W : MorphismProperty C) : Prop where
+class ContainsCoprodDesc (W : MorphismProperty C) : Prop where
   coprod_desc_mem : ∀{X Y Z : C} {f : X ⟶ Z} {g : Y ⟶ Z} [HasBinaryCoproduct X Y],
     W f → W g → W (coprod.desc f g)
 
-theorem coprod_desc_mem {W : MorphismProperty C} [PreservedByCoprodDesc W] {X Y Z : C}
+theorem coprod_desc_mem {W : MorphismProperty C} [ContainsCoprodDesc W] {X Y Z : C}
   {f : X ⟶ Z} {g : Y ⟶ Z} [HasBinaryCoproduct X Y] (hf : W f) (hg : W g) : W (coprod.desc f g)
-  := PreservedByCoprodDesc.coprod_desc_mem hf hg
+  := ContainsCoprodDesc.coprod_desc_mem hf hg
 
-class PreservedByCoprod (W : MorphismProperty C)
-  extends ContainsInjections W, PreservedByCoprodDesc W, IsMultiplicative W : Prop
+theorem codiag_mem {W : MorphismProperty C} [ContainsCoprodDesc W] [ContainsIdentities W]
+  {X : C} [HasBinaryCoproduct X X]
+  : W (codiag X) := coprod_desc_mem (id_mem _ _) (id_mem _ _)
 
-theorem coprod_map_mem {W : MorphismProperty C} [PreservedByCoprod W]
+class ContainsCoproducts (W : MorphismProperty C)
+  extends ContainsInjections W, ContainsCoprodDesc W, IsMultiplicative W : Prop
+
+theorem coprod_map_mem {W : MorphismProperty C} [ContainsCoproducts W]
   {X Y X' Y' : C} {f : X ⟶ X'} {g : Y ⟶ Y'} [HasBinaryCoproduct X Y] [HasBinaryCoproduct X' Y']
   (hf : W f) (hg : W g) : W (coprod.map f g) := by
   rw [<-coprod.desc_comp_inl_comp_inr]

@@ -26,7 +26,7 @@ theorem Fin.heq_pocast {n m} {h : n = m} {p: PartialOrder (Fin n)}
   : HEq (pocast h p) p := by cases h; rfl
 
 @[simp]
-theorem Fin.heq_pocast_pocast {n m m'} {h : n = m} {h' : n = m'} {p: PartialOrder (Fin n)}
+theorem Fin.heq_pocast_pocast {n m m'} {h : n = m} {h' : n = m'} {p : PartialOrder (Fin n)}
   : HEq (pocast h p) (pocast h' p) := by cases h; cases h'; rfl
 
 def Fin.poseq {n m} (p : PartialOrder (Fin n)) (q : PartialOrder (Fin m))
