@@ -1,4 +1,3 @@
-import Mathlib.Data.Set.Finite
 import Mathlib.Data.Sum.Order
 import Mathlib.Order.Interval.Finset.Defs
 

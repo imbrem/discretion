@@ -3,7 +3,7 @@
 import Discretion.OrderSupport
 import Discretion.Utils
 
-import Mathlib.Data.Set.Finite
+import Mathlib.Data.Set.Basic
 
 -- TODO: clean up doc comments... we need a better name than "zero set"
 

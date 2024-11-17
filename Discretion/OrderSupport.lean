@@ -1,4 +1,4 @@
-import Mathlib.Data.Set.Finite
+import Mathlib.Data.Set.Basic
 
 /-- `infSupport` of a function is the set of points `x` such that `f x ≠ ⊤` -/
 def Function.infSupport {α M} [Top M] (f : α → M) : Set α := {a | f a ≠ ⊤}
