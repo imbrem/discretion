@@ -34,6 +34,9 @@ theorem right_exchange {X Y X' Y' : C}
   (f : X ⟶ Y) (g : X' ⟶ Y') [Central g] : (f ▷ X') ≫ (Y ◁ g) = (X ◁ g) ≫ (f ▷ Y')
   := right_sliding f g
 
+-- TODO: in fact, everything is central in a _binoidal_ category with sliding; can use this
+-- to make things nicer...
+
 end Monoidal
 
 -- TODO: is it worth it to separate out IsBinoidal with
@@ -98,13 +101,11 @@ namespace Monoidal
 
 variable {C : Type _} [Category C]
 
-@[simp]
-instance Central.monoidal [MonoidalCategory C] {X Y : C} (f : X ⟶ Y) : Central f where
-  left_sliding := by simp [whisker_exchange]
-  right_sliding := by simp [whisker_exchange]
-
 def instMonoidalCategory [MonoidalCategory C] : IsMonoidal C where
   tensorHom_def := MonoidalCategory.tensorHom_def
+  associator_central := ⟨λg => by simp [ltimes, rtimes], λg => by simp [ltimes, rtimes]⟩
+  leftUnitor_central := ⟨λg => by simp [ltimes, rtimes], λg => by simp [ltimes, rtimes]⟩
+  rightUnitor_central := ⟨λg => by simp [ltimes, rtimes], λg => by simp [ltimes, rtimes]⟩
 
 variable [MonoidalCategoryStruct C]
 
@@ -113,6 +114,8 @@ theorem whiskerRight_comp_rtimes {X Y Z X' Y' : C} (f : X ⟶ Y) (g : Y ⟶ Z) (
 
 theorem whiskerLeft_comp_ltimes {X Y Z X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') (h : Y ⟶ Z) :
   X' ◁ f ≫ g ⋉ h = g ⋊ f ≫ Y' ◁ h := by simp
+
+section IsPremonoidal
 
 variable [IsPremonoidal C]
 
@@ -167,12 +170,21 @@ theorem inv_whiskerLeft {X Y Z : C} (f : X ⟶ Y) [IsIso f] : inv (Z ◁ f) = Z 
 theorem tensorHom_def {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) :
   f ⊗ g = (f ▷ X₂) ≫ (Y₁ ◁ g) := IsPremonoidal.tensorHom_def f g
 
+theorem tensor_eq_ltimes {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) :
+  f ⊗ g = f ⋉ g := tensorHom_def f g
+
+theorem tensor_eq_rtimes_left {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [Central f] :
+  f ⊗ g = f ⋊ g := by rw [tensor_eq_ltimes, left_sliding]
+
+theorem tensor_eq_rtimes_right {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [Central g] :
+  f ⊗ g = f ⋉ g := by rw [tensor_eq_ltimes, right_sliding]
+
 @[simp]
-theorem tensorHom_id {X Y : C} : 𝟙 X ⊗ 𝟙 Y = 𝟙 (X ⊗ Y) := by simp [tensorHom_def]
+theorem tensor_id {X Y : C} : 𝟙 X ⊗ 𝟙 Y = 𝟙 (X ⊗ Y) := by simp [tensorHom_def]
 
-theorem tensorHom_id_left {X Y : C} (f : X ⟶ Y) : 𝟙 X ⊗ f = X ◁ f := by simp [tensorHom_def]
+theorem id_tensorHom {X Y Z : C} (f : X ⟶ Y) : 𝟙 Z ⊗ f = Z ◁ f := by simp [tensorHom_def]
 
-theorem tensorHom_id_right {X Y : C} (f : X ⟶ Y) : f ⊗ 𝟙 Y = f ▷ Y := by simp [tensorHom_def]
+theorem tensorHom_id {X Y Z : C} (f : X ⟶ Y) : f ⊗ 𝟙 Z = f ▷ Z := by simp [tensorHom_def]
 
 theorem associator_naturality {X₁ X₂ X₃ Y₁ Y₂ Y₃ : C} (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (f₃ : X₃ ⟶ Y₃) :
   ((f₁ ⊗ f₂) ⊗ f₃) ≫ (α_ Y₁ Y₂ Y₃).hom = (α_ X₁ X₂ X₃).hom ≫ (f₁ ⊗ (f₂ ⊗ f₃))
@@ -256,6 +268,45 @@ instance Central.inv_hom {X Y : C} {f : X ≅ Y} [hf : Central f.hom] : Central 
 theorem Central.hom_inv {X Y : C} {f : X ≅ Y} [hf : Central f.inv] : Central f.hom := by
   convert Central.inv (f := f.inv)
   simp
+
+instance associator_central {X Y Z : C} : Central (α_ X Y Z).hom := IsPremonoidal.associator_central
+
+theorem associator_inv_central {X Y Z : C} : Central (α_ X Y Z).inv := inferInstance
+
+instance leftUnitor_central {X : C} : Central (λ_ X).hom := IsPremonoidal.leftUnitor_central
+
+theorem leftUnitor_inv_central {X : C} : Central (λ_ X).inv := inferInstance
+
+instance rightUnitor_central {X : C} : Central (ρ_ X).hom := IsPremonoidal.rightUnitor_central
+
+theorem rightUnitor_inv_central {X : C} : Central (ρ_ X).inv := inferInstance
+
+end IsPremonoidal
+
+section IsMonoidal
+
+variable [IsMonoidal C]
+
+theorem tensor_comp {X₁ Y₁ Z₁ X₂ Y₂ Z₂ : C}
+  (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (g₁ : Y₁ ⟶ Z₁) (g₂ : Y₂ ⟶ Z₂) :
+  (f₁ ≫ g₁) ⊗ (f₂ ≫ g₂) = (f₁ ⊗ f₂) ≫ (g₁ ⊗ g₂) := IsMonoidal.tensor_comp f₁ f₂ g₁ g₂
+
+theorem whisker_exchange {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y')
+  : f ▷ X' ≫ Y ◁ g = X ◁ g ≫ f ▷ Y'
+  := by simp [<-tensorHom_id, <-id_tensorHom, <-tensor_comp]
+
+theorem sliding {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') : f ⋉ g = f ⋊ g
+  := whisker_exchange f g
+
+@[simp]
+instance Central.monoidal [MonoidalCategory C] {X Y : C} (f : X ⟶ Y) : Central f where
+  left_sliding g := sliding f g
+  right_sliding g := sliding g f
+
+theorem tensor_eq_rtimes {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) :
+  f ⊗ g = f ⋊ g := by rw [<-sliding, tensor_eq_ltimes]
+
+end IsMonoidal
 
 end Monoidal
 

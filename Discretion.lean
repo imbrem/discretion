@@ -27,3 +27,4 @@ import Discretion.Pom
 import Discretion.Premonoidal.Category
 import Discretion.Premonoidal.Center
 import Discretion.Premonoidal.Property
+import Discretion.Premonoidal.Braided

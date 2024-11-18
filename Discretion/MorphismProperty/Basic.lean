@@ -47,6 +47,9 @@ theorem stable_under_inverse_iff_inv_mem {W : MorphismProperty C}
 class IsStableUnderInverse (W : MorphismProperty C) : Prop where
   stable_under_inverse : StableUnderInverse W
 
+instance IsStableUnderInverse.instBot : IsStableUnderInverse (⊥ : MorphismProperty C) where
+  stable_under_inverse := λ_ _ _ => False.elim
+
 set_option linter.unusedVariables false in
 theorem IsStableUnderInverse.of_inv_mem {W : MorphismProperty C}
   (h : ∀{X Y : C} {f : X ⟶ Y} [hfi : IsIso f], W f → W (inv f)) : IsStableUnderInverse W
@@ -57,6 +60,16 @@ theorem stable_under_inverse {W : MorphismProperty C} [IsStableUnderInverse W]
 
 theorem inv_mem {W : MorphismProperty C} [IsStableUnderInverse W] {X Y : C} {f : X ⟶ Y}
   [IsIso f] (hf : W f) : W (inv f) := inv_mem_of_stable_under_inverse stable_under_inverse hf
+
+instance IsStableUnderInverse.inf {W W' : MorphismProperty C}
+  [hW : IsStableUnderInverse W]
+  [hW' : IsStableUnderInverse W'] : IsStableUnderInverse (W ⊓ W')
+  := of_inv_mem (λhf => ⟨inv_mem hf.1, inv_mem hf.2⟩)
+
+instance IsStableUnderInverse.sup {W W' : MorphismProperty C}
+  [hW : IsStableUnderInverse W]
+  [hW : IsStableUnderInverse W'] : IsStableUnderInverse (W ⊔ W')
+  := of_inv_mem (λ|Or.inl hf => Or.inl <| inv_mem hf | Or.inr hf => Or.inr <| inv_mem hf)
 
 theorem IsStableUnderInverse.instIdentities : IsStableUnderInverse (identities C) where
   stable_under_inverse := StableUnderInverse.identities
@@ -76,11 +89,35 @@ class IsEndo (W : MorphismProperty C) : Prop where
 theorem is_endo {W : MorphismProperty C} [IsEndo W] {X Y : C} {f : X ⟶ Y}
   : W f → X = Y := IsEndo.is_endo
 
+instance IsEndo.instBot : IsEndo (⊥ : MorphismProperty C) where
+  is_endo := False.elim
+
+instance IsEndo.inf_left {W W' : MorphismProperty C} [hW : IsEndo W] : IsEndo (W ⊓ W') where
+  is_endo hf := is_endo hf.1
+
+instance IsEndo.inf_right {W W' : MorphismProperty C} [hW' : IsEndo W'] : IsEndo (W ⊓ W') where
+  is_endo hf := is_endo hf.2
+
+instance IsEndo.sup {W W' : MorphismProperty C} [hW : IsEndo W] [hW' : IsEndo W'] : IsEndo (W ⊔ W')
+  where is_endo hf := hf.elim is_endo is_endo
+
 instance IsEndo.instIdentities : IsEndo (identities C) where
   is_endo hf := hf.1
 
 class IsIso (W : MorphismProperty C) : Prop where
   is_iso {X Y : C} {f : X ⟶ Y} : W f → CategoryTheory.IsIso f
+
+instance IsIso.instBot : IsIso (⊥ : MorphismProperty C) where
+  is_iso := False.elim
+
+instance IsIso.inf_left {W W' : MorphismProperty C} [hW : IsIso W] : IsIso (W ⊓ W') where
+  is_iso hf := is_iso hf.1
+
+instance IsIso.inf_right {W W' : MorphismProperty C} [hW' : IsIso W'] : IsIso (W ⊓ W') where
+  is_iso hf := is_iso hf.2
+
+instance IsIso.sup {W W' : MorphismProperty C} [hW : IsIso W] [hW' : IsIso W'] : IsIso (W ⊔ W')
+  where is_iso hf := hf.elim is_iso is_iso
 
 theorem is_iso {W : MorphismProperty C} [IsIso W] {X Y : C} {f : X ⟶ Y}
   : W f → CategoryTheory.IsIso f := IsIso.is_iso
@@ -96,6 +133,18 @@ class IsAuto (W : MorphismProperty C) : Prop where
 
 theorem is_auto {W : MorphismProperty C} [IsAuto W] {X : C} {f : X ⟶ X}
   : W f → CategoryTheory.IsIso f := IsAuto.is_auto
+
+instance IsAuto.instBot : IsAuto (⊥ : MorphismProperty C) where
+  is_auto := False.elim
+
+instance IsAuto.inf_left {W W' : MorphismProperty C} [IsAuto W] : IsAuto (W ⊓ W') where
+  is_auto hf := is_auto hf.1
+
+instance IsAuto.inf_right {W W' : MorphismProperty C} [IsAuto W'] : IsAuto (W ⊓ W') where
+  is_auto hf := is_auto hf.2
+
+instance IsAuto.sup {W W' : MorphismProperty C} [IsAuto W] [IsAuto W'] : IsAuto (W ⊔ W')
+  where is_auto hf := hf.elim is_auto is_auto
 
 instance IsAuto.ofIsIso {W : MorphismProperty C} [IsIso W] : IsAuto W where
   is_auto hf := is_iso hf
