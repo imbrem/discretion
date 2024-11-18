@@ -1,3 +1,5 @@
+-- TODO: rework to be based off CategoryTheory.MorphismProperty.Limits?
+
 import Mathlib.CategoryTheory.MorphismProperty.Composition
 import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 
