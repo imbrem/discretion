@@ -11,6 +11,8 @@ namespace Monoidal
 
 scoped notation "σ_" => λX Y => Iso.hom (BraidedCategoryStruct.braiding X Y)
 
+scoped notation "σ_'" => λX Y => Iso.inv (BraidedCategoryStruct.braiding X Y)
+
 end Monoidal
 
 open Monoidal
@@ -82,6 +84,11 @@ theorem hexagon_reverse (X Y Z : C) :
   (α_ X Y Z).inv ≫ σ_ (X ⊗ Y) Z ≫ (α_ Z X Y).inv =
     (X ◁ σ_ Y Z) ≫ (α_ X Z Y).inv ≫ (σ_ X Z ▷ Y) := IsBraided.hexagon_reverse X Y Z
 
+variable [IsPremonoidal C]
+
+@[simp]
+instance braiding_inv_central {X Y : C} : Monoidal.Central (σ_' X Y) := inferInstance
+
 end IsBraided
 
 section IsSymmetric
@@ -91,6 +98,9 @@ variable [IsSymmetric C]
 @[simp]
 theorem braiding_braiding (X Y : C) : σ_ X Y ≫ σ_ Y X = 𝟙 (X ⊗ Y)
   := IsSymmetric.braiding_braiding X Y
+
+@[simp]
+theorem braiding_inv_eq (X Y : C) : σ_' X Y = σ_ Y X := (cancel_epi (σ_ X Y)).mp (by simp)
 
 end IsSymmetric
 

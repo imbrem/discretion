@@ -28,3 +28,5 @@ import Discretion.Premonoidal.Category
 import Discretion.Premonoidal.Center
 import Discretion.Premonoidal.Property
 import Discretion.Premonoidal.Braided
+import Discretion.Premonoidal.Distributive
+import Discretion.Premonoidal.CopyDrop

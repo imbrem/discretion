@@ -269,6 +269,46 @@ theorem Central.hom_inv {X Y : C} {f : X ≅ Y} [hf : Central f.inv] : Central f
   convert Central.inv (f := f.inv)
   simp
 
+instance Central.whiskerRight {X Y Z : C} (f : X ⟶ Y) [hf : Central f] : Central (f ▷ Z) where
+  left_sliding g := by
+    rw [ltimes]
+    apply (cancel_mono (α_ _ _ _).hom).mp
+    rw [
+      Category.assoc, associator_naturality_left, <-Category.assoc,
+      associator_naturality_right, Category.assoc, left_exchange,
+      <-Category.assoc, <-associator_naturality_left, Category.assoc,
+      <-associator_naturality_right, Category.assoc
+    ]
+  right_sliding g := by
+    rw [ltimes]
+    apply (cancel_mono (α_ _ _ _).inv).mp
+    rw [
+      Category.assoc, associator_inv_naturality_middle, <-Category.assoc,
+      associator_inv_naturality_right, Category.assoc, <-whiskerRight_comp, right_exchange,
+      whiskerRight_comp, <-Category.assoc, <-associator_inv_naturality_middle, Category.assoc,
+      <-associator_inv_naturality_right, rtimes, Category.assoc
+    ]
+
+instance Central.whiskerLeft {X Y Z : C} (f : X ⟶ Y) [hf : Central f] : Central (Z ◁ f) where
+  left_sliding g := by
+    rw [ltimes]
+    apply (cancel_mono (α_ _ _ _).hom).mp
+    rw [
+      Category.assoc, associator_naturality_left, <-Category.assoc,
+      associator_naturality_middle, Category.assoc, <-whiskerLeft_comp, left_exchange,
+      whiskerLeft_comp, <-Category.assoc, <-associator_naturality_left, Category.assoc,
+      <-associator_naturality_middle, rtimes, Category.assoc
+    ]
+  right_sliding g := by
+    rw [rtimes]
+    apply (cancel_mono (α_ _ _ _).inv).mp
+    rw [
+      Category.assoc, associator_inv_naturality_left, <-Category.assoc,
+      associator_inv_naturality_right, Category.assoc, right_exchange,
+      <-Category.assoc, <-associator_inv_naturality_left, Category.assoc,
+      <-associator_inv_naturality_right, Category.assoc
+    ]
+
 instance associator_central {X Y Z : C} : Central (α_ X Y Z).hom := IsPremonoidal.associator_central
 
 theorem associator_inv_central {X Y Z : C} : Central (α_ X Y Z).inv := inferInstance

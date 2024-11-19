@@ -375,6 +375,16 @@ section BraidedCategoryStruct
 
 variable [BraidedCategoryStruct C]
 
+class ContainsBraidings (W : MorphismProperty C) : Prop where
+  braiding_hom_mem : ∀ {X Y : C}, W (σ_ X Y)
+  braiding_inv_mem : ∀ {X Y : C}, W (BraidedCategoryStruct.braiding X Y).inv
+
+theorem braiding_hom_mem {W : MorphismProperty C} [ContainsBraidings W] {X Y : C}
+  : W (σ_ X Y) := ContainsBraidings.braiding_hom_mem
+
+theorem braiding_inv_mem {W : MorphismProperty C} [ContainsBraidings W] {X Y : C}
+  : W (BraidedCategoryStruct.braiding X Y).inv := ContainsBraidings.braiding_inv_mem
+
 def braidedClosure (W : MorphismProperty C) : MorphismProperty C
   := whiskerClosure (braidedStructure C ⊔ W)
 
