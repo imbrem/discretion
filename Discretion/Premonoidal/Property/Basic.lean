@@ -1,11 +1,13 @@
 import Discretion.Premonoidal.Category
 import Discretion.MorphismProperty.Basic
 
-namespace CategoryTheory.MorphismProperty
+namespace CategoryTheory
 
 open MonoidalCategory
 
 open Monoidal
+
+namespace MorphismProperty
 
 inductive monoidalStructure (C) [Category C] [MonoidalCategoryStruct C] : MorphismProperty C
   | associator_hom : monoidalStructure C (α_ X Y Z).hom
@@ -448,3 +450,9 @@ instance ContainsMonoidal.instCenter : ContainsMonoidal (center C) where
   leftUnitor_inv_mem := leftUnitor_inv_central
   rightUnitor_hom_mem := rightUnitor_central
   rightUnitor_inv_mem := rightUnitor_inv_central
+
+end IsPremonoidal
+
+end MorphismProperty
+
+open MorphismProperty
