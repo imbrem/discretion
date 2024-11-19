@@ -9,9 +9,15 @@ class BraidedCategoryStruct (C : Type u) [Category C] [MonoidalCategoryStruct C]
 
 namespace Monoidal
 
-scoped notation "σ_" => λX Y => Iso.hom (BraidedCategoryStruct.braiding X Y)
+variable {C : Type u} [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
 
-scoped notation "σ_'" => λX Y => Iso.inv (BraidedCategoryStruct.braiding X Y)
+abbrev symm (X Y : C) : X ⊗ Y ⟶ Y ⊗ X := (BraidedCategoryStruct.braiding X Y).hom
+
+abbrev inv_symm (X Y : C) : Y ⊗ X ⟶ X ⊗ Y := (BraidedCategoryStruct.braiding X Y).inv
+
+scoped notation "σ_" => symm
+
+scoped notation "σ_'" => inv_symm
 
 end Monoidal
 
@@ -88,6 +94,18 @@ variable [IsPremonoidal C]
 
 @[simp]
 instance braiding_inv_central {X Y : C} : Monoidal.Central (σ_' X Y) := inferInstance
+
+-- TODO: prove with diagram + monoidal coherence
+
+-- theorem braiding_leftUnitor (X : C) : σ_ X (𝟙_ C) ≫ (λ_ X).hom = (ρ_ X).hom := sorry
+
+-- theorem id_braiding (X : C) : σ_ (𝟙_ C) X = (λ_ X).hom ≫ (ρ_ X).inv := sorry
+
+-- theorem braiding_id (X : C) : σ_ X (𝟙_ C) = (ρ_ X).hom ≫ (λ_ X).inv := sorry
+
+-- TODO: inverse braiding id lore
+
+-- theorem braiding_id_id : σ_ (𝟙_ C) (𝟙_ C) = 𝟙 _ := sorry
 
 end IsBraided
 

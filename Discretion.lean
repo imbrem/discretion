@@ -25,8 +25,8 @@ import Discretion.Trace.Elgot
 import Discretion.Nonempty.Set
 import Discretion.Pom
 import Discretion.Premonoidal.Category
-import Discretion.Premonoidal.Center
-import Discretion.Premonoidal.Property
 import Discretion.Premonoidal.Braided
 import Discretion.Premonoidal.Distributive
 import Discretion.Premonoidal.CopyDrop
+import Discretion.Premonoidal.Property.Basic
+import Discretion.Premonoidal.Property.Braided

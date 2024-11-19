@@ -156,8 +156,10 @@ class RelHom {X Y : C} (f : X ⟶ Y) extends Copyable f, Central f : Prop
 instance {X Y : C} {f : X ⟶ Y} [Copyable f] [Central f] : RelHom f := ⟨⟩
 
 class Discardable {X Y : C} (f : X ⟶ Y) where
+  -- TODO: drop_hom on its own makes a morphism "semi-affine", but this implies affinity if
+  -- X is affine assuming that drop is indeed pure (and therefore satisfies copy_drop_left)
   drop_hom : [IsAffine X] → [IsAffine Y] → f ≫ !_ Y = !_ X
-  copy_drop_left : [IsRelevant X] → [IsAffine Y] → Δ_ X ≫ (f ≫ !_ Y) ▷ X = (λ_ X).inv
+  copy_drop_left_res : [IsRelevant X] → [IsAffine Y] → Δ_ X ≫ (f ≫ !_ Y) ▷ X = (λ_ X).inv
 
 class AffHom {X Y : C} (f : X ⟶ Y) extends Discardable f, Central f : Prop
 
@@ -167,11 +169,31 @@ class PureHom {X Y : C} (f : X ⟶ Y) extends Copyable f, Discardable f, Central
 
 instance {X Y : C} {f : X ⟶ Y} [Copyable f] [Discardable f] [Central f] : PureHom f := ⟨⟩
 
+namespace Monoidal
+
+theorem copy_hom {X Y : C} [IsRelevant X] [IsRelevant Y] (f : X ⟶ Y) [Copyable f]
+  : f ≫ Δ_ Y = Δ_ X ≫ (f ⊗ f) := Copyable.copy_hom
+
+@[simp]
+theorem drop_hom {X Y : C} [IsAffine X] [IsAffine Y] (f : X ⟶ Y) [Discardable f]
+  : f ≫ !_ Y = !_ X := Discardable.drop_hom
+
+@[simp]
+theorem copy_drop_left_res {X Y : C} [IsRelevant X] [IsAffine Y] (f : X ⟶ Y) [Discardable f]
+  : Δ_ X ≫ (f ≫ !_ Y) ▷ X = (λ_ X).inv := Discardable.copy_drop_left_res
+
+variable [IsPremonoidal C]
+
+theorem copy_hom_ltimes {X Y : C} [IsRelevant X] [IsRelevant Y] (f : X ⟶ Y) [Copyable f]
+  : f ≫ Δ_ Y = Δ_ X ≫ f ⋉ f := by simp [copy_hom, tensorHom_def]
+
+end Monoidal
+
 class CopyDrop (C : Type u)
   [Category C] [MonoidalCategoryStruct C] [CopyDropStruct C] [BraidedCategoryStruct C]
   : Prop where
-  relevantMonoidal : MonoidalPredicate' (IsRelevant (C := C))
-  affineMonoidal : MonoidalPredicate' (IsAffine (C := C))
+  relevant_monoidal : MonoidalPredicate' (IsRelevant (C := C))
+  affine_monoidal : MonoidalPredicate' (IsAffine (C := C))
   pure_copy : ∀ (X : C) [IsRelevant X], PureHom (Δ_ X)
   pure_drop : ∀ (X : C) [IsAffine X], PureHom (!_ X)
   pure_associator : ∀ (X Y Z : C), PureHom (α_ X Y Z).hom
@@ -184,61 +206,61 @@ class CopyDrop (C : Type u)
     (Δ_ X ⊗ Δ_ Y) ≫ swap_ll_rr X X Y Y = Δ_ (X ⊗ Y)
   tensor_drop : ∀ (X Y : C) [IsAffine X] [IsAffine Y], (!_ X ⊗ !_ Y) ≫ (λ_ _).hom = !_ (X ⊗ Y)
 
--- namespace Monoidal
+namespace Monoidal
 
---   scoped notation "Δ_" => CopyDrop.copy
+variable [BraidedCategoryStruct C] [CopyDrop C]
 
---   scoped notation "!_" => CopyDrop.drop
+instance MonoidalPredicate'.instRelevantMonoidal : MonoidalPredicate' (IsRelevant (C := C))
+  := CopyDrop.relevant_monoidal
 
---   variable {C : Type u}
---     [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C] [CopyDrop C]
+instance MonoidalPredicate'.instAffineMonoidal : MonoidalPredicate' (IsAffine (C := C))
+  := CopyDrop.affine_monoidal
 
---   @[simp]
---   instance central_copy (X : C) : Monoidal.Central (Δ_ X) := CopyDrop.central_copy X
+@[simp]
+instance pure_copy (X : C) [IsRelevant X] : PureHom (Δ_ X) := CopyDrop.pure_copy X
 
---   @[simp]
---   instance central_drop (X : C) : Monoidal.Central (!_ X) := CopyDrop.central_drop X
+@[simp]
+instance pure_drop (X : C) [IsAffine X] : PureHom (!_ X) := CopyDrop.pure_drop X
 
---   @[simp]
---   theorem commutative (X : C) : Δ_ X ≫ σ_ X X = Δ_ X := CopyDrop.commutative X
+@[simp]
+instance pure_associator (X Y Z : C) : PureHom (α_ X Y Z).hom := CopyDrop.pure_associator X Y Z
 
---   theorem associative (X : C) : Δ_ X ≫ Δ_ X ▷ X ≫ (α_ X X X).hom = Δ_ X ≫ X ◁ Δ_ X
---     := CopyDrop.associative X
+@[simp]
+instance pure_leftUnitor (X : C) : PureHom (λ_ X).hom := CopyDrop.pure_leftUnitor X
 
---   @[simp]
---   theorem unit_right (X : C) : Δ_ X ≫ X ◁ !_ X = (ρ_ X).inv := CopyDrop.unit_right X
+@[simp]
+instance pure_rightUnitor (X : C) : PureHom (ρ_ X).hom := CopyDrop.pure_rightUnitor X
 
---   theorem tensor_copy (X Y : C) : (Δ_ X ⊗ Δ_ Y) ≫ swap_ll_rr X X Y Y = Δ_ (X ⊗ Y)
---     := CopyDrop.tensor_copy X Y
+@[simp]
+instance pure_symmetry (X Y : C) : PureHom (σ_ X Y) := CopyDrop.pure_symmetry X Y
 
---   theorem tensor_drop (X Y : C) : (!_ X ⊗ !_ Y) ≫ (λ_ _).hom = !_ (X ⊗ Y)
---     := CopyDrop.tensor_drop X Y
+@[simp]
+theorem copy_drop_left {X : C} [IsRelevant X] [IsAffine X]
+  : Δ_ X ≫ !_ X ▷ X = (λ_ X).inv := by convert copy_drop_left_res (!_ X) using 1; simp
 
---   -- @[simp]
---   -- theorem unit_left (X : C) : Δ_ X ≫ !_ X ▷ X = (λ_ X).inv := sorry
+@[simp]
+theorem copy_comm (X : C) [IsRelevant X] : Δ_ X ≫ σ_ X X = Δ_ X := CopyDrop.commutative X
 
---   def pil (X Y : C) : X ⊗ Y ⟶ X := (X ◁ !_ Y) ≫ (ρ_ X).hom
+theorem copy_assoc (X : C) [IsRelevant X] : Δ_ X ≫ Δ_ X ▷ X ≫ (α_ X X X).hom = Δ_ X ≫ X ◁ Δ_ X
+  := CopyDrop.associative X
 
---   def pir (X Y : C) : X ⊗ Y ⟶ Y := (!_ X ▷ Y) ≫ (λ_ Y).hom
+theorem tensor_copy (X Y : C) [IsRelevant X] [IsRelevant Y]
+  : (Δ_ X ⊗ Δ_ Y) ≫ swap_ll_rr X X Y Y = Δ_ (X ⊗ Y) := CopyDrop.tensor_copy X Y
 
---   theorem copy_pil (X : C) : Δ_ X ≫ pil X X = 𝟙 X := by simp [pil, <-Category.assoc]
+theorem tensor_drop (X Y : C) [IsAffine X] [IsAffine Y]
+  : (!_ X ⊗ !_ Y) ≫ (λ_ _).hom = !_ (X ⊗ Y) := CopyDrop.tensor_drop X Y
 
---   -- theorem copy_pir (X : C) : Δ_ X ≫ pir X X = 𝟙 X := by simp [pir, <-Category.assoc]
+variable [IsPremonoidal C] [IsBraided C]
 
---   class Copyable {X Y : C} (f : X ⟶ Y) where
---     copy_hom : f ≫ Δ_ Y = Δ_ X ≫ (f ⊗ f)
+theorem copy_hom_rtimes {X Y : C} [IsRelevant X] [IsRelevant Y] (f : X ⟶ Y) [Copyable f]
+  : f ≫ Δ_ Y = Δ_ X ≫ f ⋊ f := calc
+  _ = (f ≫ Δ_ Y) ≫ σ_ Y Y := by simp
+  _ = Δ_ X ≫ (f ⋉ f) ≫ σ_ Y Y := by simp [copy_hom f, tensorHom_def]
+  _ = _ := by rw [ltimes_braiding, <-Category.assoc, copy_comm]
 
---   theorem copy_hom {X Y : C} (f : X ⟶ Y) [Copyable f] : f ≫ Δ_ Y = Δ_ X ≫ (f ⊗ f)
---     := Copyable.copy_hom
+theorem copy_swap {X Y : C} [IsRelevant X] [IsRelevant Y] (f : X ⟶ Y) [Copyable f]
+  : Δ_ X ≫ f ⋉ f = Δ_ X ≫ f ⋊ f := by rw [<-copy_hom_ltimes, copy_hom_rtimes]
 
---   class Droppable {X Y : C} (f : X ⟶ Y) where
---     drop_hom : f ≫ !_ Y = !_ X
+-- TODO: copy_drop_right
 
---   theorem drop_hom {X Y : C} (f : X ⟶ Y) [Droppable f] : f ≫ !_ Y = !_ X
---     := Droppable.drop_hom
-
---   class Nonlinear {X Y : C} (f : X ⟶ Y) extends Copyable f, Droppable f, Central f
-
---   instance {X Y : C} {f : X ⟶ Y} [Copyable f] [Droppable f] [Central f] : Nonlinear f := ⟨⟩
-
--- end Monoidal
+end Monoidal

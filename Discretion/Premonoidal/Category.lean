@@ -165,6 +165,12 @@ theorem inv_whiskerRight {X Y Z : C} (f : X ⟶ Y) [IsIso f] : inv (f ▷ Z) = i
 theorem inv_whiskerLeft {X Y Z : C} (f : X ⟶ Y) [IsIso f] : inv (Z ◁ f) = Z ◁ inv f
   := by aesop_cat
 
+theorem inv_ltimes {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') [IsIso f] [IsIso g] :
+  inv (f ⋉ g) = inv f ⋊ inv g := by simp
+
+theorem inv_rtimes {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') [IsIso f] [IsIso g] :
+  inv (f ⋊ g) = inv f ⋉ inv g := by simp
+
 -- TODO: tensorHom is iso, ltimes is iso, rtimes is iso
 
 theorem tensorHom_def {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) :
@@ -178,6 +184,19 @@ theorem tensor_eq_rtimes_left {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g :
 
 theorem tensor_eq_rtimes_right {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [Central g] :
   f ⊗ g = f ⋉ g := by rw [tensor_eq_ltimes, right_sliding]
+
+instance IsIso.instTensor' {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [IsIso f] [IsIso g] :
+  IsIso (f ⊗ g) := by rw [tensor_eq_ltimes]; infer_instance
+
+@[simp]
+theorem inv_tensor_left {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂)
+  [IsIso f] [IsIso g] [Central f] :
+  inv (f ⊗ g) = inv f ⊗ inv g := by simp [tensorHom_def, left_sliding]
+
+@[simp]
+theorem inv_tensor_right {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂)
+  [IsIso f] [IsIso g] [Central g] :
+  inv (f ⊗ g) = inv f ⊗ inv g := by simp [tensorHom_def, right_sliding]
 
 @[simp]
 theorem tensor_id {X Y : C} : 𝟙 X ⊗ 𝟙 Y = 𝟙 (X ⊗ Y) := by simp [tensorHom_def]
