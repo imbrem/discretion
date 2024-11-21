@@ -1,5 +1,6 @@
 import Discretion.Premonoidal.Braided
-import Discretion.Premonoidal.Predicate
+import Discretion.Premonoidal.Predicate.Basic
+import Discretion.Premonoidal.Property.Braided
 import Mathlib.CategoryTheory.Monoidal.Subcategory
 
 namespace CategoryTheory
@@ -115,8 +116,6 @@ instance [AffineCat C] [RelevantCat C] : IntuitionisticCat C := ⟨⟩
 
 variable [MonoidalCategoryStruct C]
 
-open MonoidalPredicate'
-
 instance IsRelevant.instUnit [MonoidalPredicate' (IsRelevant (C := C))] : IsRelevant (𝟙_ C)
   := prop_id
 
@@ -155,10 +154,10 @@ class RelHom {X Y : C} (f : X ⟶ Y) extends Copyable f, Central f : Prop
 
 instance {X Y : C} {f : X ⟶ Y} [Copyable f] [Central f] : RelHom f := ⟨⟩
 
-class Discardable {X Y : C} (f : X ⟶ Y) where
-  -- TODO: drop_hom on its own makes a morphism "semi-affine", but this implies affinity if
-  -- X is affine assuming that drop is indeed pure (and therefore satisfies copy_drop_left)
+class Droppable {X Y : C} (f : X ⟶ Y) where
   drop_hom : [IsAffine X] → [IsAffine Y] → f ≫ !_ Y = !_ X
+
+class Discardable {X Y : C} (f : X ⟶ Y) extends Droppable f where
   copy_drop_left_res : [IsRelevant X] → [IsAffine Y] → Δ_ X ≫ (f ≫ !_ Y) ▷ X = (λ_ X).inv
 
 class AffHom {X Y : C} (f : X ⟶ Y) extends Discardable f, Central f : Prop
@@ -175,8 +174,8 @@ theorem copy_hom {X Y : C} [IsRelevant X] [IsRelevant Y] (f : X ⟶ Y) [Copyable
   : f ≫ Δ_ Y = Δ_ X ≫ (f ⊗ f) := Copyable.copy_hom
 
 @[simp]
-theorem drop_hom {X Y : C} [IsAffine X] [IsAffine Y] (f : X ⟶ Y) [Discardable f]
-  : f ≫ !_ Y = !_ X := Discardable.drop_hom
+theorem drop_hom {X Y : C} [IsAffine X] [IsAffine Y] (f : X ⟶ Y) [Droppable f]
+  : f ≫ !_ Y = !_ X := Droppable.drop_hom
 
 @[simp]
 theorem copy_drop_left_res {X Y : C} [IsRelevant X] [IsAffine Y] (f : X ⟶ Y) [Discardable f]
@@ -189,17 +188,20 @@ theorem copy_hom_ltimes {X Y : C} [IsRelevant X] [IsRelevant Y] (f : X ⟶ Y) [C
 
 end Monoidal
 
+open MorphismProperty
+
 class CopyDrop (C : Type u)
   [Category C] [MonoidalCategoryStruct C] [CopyDropStruct C] [BraidedCategoryStruct C]
   : Prop where
   relevant_monoidal : MonoidalPredicate' (IsRelevant (C := C))
   affine_monoidal : MonoidalPredicate' (IsAffine (C := C))
-  pure_copy : ∀ (X : C) [IsRelevant X], PureHom (Δ_ X)
-  pure_drop : ∀ (X : C) [IsAffine X], PureHom (!_ X)
-  pure_associator : ∀ (X Y Z : C), PureHom (α_ X Y Z).hom
-  pure_leftUnitor : ∀ (X : C), PureHom (λ_ X).hom
-  pure_rightUnitor : ∀ (X : C), PureHom (ρ_ X).hom
-  pure_symmetry : ∀ (X Y : C), PureHom (σ_ X Y)
+  relevant_assoc : RespectsAssoc (IsRelevant (C := C))
+  affine_assoc : RespectsAssoc (IsAffine (C := C))
+  affine_of_relevant : ∀ (X : C) [IsRelevant X] [IsAffine (X ⊗ X)], IsAffine X
+  central_copy : ∀ (X : C) [IsRelevant X], Central (Δ_ X)
+  central_drop : ∀ (X : C) [IsAffine X], Central (!_ X)
+  drop_unit : !_ (𝟙_ C) = 𝟙 (𝟙_ C)
+  pure_braided : ∀ {X Y : C} {f : X ⟶ Y}, braided C f → PureHom f
   commutative : ∀ (X : C) [IsRelevant X], Δ_ X ≫ σ_ X X = Δ_ X
   associative : ∀ (X : C) [IsRelevant X], Δ_ X ≫ Δ_ X ▷ X ≫ (α_ X X X).hom = Δ_ X ≫ X ◁ Δ_ X
   tensor_copy : ∀ (X Y : C) [IsRelevant X] [IsRelevant Y],
@@ -216,33 +218,44 @@ instance MonoidalPredicate'.instRelevantMonoidal : MonoidalPredicate' (IsRelevan
 instance MonoidalPredicate'.instAffineMonoidal : MonoidalPredicate' (IsAffine (C := C))
   := CopyDrop.affine_monoidal
 
-@[simp]
-instance pure_copy (X : C) [IsRelevant X] : PureHom (Δ_ X) := CopyDrop.pure_copy X
+theorem affine_of_relevant (X : C) [IsRelevant X] [IsAffine (X ⊗ X)] : IsAffine X
+  := CopyDrop.affine_of_relevant X
 
 @[simp]
-instance pure_drop (X : C) [IsAffine X] : PureHom (!_ X) := CopyDrop.pure_drop X
+theorem drop_unit : !_ (𝟙_ C) = 𝟙 (𝟙_ C) := CopyDrop.drop_unit
+
+theorem pure_braided {X Y : C} {f : X ⟶ Y} (h : braided C f) : PureHom f := CopyDrop.pure_braided h
 
 @[simp]
-instance pure_associator (X Y Z : C) : PureHom (α_ X Y Z).hom := CopyDrop.pure_associator X Y Z
+instance pure_id (X : C) : PureHom (𝟙 X) := pure_braided (by simp)
 
 @[simp]
-instance pure_leftUnitor (X : C) : PureHom (λ_ X).hom := CopyDrop.pure_leftUnitor X
+instance pure_associator (X Y Z : C) : PureHom (α_ X Y Z).hom := pure_braided (by simp)
 
 @[simp]
-instance pure_rightUnitor (X : C) : PureHom (ρ_ X).hom := CopyDrop.pure_rightUnitor X
+instance pure_leftUnitor (X : C) : PureHom (λ_ X).hom := pure_braided (by simp)
 
 @[simp]
-instance pure_symmetry (X Y : C) : PureHom (σ_ X Y) := CopyDrop.pure_symmetry X Y
+instance pure_rightUnitor (X : C) : PureHom (ρ_ X).hom := pure_braided (by simp)
 
 @[simp]
-theorem copy_drop_left {X : C} [IsRelevant X] [IsAffine X]
-  : Δ_ X ≫ !_ X ▷ X = (λ_ X).inv := by convert copy_drop_left_res (!_ X) using 1; simp
+instance pure_symmetry (X Y : C) : PureHom (σ_ X Y) := pure_braided (by simp)
 
 @[simp]
 theorem copy_comm (X : C) [IsRelevant X] : Δ_ X ≫ σ_ X X = Δ_ X := CopyDrop.commutative X
 
+@[simp]
+theorem copy_comm_inv (X : C) [IsRelevant X] : Δ_ X ≫ σ_' X X = Δ_ X
+  := (cancel_mono (σ_ X X)).mp (by simp)
+
+@[reassoc]
 theorem copy_assoc (X : C) [IsRelevant X] : Δ_ X ≫ Δ_ X ▷ X ≫ (α_ X X X).hom = Δ_ X ≫ X ◁ Δ_ X
   := CopyDrop.associative X
+
+@[reassoc]
+theorem copy_assoc_inv (X : C) [IsRelevant X]
+  : Δ_ X ≫ X ◁ Δ_ X ≫ (α_ X X X).inv = Δ_ X ≫ Δ_ X ▷ X
+  := (cancel_mono (α_ X X X).hom).mp (by simp [copy_assoc])
 
 theorem tensor_copy (X Y : C) [IsRelevant X] [IsRelevant Y]
   : (Δ_ X ⊗ Δ_ Y) ≫ swap_ll_rr X X Y Y = Δ_ (X ⊗ Y) := CopyDrop.tensor_copy X Y
@@ -250,7 +263,80 @@ theorem tensor_copy (X Y : C) [IsRelevant X] [IsRelevant Y]
 theorem tensor_drop (X Y : C) [IsAffine X] [IsAffine Y]
   : (!_ X ⊗ !_ Y) ≫ (λ_ _).hom = !_ (X ⊗ Y) := CopyDrop.tensor_drop X Y
 
-variable [IsPremonoidal C] [IsBraided C]
+instance discardable_drop (X : C) [IsAffine X] : Discardable (!_ X) where
+  drop_hom := by simp
+  copy_drop_left_res := by intros; convert (pure_id X).copy_drop_left_res using 1; simp
+
+@[reassoc, simp]
+theorem copy_drop_left {X : C} [IsRelevant X] [IsAffine X]
+  : Δ_ X ≫ !_ X ▷ X = (λ_ X).inv := by convert copy_drop_left_res (!_ X) using 1; simp
+
+variable [IsPremonoidal C]
+
+@[simp]
+theorem copy_unit : Δ_ (𝟙_ C) = (λ_ (𝟙_ C)).inv := by convert copy_drop_left (X := 𝟙_ C); simp
+
+@[simp]
+instance pure_drop (X : C) [IsAffine X] : PureHom (!_ X) where
+  toCentral := CopyDrop.central_drop X
+  copy_hom := by intros; simp only [
+    copy_unit, tensorHom_def, ←Category.assoc, copy_drop_left, <-leftUnitor_inv_naturality (X := X)
+  ]
+
+@[reassoc]
+theorem copy3_assoc (X : C) [IsRelevant X]
+  : Δ_ X ≫ Δ_ X ▷ X ≫ Δ_ X ▷ X ▷ X ≫ (α_ _ _ _).hom
+  = Δ_ X ≫ Δ_ X ▷ X ≫ (X ⊗ X) ◁ Δ_ X
+  := by
+  have h := CopyDrop.central_copy X
+  rw [
+    associator_naturality_right, <-Category.assoc, <-Category.assoc, Category.assoc (f := Δ_ X),
+    copy_assoc, Category.assoc, left_exchange
+  ]
+
+theorem copy_132 (X : C) [IsRelevant X]
+  : Δ_ X ≫ Δ_ X ▷ X ≫ (α_ X X X).hom ≫ X ◁ (σ_ X X) = Δ_ X ≫ X ◁ Δ_ X
+  := by rw [
+    <-Category.assoc, <-Category.assoc, Category.assoc (f := Δ_ X), copy_assoc, Category.assoc,
+    <-whiskerLeft_comp, copy_comm
+  ]
+
+theorem copy_213 (X : C) [IsRelevant X]
+  : Δ_ X ≫ X ◁ Δ_ X ≫ (α_ X X X).inv ≫ (σ_ X X) ▷ X = Δ_ X ≫ Δ_ X ▷ X
+  := by rw [
+    <-Category.assoc, <-Category.assoc, Category.assoc (f := Δ_ X), copy_assoc_inv, Category.assoc,
+    <-whiskerRight_comp, copy_comm
+  ]
+
+instance droppable_copy (X : C) [IsRelevant X] : Droppable (Δ_ X) where
+  drop_hom := by
+    intros
+    simp only [← tensor_drop, tensorHom_def, ← Category.assoc, copy_drop_left]
+    simp only [Category.assoc, leftUnitor_naturality, <-tensor_drop, tensorHom_def]
+    rw [<-Category.assoc, Iso.inv_hom_id, Category.id_comp]
+
+@[simp]
+instance pure_copy (X : C) [IsRelevant X] : PureHom (Δ_ X) where
+  toCentral := CopyDrop.central_copy X
+  copy_hom := by
+    intros
+    rw [<-tensor_copy, swap_ll_rr, tensorHom_def]
+    apply (cancel_mono (α_ _ _ _).hom).mp
+    simp only [whiskerLeft_comp, Category.assoc, Iso.inv_hom_id, Category.comp_id,
+      associator_naturality_left, copy_assoc_assoc]
+    apply (cancel_mono (X ◁ (α_ X X X).inv)).mp
+    simp only [← whiskerLeft_comp, Category.assoc, Iso.hom_inv_id, Category.comp_id, copy_assoc_inv]
+    apply (cancel_mono (X ◁ (σ_' X X) ▷ X)).mp
+    simp only [Category.assoc, ← whiskerLeft_comp, ← whiskerRight_comp, Iso.hom_inv_id,
+      id_whiskerRight, Category.comp_id, copy_comm_inv]
+    apply (cancel_mono (X ◁ (α_ X X X).hom)).mp
+    simp only [Category.assoc, ← whiskerLeft_comp, Iso.inv_hom_id, whiskerLeft_id, Category.comp_id,
+      copy_assoc]
+    apply (cancel_mono (α_ _ _ _).inv).mp
+    simp [associator_inv_naturality_left, copy_assoc_inv_assoc]
+  copy_drop_left_res := by intros; have h := affine_of_relevant X; rw [drop_hom, copy_drop_left]
+
+variable [IsBraided C]
 
 theorem copy_hom_rtimes {X Y : C} [IsRelevant X] [IsRelevant Y] (f : X ⟶ Y) [Copyable f]
   : f ≫ Δ_ Y = Δ_ X ≫ f ⋊ f := calc

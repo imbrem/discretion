@@ -238,6 +238,26 @@ theorem associator_inv_naturality_left {X Y Z : C} (f : Z ⟶ Z') :
   X ◁ (Y ◁ f) ≫ (α_ X Y Z').inv = (α_ X Y Z).inv ≫ (X ⊗ Y) ◁ f := by
   convert associator_inv_naturality (𝟙 _) (𝟙 _) f using 1 <;> simp [tensorHom_def]
 
+@[reassoc]
+theorem leftUnitor_naturality {X Y : C} (f : X ⟶ Y) :
+  𝟙_ C ◁ f ≫ (λ_ Y).hom = (λ_ X).hom ≫ f := IsPremonoidal.leftUnitor_naturality f
+
+@[reassoc]
+theorem leftUnitor_inv_naturality {X Y : C} (f : X ⟶ Y) :
+  f ≫ (λ_ Y).inv = (λ_ X).inv ≫ 𝟙_C ◁ f := by
+  apply (cancel_mono (λ_ Y).hom).mp
+  simp [leftUnitor_naturality]
+
+@[reassoc]
+theorem rightUnitor_naturality {X Y : C} (f : X ⟶ Y) :
+  f ▷ 𝟙_ C ≫ (ρ_ Y).hom = (ρ_ X).hom ≫ f := IsPremonoidal.rightUnitor_naturality f
+
+@[reassoc]
+theorem rightUnitor_inv_naturality {X Y : C} (f : X ⟶ Y) :
+  f ≫ (ρ_ Y).inv = (ρ_ X).inv ≫ f ▷ 𝟙_ C := by
+  apply (cancel_mono (ρ_ Y).hom).mp
+  simp [rightUnitor_naturality]
+
 -- TODO: interactions with ltimes, rtimes...
 
 @[simp]

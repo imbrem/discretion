@@ -13,6 +13,9 @@ class Iterate (C : Type u) [Category C] [HasBinaryCoproducts C] where
   fixpoint {X Y : C} {f : X ⟶ Y ⨿ X}
     : f ≫ coprod.desc (𝟙 Y) (iterate f) = iterate f
 
+def iterate {C : Type u} [Category C] [HasBinaryCoproducts C] [Iterate C] {X Y : C}
+  : (X ⟶ Y ⨿ X) → (X ⟶ Y) := Iterate.iterate
+
 class Iterate.Uniform (C : Type u) [Category C] [HasBinaryCoproducts C] [Iterate C]
   (W : MorphismProperty C) : Prop where
   uniform {X Y : C} {f : Y ⟶ Z ⨿ Y} {g : X ⟶ Z ⨿ X} {h : X ⟶ Y}

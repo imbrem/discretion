@@ -16,8 +16,6 @@ import Discretion.Correspondence.Definitions
 import Discretion.OrderOrder
 import Discretion.MorphismProperty.BinaryProducts
 import Discretion.MorphismProperty.Basic
-import Discretion.Elgot.Monad
-import Discretion.Elgot.Category
 import Discretion.Stream.Action
 import Discretion.Submonad.Basic
 import Discretion.Trace.Basic
@@ -30,3 +28,6 @@ import Discretion.Premonoidal.Distributive
 import Discretion.Premonoidal.CopyDrop
 import Discretion.Premonoidal.Property.Basic
 import Discretion.Premonoidal.Property.Braided
+import Discretion.Elgot.Monad
+import Discretion.Elgot.Category
+import Discretion.Elgot.Strong

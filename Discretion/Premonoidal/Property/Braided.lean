@@ -191,6 +191,7 @@ def braided (C) [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C
   : MorphismProperty C
   := braidedClosure ⊥
 
+@[simp]
 theorem braided.id {X : C} : braided C (𝟙 X) := braidedClosure.id
 
 theorem braided.comp {X Y Z : C} {f : X ⟶ Y} {g : Y ⟶ Z}
@@ -213,27 +214,35 @@ theorem braided.s {X Y : C} {f : X ⟶ Y}
   (hf : braidedStructure C f)
   : braided C f := braidedClosure.braided hf
 
+@[simp]
 theorem braided.associator_hom {X Y Z : C}
   : braided C (α_ X Y Z).hom := braidedClosure.associator_hom
 
+@[simp]
 theorem braided.associator_inv {X Y Z : C}
   : braided C (α_ X Y Z).inv := braidedClosure.associator_inv
 
+@[simp]
 theorem braided.leftUnitor_hom {X : C}
   : braided C (λ_ X).hom := braidedClosure.leftUnitor_hom
 
+@[simp]
 theorem braided.leftUnitor_inv {X : C}
   : braided C (λ_ X).inv := braidedClosure.leftUnitor_inv
 
+@[simp]
 theorem braided.rightUnitor_hom {X : C}
   : braided C (ρ_ X).hom := braidedClosure.rightUnitor_hom
 
+@[simp]
 theorem braided.rightUnitor_inv {X : C}
   : braided C (ρ_ X).inv := braidedClosure.rightUnitor_inv
 
+@[simp]
 theorem braided.braiding_hom {X Y : C}
   : braided C (σ_ X Y) := braidedClosure.braiding_hom
 
+@[simp]
 theorem braided.braiding_inv {X Y : C}
   : braided C (BraidedCategoryStruct.braiding X Y).inv
     := braidedClosure.braiding_inv
