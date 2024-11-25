@@ -175,20 +175,6 @@ theorem Ctx.Splits.induction {motive : (Γ Δ Θ : Ctx α) → Splits Γ Δ Θ �
     | cons a Δ Θ h2 => exact right _ _ _ _ ⟨h, h2⟩ (ih h2)
     | skip a Δ Θ h2 => exact neither _ _ _ _ ⟨h, h2⟩ (ih h2)
 
-def RCtx (α : Type u) := List α
-
-instance RCtx.instZero {α} : Zero (RCtx α) := ⟨[]⟩
-
-@[match_pattern]
-def RCtx.cons {α} (a : α) (Γ : Ctx α) : RCtx α := List.cons a Γ
-
-@[match_pattern]
-def RCtx.nil {α} : RCtx α := []
-
-instance RCtx.instEmptyCollection {α} : EmptyCollection (RCtx α) := ⟨RCtx.nil⟩
-
-infixr:67 " ::ʳ " => Ctx.cons
-
 namespace Resource
 
 instance instWithZero : Resource (WithZero α) where
@@ -273,5 +259,44 @@ variable {τ : Type u} [ResourceSystem τ]
 def res : τ → Type := ResourceSystem.res
 
 instance Resource.instRes {t : τ} : Resource (res t) := ResourceSystem.isResource t
+
+inductive ResCtx : Ctx τ → Type _
+  | nil : ResCtx ∅
+  | cons {t : τ} {Γ} (r : res t) : ResCtx Γ → ResCtx (t ::ᶜ Γ)
+
+infixr:67 " ::ʳ " => ResCtx.cons
+
+def ResCtx.zero : (Γ : Ctx τ) → ResCtx Γ
+  | Ctx.nil => ResCtx.nil
+  | _ ::ᶜ Γ => 0 ::ʳ (zero Γ)
+
+instance ResCtx.instZero {Γ : Ctx τ} : Zero (ResCtx Γ) := ⟨ResCtx.zero Γ⟩
+
+instance ResCtx.instInhabited {Γ : Ctx τ} : Inhabited (ResCtx Γ) := ⟨ResCtx.zero Γ⟩
+
+inductive ResCtx.Splits : ∀{Γ : Ctx τ}, ResCtx Γ → ResCtx Γ → ResCtx Γ → Prop
+  | nil : ResCtx.Splits ResCtx.nil ResCtx.nil ResCtx.nil
+  | cons :
+    _root_.Splits a b c
+    → ResCtx.Splits Γa Γb Γc
+    → ResCtx.Splits (a ::ʳ Γa) (b ::ʳ Γb) (c ::ʳ Γc)
+
+instance ResCtx.instResource {Γ : Ctx τ} : Resource (ResCtx Γ) where
+  splits := ResCtx.Splits
+  splits_comm h := by induction h <;> constructor; apply Splits.comm; assumption; assumption
+  splits_assoc h123 h12 := by induction h123 with
+    | nil => cases h12; exact ⟨nil, Splits.nil, Splits.nil⟩
+    | cons h123 hΓ123 I => cases h12 with
+    | cons h12 hΓ12 =>
+      have ⟨Γ23, hΓ23, hΓ23'⟩ := I hΓ12
+      have ⟨a23, h23, h23'⟩ := h123.assoc_left h12
+      exact ⟨a23 ::ʳ Γ23, hΓ23.cons h23, hΓ23'.cons h23'⟩
+  splits_zero_left {Γa} := by induction Γa <;> constructor; apply Splits.refl_left; assumption
+  splits_weakens_right h1 h2 := by
+    induction h1 <;> cases h2 <;> constructor
+    apply Splits.wk_right; assumption
+    assumption
+    apply_assumption
+    assumption
 
 open Resource
