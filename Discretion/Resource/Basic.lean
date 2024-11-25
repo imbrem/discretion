@@ -5,21 +5,70 @@ import Mathlib.Order.Lattice
 
 class Split (α : Type u) where
   splits : α → α → α → Prop
-
-class Resource (α : Type u) extends Split α, Zero α where
   splits_comm : ∀ {a b c}, splits a b c → splits a c b
   splits_assoc : ∀ {a123 a12 a1 a2 a3},
     splits a123 a12 a3 → splits a12 a1 a2 → ∃a23, splits a123 a1 a23 ∧ splits a23 a2 a3
+
+class Splits [Split α] (a b c : α) where
+  prop : Split.splits a b c
+
+namespace Split
+
+instance instPiSplit [Split α] {ι : Type v} : Split (ι → α) where
+  splits a b c := ∀i, splits (a i) (b i) (c i)
+  splits_comm h i := splits_comm (h i)
+  splits_assoc h123 h12 :=
+    have h123' := λi => splits_assoc (h123 i) (h12 i)
+    ⟨λi => (h123' i).choose, (λi => (h123' i).choose_spec.1), (λi => (h123' i).choose_spec.2)⟩
+
+class Affine (α) [Split α] [Zero α] where
+  prop : ∀a : α, splits a 0 0
+
+instance Affine.instPi [Split α] [Zero α] [Affine α] {ι : Type v} : Affine (ι → α) where
+  prop a i := Affine.prop (a i)
+
+class Relevant (α) [Split α] where
+  prop : ∀a : α, splits a a a
+
+instance Relevant.instPi [Split α] [Relevant α] {ι : Type v} : Relevant (ι → α) where
+  prop a i := Relevant.prop (a i)
+
+end Split
+
+namespace Splits
+
+open Split
+
+variable {α} [Split α]
+
+abbrev Wk [Zero α] (a b : α) := Splits a 0 b
+
+abbrev Drop [Zero α] (a : α) := Wk a 0
+
+abbrev Copy (a : α) := Splits a a a
+
+theorem comm {a b c : α} (h : Splits a b c) : Splits a c b := ⟨Split.splits_comm h.prop⟩
+
+theorem assoc_left {a123 a12 a1 a2 a3 : α}
+  (h : Splits a123 a12 a3) (h12 : Splits a12 a1 a2) : ∃a23, Splits a123 a1 a23 ∧ Splits a23 a2 a3
+  := have ⟨a23, h1, h2⟩ := Split.splits_assoc h.prop h12.prop; ⟨a23, ⟨h1⟩, ⟨h2⟩⟩
+
+theorem assoc_right {a123 a23 a1 a2 a3 : α}
+  (h : Splits a123 a1 a23) (h23 : Splits a23 a2 a3) : ∃a12, Splits a123 a12 a3 ∧ Splits a12 a1 a2
+  := have ⟨a12, h1, h2⟩ := h.comm.assoc_left h23.comm; ⟨a12, h1.comm, h2.comm⟩
+
+instance affine [Zero α] [Affine α] {a : α}  : Drop a := ⟨Affine.prop a⟩
+
+instance relevant [Relevant α] {a : α} : Splits a a a  := ⟨Relevant.prop a⟩
+
+instance pi [Split α] {ι : Type v} {a b c : ι → α}
+  [h : ∀i, Splits (a i) (b i) (c i)] : Splits a b c := ⟨λi => (h i).1⟩
+
+end Splits
+
+class Resource (α : Type u) extends Split α, Zero α where
   splits_zero_left : ∀ {a}, splits a 0 a
   splits_weakens_right : ∀ {a b c d}, splits a b c → splits c 0 d → splits a b d
-
-def Affine (α : Type u) := WithZero α
-
-instance Affine.instZero {α} : Zero (Affine α) := (inferInstance : Zero (WithZero α))
-
-def Relevant (α : Type u) := WithZero α
-
-instance Relevant.instZero {α} : Zero (Relevant α) := (inferInstance : Zero (WithZero α))
 
 def Nonlinear (α : Type u) := WithZero α
 
@@ -142,10 +191,6 @@ infixr:67 " ::ʳ " => Ctx.cons
 
 namespace Resource
 
-open Split
-
-variable {α : Type u}
-
 instance instWithZero : Resource (WithZero α) where
   splits a b c := (b = a ∧ c = 0) ∨ (b = 0 ∧ c = a)
   splits_comm | Or.inl ⟨h1, h2⟩ => Or.inr ⟨h2, h1⟩ | Or.inr ⟨h1, h2⟩ => Or.inl ⟨h2, h1⟩
@@ -183,75 +228,41 @@ instance instMonRes [AddCommMonoid α] : Resource (MonRes α) where
   splits_zero_left := by simp
   splits_weakens_right h1 h2 := by cases h2; convert h1; simp
 
-instance instPiSplit [Split α] {ι : Type v} : Split (ι → α) where
-  splits a b c := ∀i, splits (a i) (b i) (c i)
-
-class Splits [Split α] (a b c : α) where
-  prop : splits a b c
-
-abbrev Wk [Split α] [Zero α] (a b : α) := Splits a 0 b
-
-abbrev Drop [Split α] [Zero α] (a : α) := Wk a 0
-
-abbrev Copy [Split α] (a : α) := Splits a a a
-
-class Affine (α) [Split α] [Zero α] where
-  prop : ∀a : α, splits a 0 0
-
-instance Affine.instCtx : Affine (Ctx α) where
+instance instCtxAffine : Split.Affine (Ctx α) where
   prop _ := ⟨Ctx.Wk.affine, Ctx.Wk.affine⟩
 
-instance Splits.affine {a : α} [Split α] [Zero α] [Affine α]  : Drop a := ⟨Affine.prop a⟩
-
-class Relevant (α) [Split α] where
-  prop : ∀a : α, splits a a a
-
-instance Relevant.instCtx : Relevant (Ctx α) where
+instance instCtxRelevant : Split.Relevant (Ctx α) where
   prop _ := ⟨Ctx.Wk.refl, Ctx.Wk.refl⟩
 
-instance Splits.relevant {a : α} [Split α] [Relevant α] : Splits a a a
-  := ⟨Relevant.prop a⟩
+instance instPi {α : Type u} [Resource α] {ι : Type v} : Resource (ι → α) where
+  splits_zero_left _ := splits_zero_left
+  splits_weakens_right h h' i := splits_weakens_right (h i) (h' i)
 
-instance Splits.instPi [Split α] {ι : Type v} {a b c : ι → α}
-  [h : ∀i, Splits (a i) (b i) (c i)] : Splits a b c := ⟨λi => (h i).1⟩
+end Resource
 
-variable [Resource α]
+namespace Splits
 
-instance Splits.refl_left {a : α} : Splits a 0 a := ⟨splits_zero_left⟩
+open Split
 
-theorem Splits.comm {a b c : α} (h : Splits a b c) : Splits a c b := ⟨splits_comm h.prop⟩
+variable {α : Type u} [Resource α]
 
-instance Splits.refl_right {a : α} : Splits a a 0 := refl_left.comm
+instance refl_left {a : α} : Splits a 0 a := ⟨Resource.splits_zero_left⟩
 
-theorem Splits.assoc_left {a123 a12 a1 a2 a3 : α}
-  (h : Splits a123 a12 a3) (h12 : Splits a12 a1 a2) : ∃a23, Splits a123 a1 a23 ∧ Splits a23 a2 a3
-  := have ⟨a23, h1, h2⟩ := splits_assoc h.prop h12.prop; ⟨a23, ⟨h1⟩, ⟨h2⟩⟩
+instance refl_right {a : α} : Splits a a 0 := refl_left.comm
 
-theorem Splits.assoc_right {a123 a23 a1 a2 a3 : α}
-  (h : Splits a123 a1 a23) (h23 : Splits a23 a2 a3) : ∃a12, Splits a123 a12 a3 ∧ Splits a12 a1 a2
-  := have ⟨a12, h1, h2⟩ := h.comm.assoc_left h23.comm; ⟨a12, h1.comm, h2.comm⟩
+theorem wk_right {a b c d : α} (h1 : Splits a b c) (h2 : Wk c d) : Splits a b d :=
+  ⟨Resource.splits_weakens_right h1.prop h2.prop⟩
+
+theorem wk_left {a b c d : α} (h1 : Splits a b c) (h2 : Wk b d) : Splits a d c :=
+  (h1.comm.wk_right h2).comm
 
 theorem Wk.refl {a : α} : Wk a a := inferInstance
-
-theorem Splits.wk_right {a b c d : α} (h1 : Splits a b c) (h2 : Wk c d) : Splits a b d :=
-  ⟨splits_weakens_right h1.prop h2.prop⟩
-
-theorem Splits.wk_left {a b c d : α} (h1 : Splits a b c) (h2 : Wk b d) : Splits a d c :=
-  (h1.comm.wk_right h2).comm
 
 theorem Wk.trans {a b c : α} (h1 : Wk a b) (h2 : Wk b c) : Wk a c := h1.wk_right h2
 
 theorem Drop.wk {a b : α} (h1 : Wk a b) (h2 : Drop b) : Drop a := h1.trans h2
 
-instance instPi {ι : Type v} : Resource (ι → α) where
-  splits_comm h i := splits_comm (h i)
-  splits_assoc h123 h12 :=
-    have h123' := λi => splits_assoc (h123 i) (h12 i)
-    ⟨λi => (h123' i).choose, (λi => (h123' i).choose_spec.1), (λi => (h123' i).choose_spec.2)⟩
-  splits_zero_left _ := splits_zero_left
-  splits_weakens_right h h' i := splits_weakens_right (h i) (h' i)
-
-end Resource
+end Splits
 
 class ResourceSystem.{u} (τ : Type u) where
   res : τ → Type
