@@ -20,16 +20,20 @@ class Central {X Y : C} (f : X ⟶ Y) : Prop where
   left_sliding : ∀{X' Y' : C}, ∀g : X' ⟶ Y', f ⋉ g = f ⋊ g
   right_sliding : ∀{X' Y' : C}, ∀g : X' ⟶ Y', g ⋉ f = g ⋊ f
 
+@[reassoc]
 theorem left_sliding {X Y X' Y' : C}
   (f : X ⟶ Y) (g : X' ⟶ Y') [Central f] : f ⋉ g = f ⋊ g := Central.left_sliding g
 
+@[reassoc]
 theorem right_sliding {X Y X' Y' : C}
   (f : X ⟶ Y) (g : X' ⟶ Y') [Central g] : f ⋉ g = f ⋊ g := Central.right_sliding f
 
+@[reassoc]
 theorem left_exchange {X Y X' Y' : C}
   (f : X ⟶ Y) (g : X' ⟶ Y') [Central f] : (f ▷ X') ≫ (Y ◁ g) = (X ◁ g) ≫ (f ▷ Y')
   := left_sliding f g
 
+@[reassoc]
 theorem right_exchange {X Y X' Y' : C}
   (f : X ⟶ Y) (g : X' ⟶ Y') [Central g] : (f ▷ X') ≫ (Y ◁ g) = (X ◁ g) ≫ (f ▷ Y')
   := right_sliding f g
@@ -360,6 +364,15 @@ instance rightUnitor_central {X : C} : Central (ρ_ X).hom := IsPremonoidal.righ
 
 theorem rightUnitor_inv_central {X : C} : Central (ρ_ X).inv := inferInstance
 
+-- TODO: should this be an instance??
+instance IsMonoidal.of_all_central
+  [all_central : ∀{X Y : C}, ∀f : X ⟶ Y, Central f] : IsMonoidal C where
+  tensor_comp f₁ f₂ g₁ g₂ := by
+    simp only [tensorHom_def, whiskerRight_comp, whiskerLeft_comp, <-Category.assoc]
+    apply congrArg₂ _ _ rfl
+    have h := all_central g₁
+    simp only [Category.assoc, left_exchange g₁ f₂]
+
 end IsPremonoidal
 
 section IsMonoidal
@@ -378,7 +391,7 @@ theorem sliding {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') : f ⋉ g = f ⋊ 
   := whisker_exchange f g
 
 @[simp]
-instance Central.monoidal [MonoidalCategory C] {X Y : C} (f : X ⟶ Y) : Central f where
+instance Central.monoidal {X Y : C} (f : X ⟶ Y) : Central f where
   left_sliding g := sliding f g
   right_sliding g := sliding g f
 

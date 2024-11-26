@@ -368,6 +368,18 @@ instance IsMonoidal.instMonoidal {C : Type _} [Category C] [MonoidalCategoryStru
 
 -- TODO: inf lore; monoidal is the smallest ContainsMonoidal
 
+def center (C) [Category C] [MonoidalCategoryStruct C] : MorphismProperty C
+  := λ _ _  f => Monoidal.Central f
+
+class Central (W : MorphismProperty C) : Prop where
+  central {X Y : C} {f : X ⟶ Y} : W f → Monoidal.Central f
+
+instance Central.instCenter : Central (center C) where
+  central hf := hf
+
+theorem mem_central {W : MorphismProperty C} [Central W] {X Y : C} {f : X ⟶ Y}
+  (hf : W f) : Monoidal.Central f := Central.central hf
+
 section IsPremonoidal
 
 variable [IsPremonoidal C]
@@ -429,15 +441,6 @@ instance IsStableUnderInverse.instMonoidal
 
 -- instance Unique.instMonoidal : Unique (monoidal C) where
 --   unique hf hg := sorry
-
-def center (C) [Category C] [MonoidalCategoryStruct C] : MorphismProperty C
-  := λ _ _  f => Monoidal.Central f
-
-class Central (W : MorphismProperty C) : Prop where
-  central {X Y : C} {f : X ⟶ Y} : W f → Monoidal.Central f
-
-instance Central.instCenter : Central (center C) where
-  central hf := hf
 
 theorem StableUnderInverse.center : StableUnderInverse (center C)
   := λ _ _ _ hf => Monoidal.Central.inv_hom (hf := hf)
