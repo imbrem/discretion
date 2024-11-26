@@ -123,6 +123,13 @@ section IsPremonoidal
 
 variable [IsPremonoidal C]
 
+theorem pentagon {W X Y Z : C} :
+  (α_ W X Y).hom ▷ Z ≫ (α_ W (X ⊗ Y) Z).hom ≫ W ◁ (α_ X Y Z).hom =
+    (α_ (W ⊗ X) Y Z).hom ≫ (α_ W X (Y ⊗ Z)).hom := IsPremonoidal.pentagon W X Y Z
+
+theorem triangle {X Y : C} : (α_ X (𝟙_ _) Y).hom ≫ X ◁ (λ_ Y).hom = (ρ_ X).hom ▷ Y
+  := IsPremonoidal.triangle X Y
+
 @[simp]
 theorem whiskerLeft_id {X Y : C} : X ◁ 𝟙 Y = 𝟙 (X ⊗ Y)
   := IsPremonoidal.whiskerLeft_id _ _
@@ -282,6 +289,7 @@ theorem comp_rtimes {X Y Z X' Y' : C} (f : X ⟶ Y) (g : Y ⟶ Z) (h : X' ⟶ Y'
 theorem rtimes_comp {X Y X' Y' Z' : C} (f : X ⟶ Y) (g : X' ⟶ Y') (h : Y' ⟶ Z') :
   f ⋊ (g ≫ h) = X ◁ g ≫ f ⋊ h := by simp [rtimes]
 
+@[simp]
 instance Central.id {X : C} : Central (𝟙 X) where
   left_sliding := by simp [ltimes, rtimes]
   right_sliding := by simp [ltimes, rtimes]
@@ -352,6 +360,9 @@ instance Central.whiskerLeft {X Y Z : C} (f : X ⟶ Y) [hf : Central f] : Centra
       <-associator_inv_naturality_right, Category.assoc
     ]
 
+instance Central.tensorHom {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂)
+  [hf : Central f] [hg : Central g] : Central (f ⊗ g) := by rw [tensorHom_def]; infer_instance
+
 instance associator_central {X Y Z : C} : Central (α_ X Y Z).hom := IsPremonoidal.associator_central
 
 theorem associator_inv_central {X Y Z : C} : Central (α_ X Y Z).inv := inferInstance
@@ -364,14 +375,23 @@ instance rightUnitor_central {X : C} : Central (ρ_ X).hom := IsPremonoidal.righ
 
 theorem rightUnitor_inv_central {X : C} : Central (ρ_ X).inv := inferInstance
 
--- TODO: should this be an instance??
-instance IsMonoidal.of_all_central
-  [all_central : ∀{X Y : C}, ∀f : X ⟶ Y, Central f] : IsMonoidal C where
-  tensor_comp f₁ f₂ g₁ g₂ := by
+theorem tensor_comp_left {X₁ Y₁ Z₁ X₂ Y₂ Z₂ : C}
+  (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (g₁ : Y₁ ⟶ Z₁) (g₂ : Y₂ ⟶ Z₂) [Central g₁] :
+  (f₁ ≫ g₁) ⊗ (f₂ ≫ g₂) = (f₁ ⊗ f₂) ≫ (g₁ ⊗ g₂) := by
     simp only [tensorHom_def, whiskerRight_comp, whiskerLeft_comp, <-Category.assoc]
     apply congrArg₂ _ _ rfl
-    have h := all_central g₁
     simp only [Category.assoc, left_exchange g₁ f₂]
+
+theorem tensor_comp_right {X₁ Y₁ Z₁ X₂ Y₂ Z₂ : C}
+  (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (g₁ : Y₁ ⟶ Z₁) (g₂ : Y₂ ⟶ Z₂) [Central f₂] :
+  (f₁ ≫ g₁) ⊗ (f₂ ≫ g₂) = (f₁ ⊗ f₂) ≫ (g₁ ⊗ g₂) := by
+    simp only [tensorHom_def, whiskerRight_comp, whiskerLeft_comp, <-Category.assoc]
+    apply congrArg₂ _ _ rfl
+    simp only [Category.assoc, right_exchange g₁ f₂]
+
+instance IsMonoidal.of_all_central
+  [all_central : ∀{X Y : C}, ∀f : X ⟶ Y, Central f] : IsMonoidal C where
+  tensor_comp f₁ f₂ g₁ g₂ := have h := all_central g₁; by rw [tensor_comp_left]
 
 end IsPremonoidal
 

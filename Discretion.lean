@@ -30,6 +30,7 @@ import Discretion.Premonoidal.Property.Basic
 import Discretion.Premonoidal.Property.Braided
 import Discretion.Premonoidal.Property.WideSubcategory
 import Discretion.Premonoidal.Property.Cartesian
+import Discretion.Premonoidal.Property.Coherence
 import Discretion.Elgot.Monad
 import Discretion.Elgot.Category
 import Discretion.Elgot.Strong

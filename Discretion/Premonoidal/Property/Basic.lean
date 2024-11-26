@@ -380,6 +380,48 @@ instance Central.instCenter : Central (center C) where
 theorem mem_central {W : MorphismProperty C} [Central W] {X Y : C} {f : X ⟶ Y}
   (hf : W f) : Monoidal.Central f := Central.central hf
 
+class MonoidalHom {X Y : C} (f : X ⟶ Y) where
+  prop : monoidal C f
+
+instance MonoidalHom.id {X : C} : MonoidalHom (𝟙 X) where
+  prop := monoidal.id
+
+instance MonoidalHom.whiskerLeft {X Y Z : C} (f : X ⟶ Y)
+  [MonoidalHom f] : MonoidalHom (Z ◁ f) where
+  prop := monoidal.whiskerLeft MonoidalHom.prop
+
+instance MonoidalHom.whiskerRight {X Y Z : C} (f : X ⟶ Y)
+  [MonoidalHom f] : MonoidalHom (f ▷ Z) where
+  prop := monoidal.whiskerRight MonoidalHom.prop
+
+instance MonoidalHom.comp {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z)
+  [MonoidalHom f] [MonoidalHom g] : MonoidalHom (f ≫ g) where
+  prop := monoidal.comp MonoidalHom.prop MonoidalHom.prop
+
+instance MonoidalHom.associator_hom {X Y Z : C}
+  : MonoidalHom (α_ X Y Z).hom where
+  prop := monoidal.associator_hom
+
+instance MonoidalHom.associator_inv {X Y Z : C}
+  : MonoidalHom (α_ X Y Z).inv where
+  prop := monoidal.associator_inv
+
+instance MonoidalHom.leftUnitor_hom {X : C}
+  : MonoidalHom (λ_ X).hom where
+  prop := monoidal.leftUnitor_hom
+
+instance MonoidalHom.leftUnitor_inv {X : C}
+  : MonoidalHom (λ_ X).inv where
+  prop := monoidal.leftUnitor_inv
+
+instance MonoidalHom.rightUnitor_hom {X : C}
+  : MonoidalHom (ρ_ X).hom where
+  prop := monoidal.rightUnitor_hom
+
+instance MonoidalHom.rightUnitor_inv {X : C}
+  : MonoidalHom (ρ_ X).inv where
+  prop := monoidal.rightUnitor_inv
+
 section IsPremonoidal
 
 variable [IsPremonoidal C]
@@ -389,6 +431,10 @@ theorem tensorHom_mem {W : MorphismProperty C}
   {f : X ⟶ Y} {g : X' ⟶ Y'} (hf : W f) (hg : W g) : W (f ⊗ g)
   := by rw [Monoidal.tensorHom_def];
         apply comp_mem; exact whiskerRight_mem hf; exact whiskerLeft_mem hg
+
+instance MonoidalHom.tensorHom {X Y X' Y' : C} {f : X ⟶ Y} {g : X' ⟶ Y'}
+  [MonoidalHom f] [MonoidalHom g] : MonoidalHom (f ⊗ g) where
+  prop := tensorHom_mem MonoidalHom.prop MonoidalHom.prop
 
 instance IsIso.instWhiskerClosure {W : MorphismProperty C} [IsIso W] : IsIso (whiskerClosure W)
   where is_iso hf := by induction hf with
@@ -437,10 +483,9 @@ instance IsStableUnderInverse.instMonoidal
   : IsStableUnderInverse (monoidal C)
   := instMonoidalClosure
 
--- TODO: this is premonoidal coherence
-
--- instance Unique.instMonoidal : Unique (monoidal C) where
---   unique hf hg := sorry
+instance Central.instMonoidal
+  : Central (monoidal C) where
+  central hf := by induction hf using monoidal.induction' <;> infer_instance
 
 theorem StableUnderInverse.center : StableUnderInverse (center C)
   := λ _ _ _ hf => Monoidal.Central.inv_hom (hf := hf)
@@ -459,6 +504,9 @@ instance IsMonoidal.instCenter : IsMonoidal (center C) where
   leftUnitor_inv_mem := leftUnitor_inv_central
   rightUnitor_hom_mem := rightUnitor_central
   rightUnitor_inv_mem := rightUnitor_inv_central
+
+instance MonoidalHom.instCentral {X Y : C} {f : X ⟶ Y} [MonoidalHom f] : Monoidal.Central f
+  := mem_central MonoidalHom.prop
 
 end IsPremonoidal
 
