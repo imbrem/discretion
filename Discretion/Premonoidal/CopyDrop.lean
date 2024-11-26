@@ -116,17 +116,17 @@ instance [AffineCat C] [RelevantCat C] : IntuitionisticCat C := ⟨⟩
 
 variable [MonoidalCategoryStruct C]
 
-instance IsRelevant.instUnit [MonoidalPredicate' (IsRelevant (C := C))] : IsRelevant (𝟙_ C)
+instance IsRelevant.instUnit [Predicate (IsRelevant (C := C))] : IsRelevant (𝟙_ C)
   := prop_id
 
-instance IsRelevant.instTensor [MonoidalPredicate' (IsRelevant (C := C))]
+instance IsRelevant.instTensor [Predicate (IsRelevant (C := C))]
   {X Y : C} [hX : IsRelevant X] [hY : IsRelevant Y] : IsRelevant (X ⊗ Y)
   := prop_tensor hX hY
 
-instance IsAffine.instUnit [MonoidalPredicate' (IsAffine (C := C))] : IsAffine (𝟙_ C)
+instance IsAffine.instUnit [Predicate (IsAffine (C := C))] : IsAffine (𝟙_ C)
   := prop_id
 
-instance IsAffine.instTensor [MonoidalPredicate' (IsAffine (C := C))]
+instance IsAffine.instTensor [Predicate (IsAffine (C := C))]
   {X Y : C} [hX : IsAffine X] [hY : IsAffine Y] : IsAffine (X ⊗ Y)
   := prop_tensor hX hY
 
@@ -193,13 +193,13 @@ open MorphismProperty
 class CopyDrop (C : Type u)
   [Category C] [MonoidalCategoryStruct C] [CopyDropStruct C] [BraidedCategoryStruct C]
   : Prop where
-  relevant_monoidal : MonoidalPredicate' (IsRelevant (C := C))
-  affine_monoidal : MonoidalPredicate' (IsAffine (C := C))
-  relevant_assoc : RespectsAssoc (IsRelevant (C := C))
-  affine_assoc : RespectsAssoc (IsAffine (C := C))
-  affine_of_relevant : ∀ (X : C) [IsRelevant X] [IsAffine (X ⊗ X)], IsAffine X
-  central_copy : ∀ (X : C) [IsRelevant X], Central (Δ_ X)
-  central_drop : ∀ (X : C) [IsAffine X], Central (!_ X)
+  relevant_monoidal : Predicate (IsRelevant (C := C)) := by infer_instance
+  affine_monoidal : Predicate (IsAffine (C := C)) := by infer_instance
+  relevant_assoc : RespectsSymm (IsRelevant (C := C)) := by infer_instance
+  affine_assoc : RespectsSymm (IsAffine (C := C)) := by infer_instance
+  affine_of_relevant : ∀ (X : C) [IsRelevant X] [IsAffine (X ⊗ X)], IsAffine X := by infer_instance
+  central_copy : ∀ (X : C) [IsRelevant X], Central (Δ_ X) := by infer_instance
+  central_drop : ∀ (X : C) [IsAffine X], Central (!_ X) := by infer_instance
   drop_unit : !_ (𝟙_ C) = 𝟙 (𝟙_ C)
   pure_braided : ∀ {X Y : C} {f : X ⟶ Y}, braided C f → PureHom f
   commutative : ∀ (X : C) [IsRelevant X], Δ_ X ≫ σ_ X X = Δ_ X
@@ -212,10 +212,10 @@ namespace Monoidal
 
 variable [BraidedCategoryStruct C] [CopyDrop C]
 
-instance MonoidalPredicate'.instRelevantMonoidal : MonoidalPredicate' (IsRelevant (C := C))
+instance Predicate.instRelevantMonoidal : Predicate (IsRelevant (C := C))
   := CopyDrop.relevant_monoidal
 
-instance MonoidalPredicate'.instAffineMonoidal : MonoidalPredicate' (IsAffine (C := C))
+instance Predicate.instAffineMonoidal : Predicate (IsAffine (C := C))
   := CopyDrop.affine_monoidal
 
 theorem affine_of_relevant (X : C) [IsRelevant X] [IsAffine (X ⊗ X)] : IsAffine X

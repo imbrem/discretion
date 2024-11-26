@@ -2,6 +2,7 @@ import Mathlib.Algebra.Group.WithOne.Defs
 import Mathlib.Algebra.Group.Pi.Basic
 import Mathlib.Order.BoundedOrder
 import Mathlib.Order.Lattice
+import Mathlib.Order.TypeTags
 
 class Split (α : Type u) where
   splits : α → α → α → Prop
@@ -21,10 +22,10 @@ instance instPiSplit [Split α] {ι : Type v} : Split (ι → α) where
     have h123' := λi => splits_assoc (h123 i) (h12 i)
     ⟨λi => (h123' i).choose, (λi => (h123' i).choose_spec.1), (λi => (h123' i).choose_spec.2)⟩
 
-class Affine (α) [Split α] [Zero α] where
-  prop : ∀a : α, splits a 0 0
+class Affine (α) [Split α] [Top α] where
+  prop : ∀a : α, splits a ⊤ ⊤
 
-instance Affine.instPi [Split α] [Zero α] [Affine α] {ι : Type v} : Affine (ι → α) where
+instance Affine.instPi [Split α] [Top α] [Affine α] {ι : Type v} : Affine (ι → α) where
   prop a i := Affine.prop (a i)
 
 class Relevant (α) [Split α] where
@@ -34,16 +35,15 @@ instance Relevant.instPi [Split α] [Relevant α] {ι : Type v} : Relevant (ι �
   prop a i := Relevant.prop (a i)
 
 end Split
-
 namespace Splits
 
 open Split
 
 variable {α} [Split α]
 
-abbrev Wk [Zero α] (a b : α) := Splits a 0 b
+abbrev Wk [Top α] (a b : α) := Splits a ⊤ b
 
-abbrev Drop [Zero α] (a : α) := Wk a 0
+abbrev Drop [Top α] (a : α) := Wk a ⊤
 
 abbrev Copy (a : α) := Splits a a a
 
@@ -57,7 +57,7 @@ theorem assoc_right {a123 a23 a1 a2 a3 : α}
   (h : Splits a123 a1 a23) (h23 : Splits a23 a2 a3) : ∃a12, Splits a123 a12 a3 ∧ Splits a12 a1 a2
   := have ⟨a12, h1, h2⟩ := h.comm.assoc_left h23.comm; ⟨a12, h1.comm, h2.comm⟩
 
-instance affine [Zero α] [Affine α] {a : α}  : Drop a := ⟨Affine.prop a⟩
+instance affine [Top α] [Affine α] {a : α}  : Drop a := ⟨Affine.prop a⟩
 
 instance relevant [Relevant α] {a : α} : Splits a a a  := ⟨Relevant.prop a⟩
 
@@ -66,13 +66,13 @@ instance pi [Split α] {ι : Type v} {a b c : ι → α}
 
 end Splits
 
-class Resource (α : Type u) extends Split α, Zero α where
-  splits_zero_left : ∀ {a}, splits a 0 a
-  splits_weakens_right : ∀ {a b c d}, splits a b c → splits c 0 d → splits a b d
+class Resource (α : Type u) extends Top α, Split α where
+  splits_top_left : ∀ {a}, splits a ⊤ a
+  splits_weakens_right : ∀ {a b c d}, splits a b c → splits c ⊤ d → splits a b d
 
-def Nonlinear (α : Type u) := WithZero α
+def Nonlinear (α : Type u) := WithTop α
 
-instance Nonlinear.instZero {α} : Zero (Nonlinear α) := (inferInstance : Zero (WithZero α))
+instance Nonlinear.instTop {α} : Top (Nonlinear α) := (inferInstance : Top (WithTop α))
 
 def OrdRes (α : Type u) := α
 
@@ -106,16 +106,16 @@ instance OrdRes.instSemilatticeSup [SemilatticeSup α] : SemilatticeSup (OrdRes 
 
 instance OrdRes.instLattice [Lattice α] : Lattice (OrdRes α) := (inferInstance : Lattice α)
 
-instance OrdRes.instZero [Bot α] : Zero (OrdRes α) := ⟨⊥⟩
+def AddRes (α : Type u) := α
 
-def MonRes (α : Type u) := α
-
-instance MonRes.instAddCommMonoid [AddCommMonoid α] : AddCommMonoid (MonRes α)
+instance AddRes.instAddCommMonoid [AddCommMonoid α] : AddCommMonoid (AddRes α)
   := (inferInstance : AddCommMonoid α)
+
+instance AddRes.instTop [AddCommMonoid α] : Top (AddRes α) := ⟨0⟩
 
 def Ctx (α : Type u) := List α
 
-instance Ctx.instZero {α} : Zero (Ctx α) := ⟨[]⟩
+instance Ctx.instTop {α} : Top (Ctx α) := ⟨[]⟩
 
 @[match_pattern]
 def Ctx.cons {α} (a : α) (Γ : Ctx α) : Ctx α := List.cons a Γ
@@ -177,42 +177,42 @@ theorem Ctx.Splits.induction {motive : (Γ Δ Θ : Ctx α) → Splits Γ Δ Θ �
 
 namespace Resource
 
-instance instWithZero : Resource (WithZero α) where
-  splits a b c := (b = a ∧ c = 0) ∨ (b = 0 ∧ c = a)
+instance instWithTop : Resource (WithTop α) where
+  splits a b c := (b = a ∧ c = ⊤) ∨ (b = ⊤ ∧ c = a)
   splits_comm | Or.inl ⟨h1, h2⟩ => Or.inr ⟨h2, h1⟩ | Or.inr ⟨h1, h2⟩ => Or.inl ⟨h2, h1⟩
   splits_assoc  | Or.inl ⟨rfl, h3⟩, h => ⟨_, h, Or.inl ⟨rfl, h3⟩⟩
                 | h, Or.inl ⟨rfl, h2⟩ => ⟨_, h, Or.inr ⟨h2, rfl⟩⟩
                 | h, Or.inr ⟨h1, rfl⟩ => ⟨_, Or.inr ⟨h1, rfl⟩, h⟩
-  splits_zero_left := Or.inr ⟨rfl, rfl⟩
+  splits_top_left := Or.inr ⟨rfl, rfl⟩
   splits_weakens_right h | Or.inl ⟨h1, h2⟩ | Or.inr ⟨h1, h2⟩ => by cases h1; cases h2; exact h
 
 instance instNonlinear : Resource (Nonlinear α) where
-  splits a b c := (b = a ∨ b = 0) ∧ (c = a ∨ c = 0)
+  splits a b c := (b = a ∨ b = ⊤) ∧ (c = a ∨ c = ⊤)
   splits_comm := And.symm
   splits_assoc {a123} | ⟨ha12, ha3⟩, ⟨ha1, ha2⟩ => ⟨a123, by aesop⟩
-  splits_zero_left := ⟨Or.inr rfl, Or.inl rfl⟩
+  splits_top_left := ⟨Or.inr rfl, Or.inl rfl⟩
   splits_weakens_right h1 h2 := by aesop
 
 instance instCtx : Resource (Ctx α) where
   splits := Ctx.Splits
   splits_comm h := ⟨h.2, h.1⟩
   splits_assoc h123 h12 := ⟨_, ⟨h123.1.trans h12.1, Ctx.Wk.refl⟩, ⟨h123.1.trans h12.2, h123.2⟩⟩
-  splits_zero_left := ⟨Ctx.Wk.affine, Ctx.Wk.refl⟩
+  splits_top_left := ⟨Ctx.Wk.affine, Ctx.Wk.refl⟩
   splits_weakens_right h h' := ⟨h.1, h.2.trans h'.2⟩
 
 instance instOrdRes [Preorder α] [OrderTop α] : Resource (OrdRes α) where
   splits a b c := (a ≤ b ∧ a ≤ c)
   splits_comm := And.symm
   splits_assoc h123 h12 := ⟨_, ⟨le_trans h123.1 h12.1, le_refl _⟩, ⟨le_trans h123.1 h12.2, h123.2⟩⟩
-  splits_zero_left := ⟨le_top, le_refl _⟩
+  splits_top_left := ⟨le_top, le_refl _⟩
   splits_weakens_right h1 h2 := ⟨h1.1, le_trans h1.2 h2.2⟩
 
-instance instMonRes [AddCommMonoid α] : Resource (MonRes α) where
+instance instAddRes [AddCommMonoid α] : Resource (AddRes α) where
   splits a b c := (a = b + c)
   splits_comm h := by simp only [add_comm]; exact h
   splits_assoc h123 h12 := by cases h123; cases h12; exact ⟨_, by simp [add_assoc], rfl⟩
-  splits_zero_left := by simp
-  splits_weakens_right h1 h2 := by cases h2; convert h1; simp
+  splits_top_left := by simp [Top.top]
+  splits_weakens_right h1 h2 := by cases h2; convert h1; simp [Top.top]
 
 instance instCtxAffine : Split.Affine (Ctx α) where
   prop _ := ⟨Ctx.Wk.affine, Ctx.Wk.affine⟩
@@ -221,7 +221,7 @@ instance instCtxRelevant : Split.Relevant (Ctx α) where
   prop _ := ⟨Ctx.Wk.refl, Ctx.Wk.refl⟩
 
 instance instPi {α : Type u} [Resource α] {ι : Type v} : Resource (ι → α) where
-  splits_zero_left _ := splits_zero_left
+  splits_top_left _ := splits_top_left
   splits_weakens_right h h' i := splits_weakens_right (h i) (h' i)
 
 end Resource
@@ -232,9 +232,9 @@ open Split
 
 variable {α : Type u} [Resource α]
 
-instance refl_left {a : α} : Splits a 0 a := ⟨Resource.splits_zero_left⟩
+instance refl_left {a : α} : Splits a ⊤ a := ⟨Resource.splits_top_left⟩
 
-instance refl_right {a : α} : Splits a a 0 := refl_left.comm
+instance refl_right {a : α} : Splits a a ⊤ := refl_left.comm
 
 theorem wk_right {a b c d : α} (h1 : Splits a b c) (h2 : Wk c d) : Splits a b d :=
   ⟨Resource.splits_weakens_right h1.prop h2.prop⟩
@@ -250,15 +250,19 @@ theorem Drop.wk {a b : α} (h1 : Wk a b) (h2 : Drop b) : Drop a := h1.trans h2
 
 end Splits
 
-class ResourceSystem.{u} (τ : Type u) where
+class ResourceFamily.{u} (τ : Type u) where
   res : τ → Type
   isResource : ∀t, Resource (res t)
 
-variable {τ : Type u} [ResourceSystem τ]
+variable {τ : Type u}
 
-def res : τ → Type := ResourceSystem.res
+section ResourceFamily
 
-instance Resource.instRes {t : τ} : Resource (res t) := ResourceSystem.isResource t
+variable [ResourceFamily τ]
+
+def res : τ → Type := ResourceFamily.res
+
+instance Resource.instRes {t : τ} : Resource (res t) := ResourceFamily.isResource t
 
 inductive ResCtx : Ctx τ → Type _
   | nil : ResCtx ∅
@@ -266,13 +270,13 @@ inductive ResCtx : Ctx τ → Type _
 
 infixr:67 " ::ʳ " => ResCtx.cons
 
-def ResCtx.zero : (Γ : Ctx τ) → ResCtx Γ
+def ResCtx.top : (Γ : Ctx τ) → ResCtx Γ
   | Ctx.nil => ResCtx.nil
-  | _ ::ᶜ Γ => 0 ::ʳ (zero Γ)
+  | _ ::ᶜ Γ => ⊤ ::ʳ (top Γ)
 
-instance ResCtx.instZero {Γ : Ctx τ} : Zero (ResCtx Γ) := ⟨ResCtx.zero Γ⟩
+instance ResCtx.instTop {Γ : Ctx τ} : Top (ResCtx Γ) := ⟨ResCtx.top Γ⟩
 
-instance ResCtx.instInhabited {Γ : Ctx τ} : Inhabited (ResCtx Γ) := ⟨ResCtx.zero Γ⟩
+instance ResCtx.instInhabited {Γ : Ctx τ} : Inhabited (ResCtx Γ) := ⟨ResCtx.top Γ⟩
 
 inductive ResCtx.Splits : ∀{Γ : Ctx τ}, ResCtx Γ → ResCtx Γ → ResCtx Γ → Prop
   | nil : ResCtx.Splits ResCtx.nil ResCtx.nil ResCtx.nil
@@ -291,12 +295,22 @@ instance ResCtx.instResource {Γ : Ctx τ} : Resource (ResCtx Γ) where
       have ⟨Γ23, hΓ23, hΓ23'⟩ := I hΓ12
       have ⟨a23, h23, h23'⟩ := h123.assoc_left h12
       exact ⟨a23 ::ʳ Γ23, hΓ23.cons h23, hΓ23'.cons h23'⟩
-  splits_zero_left {Γa} := by induction Γa <;> constructor; apply Splits.refl_left; assumption
+  splits_top_left {Γa} := by induction Γa <;> constructor; apply Splits.refl_left; assumption
   splits_weakens_right h1 h2 := by
     induction h1 <;> cases h2 <;> constructor
     apply Splits.wk_right; assumption
     assumption
     apply_assumption
     assumption
+
+end ResourceFamily
+
+class ResourceSystem (τ : Type u) [Mul τ] extends ResourceFamily τ where
+  tensorRes : ∀s t : τ, res s → res t → res (s * t)
+  split_tensorRes : ∀(s t : τ) (a b c : res s) (a' b' c' : res t),
+    Splits a b c → Splits a' b' c'
+      → Splits (tensorRes s t a a') (tensorRes s t b b') (tensorRes s t c c')
+  split_copy_drop : ∀(t : τ) (a : res t),
+    Splits.Copy a → Splits.Drop (tensorRes t t a a) → Splits.Drop a
 
 open Resource

@@ -9,9 +9,9 @@ open Monoidal
 
 inductive braidedStructure (C) [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
   : MorphismProperty C
-  | monoidal : monoidalStructure C f → braidedStructure C f
   | braiding_hom : braidedStructure C (σ_ X Y)
   | braiding_inv : braidedStructure C (BraidedCategoryStruct.braiding X Y).inv
+  | monoidal : monoidalStructure C f → braidedStructure C f
 
 variable {C : Type _} [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
 

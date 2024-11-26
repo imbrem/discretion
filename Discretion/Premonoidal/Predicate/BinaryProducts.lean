@@ -41,8 +41,6 @@ instance StrongCoCartesianPredicate.instTop : StrongCoCartesianPredicate (⊤ : 
   prop_coprod_left _ := trivial
   prop_coprod_right _ := trivial
 
-
-
 namespace Monoidal
 
 theorem prop_terminal {P : C → Prop} [CartesianPredicate P] [HasTerminal C] : P (⊤_ C)
