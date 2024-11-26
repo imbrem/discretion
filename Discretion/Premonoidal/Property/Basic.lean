@@ -7,6 +7,8 @@ open MonoidalCategory
 
 open Monoidal
 
+-- TODO: IsMonoidal, IsBraided classes?
+
 namespace MorphismProperty
 
 inductive monoidalStructure (C) [Category C] [MonoidalCategoryStruct C] : MorphismProperty C
