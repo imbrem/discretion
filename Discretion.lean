@@ -28,6 +28,8 @@ import Discretion.Premonoidal.Distributive
 import Discretion.Premonoidal.CopyDrop
 import Discretion.Premonoidal.Property.Basic
 import Discretion.Premonoidal.Property.Braided
+import Discretion.Premonoidal.Property.WideSubcategory
+import Discretion.Premonoidal.Property.Cartesian
 import Discretion.Elgot.Monad
 import Discretion.Elgot.Category
 import Discretion.Elgot.Strong

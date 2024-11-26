@@ -338,19 +338,17 @@ instance ContainsMonoidalStructure.instMonoidalStructure
   rightUnitor_hom_mem := monoidalStructure.rightUnitor_hom
   rightUnitor_inv_mem := monoidalStructure.rightUnitor_inv
 
-class ContainsMonoidal (W : MorphismProperty C) extends
+class IsMonoidal (W : MorphismProperty C) extends
   ContainsMonoidalStructure W,
-  ContainsIdentities W,
-  IsStableUnderComposition W,
+  IsMultiplicative W,
   IsStableUnderWhisker W : Prop where
 
 instance {W : MorphismProperty C}
-  [ContainsMonoidalStructure W] [ContainsIdentities W]
-  [IsStableUnderComposition W] [IsStableUnderWhisker W]
-  : ContainsMonoidal W := ⟨⟩
+  [ContainsMonoidalStructure W] [IsMultiplicative W] [IsStableUnderWhisker W]
+  : IsMonoidal W := ⟨⟩
 
-instance ContainsMonoidal.instWhiskerClosure {W : MorphismProperty C} [ContainsMonoidalStructure W]
-  : ContainsMonoidal (whiskerClosure W) where
+instance IsMonoidal.instWhiskerClosure {W : MorphismProperty C} [ContainsMonoidalStructure W]
+  : IsMonoidal (whiskerClosure W) where
   id_mem _ := whiskerClosure.id
   comp_mem _ _ := whiskerClosure.comp
   whiskerLeft_mem _ := whiskerClosure.whiskerLeft
@@ -362,17 +360,23 @@ instance ContainsMonoidal.instWhiskerClosure {W : MorphismProperty C} [ContainsM
   rightUnitor_hom_mem := whiskerClosure.base rightUnitor_hom_mem
   rightUnitor_inv_mem := whiskerClosure.base rightUnitor_inv_mem
 
-instance ContainsMonoidal.instMonoidalClosure {W : MorphismProperty C}
-  : ContainsMonoidal (monoidalClosure W) := instWhiskerClosure
+instance IsMonoidal.instMonoidalClosure {W : MorphismProperty C}
+  : IsMonoidal (monoidalClosure W) := instWhiskerClosure
 
-instance ContainsMonoidal.instMonoidal {C : Type _} [Category C] [MonoidalCategoryStruct C]
-  : ContainsMonoidal (monoidal C) := instMonoidalClosure
+instance IsMonoidal.instMonoidal {C : Type _} [Category C] [MonoidalCategoryStruct C]
+  : IsMonoidal (monoidal C) := instMonoidalClosure
 
 -- TODO: inf lore; monoidal is the smallest ContainsMonoidal
 
 section IsPremonoidal
 
 variable [IsPremonoidal C]
+
+theorem tensorHom_mem {W : MorphismProperty C}
+  [IsStableUnderWhisker W] [IsStableUnderComposition W] {X Y X' Y' : C}
+  {f : X ⟶ Y} {g : X' ⟶ Y'} (hf : W f) (hg : W g) : W (f ⊗ g)
+  := by rw [Monoidal.tensorHom_def];
+        apply comp_mem; exact whiskerRight_mem hf; exact whiskerLeft_mem hg
 
 instance IsIso.instWhiskerClosure {W : MorphismProperty C} [IsIso W] : IsIso (whiskerClosure W)
   where is_iso hf := by induction hf with
@@ -441,7 +445,7 @@ theorem StableUnderInverse.center : StableUnderInverse (center C)
 theorem IsStableUnderInverse.instCenter : IsStableUnderInverse (center C) where
   stable_under_inverse := StableUnderInverse.center
 
-instance ContainsMonoidal.instCenter : ContainsMonoidal (center C) where
+instance IsMonoidal.instCenter : IsMonoidal (center C) where
   id_mem _ := Monoidal.Central.id
   comp_mem _ _ hf hg := Monoidal.Central.comp (hf := hf) (hg := hg)
   whiskerLeft_mem _ hf := Monoidal.Central.whiskerLeft (hf := hf)
