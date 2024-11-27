@@ -1,4 +1,5 @@
 import Mathlib.CategoryTheory.Monoidal.Category
+import Discretion.Utils.Category
 
 namespace CategoryTheory
 
@@ -43,10 +44,7 @@ theorem right_exchange {X Y X' Y' : C}
 
 end Monoidal
 
--- TODO: is it worth it to separate out IsBinoidal with
--- {tensorHom_def, whisker{Left, Right}_comp, whiskerLeft_id, id_whiskerRight}?
-
-class IsPremonoidal (C: Type u) [Category C] [MonoidalCategoryStruct C] : Prop where
+class IsBinoidal (C: Type u) [Category C] [MonoidalCategoryStruct C] : Prop where
   tensorHom_def {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) :
     f ⊗ g = (f ▷ X₂) ≫ (Y₁ ◁ g) := by
       aesop_cat
@@ -58,6 +56,9 @@ class IsPremonoidal (C: Type u) [Category C] [MonoidalCategoryStruct C] : Prop w
     := by aesop_cat
   whiskerRight_comp : ∀ {X Y Z W : C} (f : X ⟶ Y) (g : Y ⟶ Z), (f ≫ g) ▷ W = (f ▷ W) ≫ (g ▷ W)
     := by aesop_cat
+
+class IsPremonoidal (C: Type u) [Category C] [MonoidalCategoryStruct C]
+  extends IsBinoidal C : Prop where
   associator_central : ∀ {X Y Z : C}, Monoidal.Central (α_ X Y Z).hom := by aesop_cat
   leftUnitor_central : ∀ {X : C}, Monoidal.Central (λ_ X).hom := by aesop_cat
   rightUnitor_central : ∀ {X : C}, Monoidal.Central (ρ_ X).hom := by aesop_cat
@@ -119,32 +120,40 @@ theorem whiskerRight_comp_rtimes {X Y Z X' Y' : C} (f : X ⟶ Y) (g : Y ⟶ Z) (
 theorem whiskerLeft_comp_ltimes {X Y Z X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') (h : Y ⟶ Z) :
   X' ◁ f ≫ g ⋉ h = g ⋊ f ≫ Y' ◁ h := by simp
 
-section IsPremonoidal
+class IsStrict (C : Type u) [Category C] [MonoidalCategoryStruct C] : Prop where
+  tensor_assoc : ∀ {X Y Z : C}, (X ⊗ Y) ⊗ Z = X ⊗ (Y ⊗ Z)
+  unit_tensor : ∀ {X : C}, 𝟙_ C ⊗ X = X
+  tensor_unit : ∀ {X : C}, X ⊗ 𝟙_ C = X
+  associator_eq_id : ∀ {X Y Z : C}, (α_ X Y Z).hom = eq_hom tensor_assoc
+  leftUnitor_eq_id : ∀ {X : C}, (λ_ X).hom = eq_hom unit_tensor
+  rightUnitor_eq_id : ∀ {X : C}, (ρ_ X).hom = eq_hom tensor_unit
+section IsBinoidal
 
-variable [IsPremonoidal C]
-
-theorem pentagon {W X Y Z : C} :
-  (α_ W X Y).hom ▷ Z ≫ (α_ W (X ⊗ Y) Z).hom ≫ W ◁ (α_ X Y Z).hom =
-    (α_ (W ⊗ X) Y Z).hom ≫ (α_ W X (Y ⊗ Z)).hom := IsPremonoidal.pentagon W X Y Z
-
-theorem triangle {X Y : C} : (α_ X (𝟙_ _) Y).hom ≫ X ◁ (λ_ Y).hom = (ρ_ X).hom ▷ Y
-  := IsPremonoidal.triangle X Y
+variable [IsBinoidal C]
 
 @[simp]
 theorem whiskerLeft_id {X Y : C} : X ◁ 𝟙 Y = 𝟙 (X ⊗ Y)
-  := IsPremonoidal.whiskerLeft_id _ _
+  := IsBinoidal.whiskerLeft_id _ _
 
 @[simp]
 theorem id_whiskerRight {X Y : C} : 𝟙 X ▷ Y = 𝟙 (X ⊗ Y)
-  := IsPremonoidal.id_whiskerRight _ _
+  := IsBinoidal.id_whiskerRight _ _
+
+@[simp]
+theorem whiskerLeft_eq_hom {X Y Z : C} (p : Y = Z) : X ◁ (eq_hom p) = eq_hom (by rw [p])
+  := by cases p; simp
+
+@[simp]
+theorem eq_hom_whiskerRight {X Y Z : C} (p : X = Y) : eq_hom p ▷ Z = eq_hom (by rw [p])
+  := by cases p; simp
 
 @[reassoc, simp]
 theorem whiskerLeft_comp {X Y Z W : C} (f : X ⟶ Y) (g : Y ⟶ Z)
-  : W ◁ (f ≫ g) = (W ◁ f) ≫ (W ◁ g) := IsPremonoidal.whiskerLeft_comp f g
+  : W ◁ (f ≫ g) = (W ◁ f) ≫ (W ◁ g) := IsBinoidal.whiskerLeft_comp f g
 
 @[reassoc, simp]
 theorem whiskerRight_comp {X Y Z W : C} (f : X ⟶ Y) (g : Y ⟶ Z)
-  : (f ≫ g) ▷ W = (f ▷ W) ≫ (g ▷ W) :=  IsPremonoidal.whiskerRight_comp f g
+  : (f ≫ g) ▷ W = (f ▷ W) ≫ (g ▷ W) :=  IsBinoidal.whiskerRight_comp f g
 
 @[reassoc, simp]
 theorem whiskerRight_comp_inv {X Y Z : C} (f : X ⟶ Y) [IsIso f]
@@ -185,7 +194,7 @@ theorem inv_rtimes {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') [IsIso f] [IsIs
 -- TODO: tensorHom is iso, ltimes is iso, rtimes is iso
 
 theorem tensorHom_def {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) :
-  f ⊗ g = (f ▷ X₂) ≫ (Y₁ ◁ g) := IsPremonoidal.tensorHom_def f g
+  f ⊗ g = (f ▷ X₂) ≫ (Y₁ ◁ g) := IsBinoidal.tensorHom_def f g
 
 theorem tensor_eq_ltimes {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) :
   f ⊗ g = f ⋉ g := tensorHom_def f g
@@ -212,9 +221,106 @@ theorem inv_tensor_right {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂
 @[simp]
 theorem tensor_id {X Y : C} : 𝟙 X ⊗ 𝟙 Y = 𝟙 (X ⊗ Y) := by simp [tensorHom_def]
 
+@[simp]
+theorem tensorHom_eq_hom {X₁ Y₁ X₂ Y₂ : C} (p : X₁ = Y₁) (q : X₂ = Y₂) :
+  eq_hom p ⊗ eq_hom q = eq_hom (by rw [p, q]) := by cases p; cases q; simp
+
 theorem id_tensorHom {X Y Z : C} (f : X ⟶ Y) : 𝟙 Z ⊗ f = Z ◁ f := by simp [tensorHom_def]
 
 theorem tensorHom_id {X Y Z : C} (f : X ⟶ Y) : f ⊗ 𝟙 Z = f ▷ Z := by simp [tensorHom_def]
+
+@[simp]
+theorem ltimes_id {X Y : C} : 𝟙 X ⋉ 𝟙 Y = 𝟙 (X ⊗ Y) := by simp [ltimes]
+
+@[simp]
+theorem rtimes_id {X Y : C} : 𝟙 X ⋊ 𝟙 Y = 𝟙 (X ⊗ Y) := by simp [rtimes]
+
+theorem comp_ltimes {X Y Z X' Y' : C} (f : X ⟶ Y) (g : Y ⟶ Z) (h : X' ⟶ Y') :
+  (f ≫ g) ⋉ h = f ▷ X' ≫ g ⋉ h := by simp [ltimes]
+
+theorem ltimes_comp {X Y X' Y' Z' : C} (f : X ⟶ Y) (g : X' ⟶ Y') (h : Y' ⟶ Z') :
+  f ⋉ (g ≫ h) = f ⋉ g ≫ Y ◁ h := by simp [ltimes]
+
+theorem comp_rtimes {X Y Z X' Y' : C} (f : X ⟶ Y) (g : Y ⟶ Z) (h : X' ⟶ Y') :
+  (f ≫ g) ⋊ h = f ⋊ h ≫ (g ▷ Y') := by simp [rtimes]
+
+theorem rtimes_comp {X Y X' Y' Z' : C} (f : X ⟶ Y) (g : X' ⟶ Y') (h : Y' ⟶ Z') :
+  f ⋊ (g ≫ h) = X ◁ g ≫ f ⋊ h := by simp [rtimes]
+
+@[simp]
+instance Central.id {X : C} : Central (𝟙 X) where
+  left_sliding := by simp [ltimes, rtimes]
+  right_sliding := by simp [ltimes, rtimes]
+
+@[simp]
+instance Central.eq_hom {X Y : C} (p : X = Y) : Central (eq_hom p) := by cases p; simp
+
+instance Central.comp {X Y Z : C} {f : X ⟶ Y} {g : Y ⟶ Z}
+  [hf : Central f] [hg : Central g] : Central (f ≫ g) where
+  left_sliding h := by
+    simp only [ltimes, whiskerRight_comp, Category.assoc, left_exchange g h, rtimes]
+    rw [<-Category.assoc, left_exchange f h, Category.assoc]
+  right_sliding h := by
+    simp only [ltimes, whiskerLeft_comp, rtimes, Category.assoc, <-right_exchange h g]
+    rw [<-Category.assoc, right_exchange h f, Category.assoc]
+
+instance Central.inv {X Y : C} {f : X ⟶ Y} [IsIso f] [Central f] : Central (inv f) where
+  left_sliding g := (cancel_epi (f ▷ _)).mp (by
+    simp only [← Category.assoc, whiskerRight_comp_inv, Category.id_comp, left_exchange]
+    simp)
+  right_sliding g := (cancel_epi (_ ◁ f)).mp (by
+    rw [whiskerLeft_comp_ltimes, <-right_sliding g]
+    simp only [rtimes, ← Category.assoc, whiskerLeft_comp_inv, Category.id_comp]
+    simp)
+
+instance Central.inv_hom {X Y : C} {f : X ≅ Y} [hf : Central f.hom] : Central f.inv := by
+  convert Central.inv (f := f.hom)
+  simp
+
+theorem Central.hom_inv {X Y : C} {f : X ≅ Y} [hf : Central f.inv] : Central f.hom := by
+  convert Central.inv (f := f.inv)
+  simp
+
+end IsBinoidal
+
+section IsStrict
+
+variable [IsStrict C]
+
+theorem tensor_assoc {X Y Z : C} : (X ⊗ Y) ⊗ Z = X ⊗ (Y ⊗ Z) := IsStrict.tensor_assoc
+
+theorem unit_tensor {X : C} : 𝟙_ C ⊗ X = X := IsStrict.unit_tensor
+
+theorem tensor_unit {X : C} : X ⊗ 𝟙_ C = X := IsStrict.tensor_unit
+
+theorem associator_eq_id {X Y Z : C} : (α_ X Y Z).hom = eq_hom tensor_assoc
+  := IsStrict.associator_eq_id
+
+theorem leftUnitor_eq_id {X : C} : (λ_ X).hom = eq_hom unit_tensor := IsStrict.leftUnitor_eq_id
+
+theorem rightUnitor_eq_id {X : C} : (ρ_ X).hom = eq_hom tensor_unit := IsStrict.rightUnitor_eq_id
+
+-- TODO: need extra conditions on IsStrict...
+-- f ▷ X ▷ Y heq f ▷ (X ⊗ Y)
+-- X ◁ Y ◁ f heq (X ⊗ Y) ◁ f
+-- f ▷ 𝟙_ C heq f
+-- 𝟙_ C ◁ f heq f
+
+-- instance IsStrict.premonoidal [IsBinoidal C] : IsPremonoidal C where
+--   associator_central {X Y Z} := by simp [associator_eq_id]
+--   leftUnitor_central {X} := by simp [leftUnitor_eq_id]
+--   rightUnitor_central {X} := by simp [rightUnitor_eq_id]
+--   associator_naturality f g h := sorry
+--   leftUnitor_naturality f := sorry
+--   rightUnitor_naturality g := sorry
+--   pentagon W X Y Z := by simp [associator_eq_id]
+--   triangle := by simp [associator_eq_id, leftUnitor_eq_id, rightUnitor_eq_id]
+
+end IsStrict
+
+section IsPremonoidal
+
+variable [IsPremonoidal C]
 
 theorem associator_naturality {X₁ X₂ X₃ Y₁ Y₂ Y₃ : C} (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (f₃ : X₃ ⟶ Y₃) :
   ((f₁ ⊗ f₂) ⊗ f₃) ≫ (α_ Y₁ Y₂ Y₃).hom = (α_ X₁ X₂ X₃).hom ≫ (f₁ ⊗ (f₂ ⊗ f₃))
@@ -269,56 +375,14 @@ theorem rightUnitor_inv_naturality {X Y : C} (f : X ⟶ Y) :
   apply (cancel_mono (ρ_ Y).hom).mp
   simp [rightUnitor_naturality]
 
+theorem pentagon {W X Y Z : C} :
+  (α_ W X Y).hom ▷ Z ≫ (α_ W (X ⊗ Y) Z).hom ≫ W ◁ (α_ X Y Z).hom =
+    (α_ (W ⊗ X) Y Z).hom ≫ (α_ W X (Y ⊗ Z)).hom := IsPremonoidal.pentagon W X Y Z
+
+theorem triangle {X Y : C} : (α_ X (𝟙_ _) Y).hom ≫ X ◁ (λ_ Y).hom = (ρ_ X).hom ▷ Y
+  := IsPremonoidal.triangle X Y
+
 -- TODO: interactions with ltimes, rtimes...
-
-@[simp]
-theorem ltimes_id {X Y : C} : 𝟙 X ⋉ 𝟙 Y = 𝟙 (X ⊗ Y) := by simp [ltimes]
-
-@[simp]
-theorem rtimes_id {X Y : C} : 𝟙 X ⋊ 𝟙 Y = 𝟙 (X ⊗ Y) := by simp [rtimes]
-
-theorem comp_ltimes {X Y Z X' Y' : C} (f : X ⟶ Y) (g : Y ⟶ Z) (h : X' ⟶ Y') :
-  (f ≫ g) ⋉ h = f ▷ X' ≫ g ⋉ h := by simp [ltimes]
-
-theorem ltimes_comp {X Y X' Y' Z' : C} (f : X ⟶ Y) (g : X' ⟶ Y') (h : Y' ⟶ Z') :
-  f ⋉ (g ≫ h) = f ⋉ g ≫ Y ◁ h := by simp [ltimes]
-
-theorem comp_rtimes {X Y Z X' Y' : C} (f : X ⟶ Y) (g : Y ⟶ Z) (h : X' ⟶ Y') :
-  (f ≫ g) ⋊ h = f ⋊ h ≫ (g ▷ Y') := by simp [rtimes]
-
-theorem rtimes_comp {X Y X' Y' Z' : C} (f : X ⟶ Y) (g : X' ⟶ Y') (h : Y' ⟶ Z') :
-  f ⋊ (g ≫ h) = X ◁ g ≫ f ⋊ h := by simp [rtimes]
-
-@[simp]
-instance Central.id {X : C} : Central (𝟙 X) where
-  left_sliding := by simp [ltimes, rtimes]
-  right_sliding := by simp [ltimes, rtimes]
-
-instance Central.comp {X Y Z : C} {f : X ⟶ Y} {g : Y ⟶ Z}
-  [hf : Central f] [hg : Central g] : Central (f ≫ g) where
-  left_sliding h := by
-    simp only [ltimes, whiskerRight_comp, Category.assoc, left_exchange g h, rtimes]
-    rw [<-Category.assoc, left_exchange f h, Category.assoc]
-  right_sliding h := by
-    simp only [ltimes, whiskerLeft_comp, rtimes, Category.assoc, <-right_exchange h g]
-    rw [<-Category.assoc, right_exchange h f, Category.assoc]
-
-instance Central.inv {X Y : C} {f : X ⟶ Y} [IsIso f] [Central f] : Central (inv f) where
-  left_sliding g := (cancel_epi (f ▷ _)).mp (by
-    simp only [← Category.assoc, whiskerRight_comp_inv, Category.id_comp, left_exchange]
-    simp)
-  right_sliding g := (cancel_epi (_ ◁ f)).mp (by
-    rw [whiskerLeft_comp_ltimes, <-right_sliding g]
-    simp only [rtimes, ← Category.assoc, whiskerLeft_comp_inv, Category.id_comp]
-    simp)
-
-instance Central.inv_hom {X Y : C} {f : X ≅ Y} [hf : Central f.hom] : Central f.inv := by
-  convert Central.inv (f := f.hom)
-  simp
-
-theorem Central.hom_inv {X Y : C} {f : X ≅ Y} [hf : Central f.inv] : Central f.hom := by
-  convert Central.inv (f := f.inv)
-  simp
 
 instance Central.whiskerRight {X Y Z : C} (f : X ⟶ Y) [hf : Central f] : Central (f ▷ Z) where
   left_sliding g := by

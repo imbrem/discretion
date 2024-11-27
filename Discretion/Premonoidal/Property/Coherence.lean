@@ -107,16 +107,11 @@ end FNotation
 
 end FreeMonoidalCategory
 
--- Now:
+-- Note: for an example of why `Unique (monoidal C)` does not hold in general despite monoidal
+-- coherence, see Jose Brox's answer in:
+-- https://math.stackexchange.com/questions/3725568/how-does-mac-lanes-coherence-theorem-follow-from-the-fact-that-a-tensor-categor?rq=1
 
--- Step 1: every MonoidalHom has a preimage under projectMapAux' id
-
--- Step 2: and therefore, every MonoidalHom has a preimage under projectMap id
-
--- Step 3: but the free monoidal category is thin, and so every monoid hom in fact has the
--- _same_ preimage, and therefore they are all equal!
-
--- Step 4: which in particular, implies:
-
--- instance Unique.instMonoidal : Unique (monoidal C) where
---   unique hf hg := sorry
+-- TODO: investigate in which cases it _does_ hold
+-- For sure: strict monoidal categories
+-- Maybe: _non-strict_ monoidal categories a-la
+-- https://arxiv.org/abs/2303.16740#:~:text=It%20is%20a%20classical%20result,%2C%20called%20its%20non%2Dstrictification.
