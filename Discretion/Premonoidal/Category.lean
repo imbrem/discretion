@@ -127,6 +127,7 @@ class IsStrict (C : Type u) [Category C] [MonoidalCategoryStruct C] : Prop where
   associator_eq_id : ∀ {X Y Z : C}, (α_ X Y Z).hom = eq_hom tensor_assoc
   leftUnitor_eq_id : ∀ {X : C}, (λ_ X).hom = eq_hom unit_tensor
   rightUnitor_eq_id : ∀ {X : C}, (ρ_ X).hom = eq_hom tensor_unit
+
 section IsBinoidal
 
 variable [IsBinoidal C]
@@ -300,21 +301,29 @@ theorem leftUnitor_eq_id {X : C} : (λ_ X).hom = eq_hom unit_tensor := IsStrict.
 
 theorem rightUnitor_eq_id {X : C} : (ρ_ X).hom = eq_hom tensor_unit := IsStrict.rightUnitor_eq_id
 
--- TODO: need extra conditions on IsStrict...
--- f ▷ X ▷ Y heq f ▷ (X ⊗ Y)
--- X ◁ Y ◁ f heq (X ⊗ Y) ◁ f
--- f ▷ 𝟙_ C heq f
--- 𝟙_ C ◁ f heq f
+section IsBinoidal
 
--- instance IsStrict.premonoidal [IsBinoidal C] : IsPremonoidal C where
---   associator_central {X Y Z} := by simp [associator_eq_id]
---   leftUnitor_central {X} := by simp [leftUnitor_eq_id]
---   rightUnitor_central {X} := by simp [rightUnitor_eq_id]
---   associator_naturality f g h := sorry
---   leftUnitor_naturality f := sorry
---   rightUnitor_naturality g := sorry
---   pentagon W X Y Z := by simp [associator_eq_id]
---   triangle := by simp [associator_eq_id, leftUnitor_eq_id, rightUnitor_eq_id]
+variable [IsBinoidal C]
+
+theorem associator_central_of_strict {X Y Z : C} : Central (α_ X Y Z).hom
+  := by simp [associator_eq_id]
+
+theorem leftUnitor_central_of_strict {X : C} : Central (λ_ X).hom
+  := by simp [leftUnitor_eq_id]
+
+theorem rightUnitor_central_of_strict {X : C} : Central (ρ_ X).hom
+  := by simp [rightUnitor_eq_id]
+
+theorem pentagon_of_strict {W X Y Z : C} :
+  (α_ W X Y).hom ▷ Z ≫ (α_ W (X ⊗ Y) Z).hom ≫ W ◁ (α_ X Y Z).hom =
+    (α_ (W ⊗ X) Y Z).hom ≫ (α_ W X (Y ⊗ Z)).hom
+  := by simp [associator_eq_id]
+
+theorem triangle_of_strict {X Y : C} :
+  (α_ X (𝟙_ _) Y).hom ≫ X ◁ (λ_ Y).hom = (ρ_ X).hom ▷ Y
+  := by simp [associator_eq_id, leftUnitor_eq_id, rightUnitor_eq_id]
+
+end IsBinoidal
 
 end IsStrict
 
@@ -374,6 +383,46 @@ theorem rightUnitor_inv_naturality {X Y : C} (f : X ⟶ Y) :
   f ≫ (ρ_ Y).inv = (ρ_ X).inv ≫ f ▷ 𝟙_ C := by
   apply (cancel_mono (ρ_ Y).hom).mp
   simp [rightUnitor_naturality]
+
+section IsStrict
+
+variable [IsStrict C]
+
+theorem tensorHom_assoc {X₁ Y₁ X₂ Y₂ X₃ Y₃ : C} (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (f₃ : X₃ ⟶ Y₃) :
+  HEq ((f₁ ⊗ f₂) ⊗ f₃) (f₁ ⊗ (f₂ ⊗ f₃)) := by
+  rw [<-heq_iff_eq_hom_right_left]
+  convert associator_naturality f₁ f₂ f₃ using 1 <;> simp [associator_eq_id]
+  all_goals simp [tensor_assoc]
+
+theorem whiskerRight_whiskerRight_heq {X Y Z Z' : C} {f : Z ⟶ Z'}
+  : HEq (f ▷ X ▷ Y) (f ▷ (X ⊗ Y)) := by
+  rw [<-heq_iff_eq_hom_right_left]
+  convert associator_naturality_right f using 1 <;> simp [associator_eq_id]
+  all_goals simp [tensor_assoc]
+
+theorem whiskerRight_whiskerLeft_heq {X Y Z Z' : C} {f : Z ⟶ Z'}
+  : HEq ((X ◁ f) ▷ Y) (X ◁ f ▷ Y) := by
+  rw [<-heq_iff_eq_hom_right_left]
+  convert associator_naturality_middle f using 1 <;> simp [associator_eq_id]
+  all_goals simp [tensor_assoc]
+
+theorem whiskerLeft_whiskerLeft_heq {X Y Z Z' : C} {f : Z ⟶ Z'}
+  : HEq ((X ⊗ Y) ◁ f) (X ◁ Y ◁ f) := by
+  rw [<-heq_iff_eq_hom_right_left]
+  convert associator_naturality_left f using 1 <;> simp [associator_eq_id]
+  all_goals simp [tensor_assoc]
+
+theorem unit_whiskerLeft_heq {X Y : C} (f : X ⟶ Y) : HEq (𝟙_ C ◁ f) f := by
+  rw [<-heq_iff_eq_hom_right_left]
+  convert leftUnitor_naturality f using 1 <;> simp [leftUnitor_eq_id]
+  all_goals simp [unit_tensor]
+
+theorem whiskerRight_unit_heq {X Y : C} (f : X ⟶ Y) : HEq (f ▷ 𝟙_ C) f := by
+  rw [<-heq_iff_eq_hom_right_left]
+  convert rightUnitor_naturality f using 1 <;> simp [rightUnitor_eq_id]
+  all_goals simp [tensor_unit]
+
+end IsStrict
 
 theorem pentagon {W X Y Z : C} :
   (α_ W X Y).hom ▷ Z ≫ (α_ W (X ⊗ Y) Z).hom ≫ W ◁ (α_ X Y Z).hom =
