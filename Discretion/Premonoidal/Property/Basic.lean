@@ -422,9 +422,9 @@ instance MonoidalHom.rightUnitor_inv {X : C}
   : MonoidalHom (ρ_ X).inv where
   prop := monoidal.rightUnitor_inv
 
-section IsPremonoidal
+section IsBinoidal
 
-variable [IsPremonoidal C]
+variable [IsBinoidal C]
 
 theorem tensorHom_mem {W : MorphismProperty C}
   [IsStableUnderWhisker W] [IsStableUnderComposition W] {X Y X' Y' : C}
@@ -483,15 +483,21 @@ instance IsStableUnderInverse.instMonoidal
   : IsStableUnderInverse (monoidal C)
   := instMonoidalClosure
 
-instance Central.instMonoidal
-  : Central (monoidal C) where
-  central hf := by induction hf using monoidal.induction' <;> infer_instance
-
 theorem StableUnderInverse.center : StableUnderInverse (center C)
   := λ _ _ _ hf => Monoidal.Central.inv_hom (hf := hf)
 
 theorem IsStableUnderInverse.instCenter : IsStableUnderInverse (center C) where
   stable_under_inverse := StableUnderInverse.center
+
+end IsBinoidal
+
+section IsPremonoidal
+
+variable [IsPremonoidal C]
+
+instance Central.instMonoidal
+  : Central (monoidal C) where
+  central hf := by induction hf using monoidal.induction' <;> infer_instance
 
 instance IsMonoidal.instCenter : IsMonoidal (center C) where
   id_mem _ := Monoidal.Central.id

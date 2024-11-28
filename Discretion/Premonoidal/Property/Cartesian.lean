@@ -3,6 +3,7 @@ import Discretion.Premonoidal.Property.Basic
 import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 import Mathlib.CategoryTheory.Widesubcategory
 import Discretion.MorphismProperty.CartesianSubcategory
+import Discretion.Premonoidal.Property.WideSubcategory
 
 namespace CategoryTheory.MorphismProperty
 
@@ -12,12 +13,14 @@ open MonoidalCategory
 
 open Monoidal
 
-variable {C} [Category C] [MonoidalCategoryStruct C]
+variable {C} [Category C] [MonoidalCategoryStruct C] [IsBinoidal C]
 
-class CartesianMonoidal (W : MorphismProperty C) extends IsMultiplicative W : Type _ where
-  fst : ∀(X Y : C), (X ⊗ Y) ⟶ X
-  snd : ∀(X Y : C), (X ⊗ Y) ⟶ Y
-  fst_prop : ∀(X Y : C), W (fst X Y)
-  snd_prop : ∀(X Y : C), W (snd X Y)
-  monoidal_product_is_cartesian : ∀(X Y : C), IsLimit (BinaryFan.mk (fst X Y) (snd X Y))
-  monoidal_unit_is_terminal : IsTerminal (𝟙_ C)
+class CartesianMonoidal (W : MorphismProperty C) extends IsMonoidal W : Type _ where
+  fst : ∀(X Y : WideSubcategory W), (X ⊗ Y) ⟶ X
+  snd : ∀(X Y : WideSubcategory W), (X ⊗ Y) ⟶ Y
+  monoidal_product_is_cartesian
+    : ∀(X Y : WideSubcategory W), IsLimit (BinaryFan.mk (fst X Y) (snd X Y))
+  monoidal_unit_is_terminal
+    : IsTerminal (𝟙_ (WideSubcategory W))
+
+-- TODO: if a morphism property is CartesianMonoidal, then its WideSubcategory HasBinaryProducts

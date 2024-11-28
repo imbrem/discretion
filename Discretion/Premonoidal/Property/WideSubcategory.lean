@@ -11,13 +11,17 @@ theorem WideSubcategory.hom_ext {W : MorphismProperty C} [W.IsMultiplicative]
   {X Y : WideSubcategory W} (f g : X ⟶ Y)
   (h : f.val = g.val) : f = g := by cases f; cases g; cases h; rfl
 
-variable [MonoidalCategoryStruct C] [IsPremonoidal C]
+variable [MonoidalCategoryStruct C]
 
 open MonoidalCategory
 
 open Monoidal
 
 open MorphismProperty
+
+section IsBinoidal
+
+variable [IsBinoidal C]
 
 instance WideSubcategory.monoidalCategoryStruct (W : MorphismProperty C) [W.IsMonoidal]
   : MonoidalCategoryStruct (WideSubcategory W) where
@@ -81,6 +85,12 @@ instance Monoidal.Central.ofCentral {W : MorphismProperty C} [W.IsMonoidal] [W.C
   left_sliding g := by ext; have _ := mem_central f.prop; simp [left_sliding]
   right_sliding g := by ext; have _ := mem_central f.prop; simp [right_sliding]
 
+end IsBinoidal
+
+section IsPremonoidal
+
+variable [IsPremonoidal C]
+
 instance WideSubcategory.is_premonoidal (W : MorphismProperty C) [W.IsMonoidal]
   : IsPremonoidal (WideSubcategory W) where
   tensorHom_def f g := by ext; simp [Monoidal.tensorHom_def]
@@ -97,3 +107,5 @@ theorem WideSubcategory.is_monoidal (W : MorphismProperty C) [W.IsMonoidal] [W.C
   : IsMonoidal (WideSubcategory W) := inferInstance
 
 -- TODO: WideSubcategory also inherits braidedness
+
+end IsPremonoidal

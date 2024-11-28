@@ -23,7 +23,7 @@ class Iterate.Uniform (C : Type u) [Category C] [HasBinaryCoproducts C] [Iterate
 
 -- Part 1 of Lemma 31 of Goncharov and Schröder (2018, Guarded Traced Categories)
 theorem Iterate.Uniform.squaring {C : Type u} [Category C] [HasBinaryCoproducts C] [Iterate C]
-  {W : MorphismProperty C} [W.ContainsCoproducts] [U : Iterate.Uniform C W]
+  {W : MorphismProperty C} [W.ContainsBinaryCoproducts] [U : Iterate.Uniform C W]
   (codiagonal : ∀{X Y : C} {f : X ⟶ (Y ⨿ X) ⨿ X},
     iterate (iterate f) = iterate (f ≫ coprod.desc (𝟙 (Y ⨿ X)) coprod.inr))
   {X Y : C} {f : X ⟶ Y ⨿ X} : iterate (f ≫ coprod.desc coprod.inl f) = iterate f := by
@@ -65,7 +65,7 @@ theorem Iterate.Uniform.squaring {C : Type u} [Category C] [HasBinaryCoproducts 
 
 -- Part 2 of Lemma 32 of Goncharov and Schröder (2018, Guarded Traced Categories)
 theorem Iterate.Uniform.dinaturality {C : Type u} [Category C] [HasBinaryCoproducts C] [Iterate C]
-  {W : MorphismProperty C} [W.ContainsCoproducts] [U : Iterate.Uniform C W]
+  {W : MorphismProperty C} [W.ContainsBinaryCoproducts] [U : Iterate.Uniform C W]
   (squaring : ∀{X Y : C} {f : X ⟶ Y ⨿ X}, iterate (f ≫ coprod.desc coprod.inl f) = iterate f)
   {X Y Z : C} {f : X ⟶ Y ⨿ Z} {g : Z ⟶ Y ⨿ X}
   : f ≫ coprod.desc (𝟙 Y) (iterate (g ≫ coprod.desc coprod.inl f))
@@ -101,7 +101,7 @@ class Iterate.Conway (C : Type u) [Category C] [HasBinaryCoproducts C] [Iterate 
     : iterate (iterate f) = iterate (f ≫ coprod.desc (𝟙 (Y ⨿ X)) coprod.inr)
 
 theorem Iterate.Uniform.conway {C : Type u} [Category C] [HasBinaryCoproducts C] [Iterate C]
-  {W : MorphismProperty C} [W.ContainsCoproducts] [U : Iterate.Uniform C W]
+  {W : MorphismProperty C} [W.ContainsBinaryCoproducts] [U : Iterate.Uniform C W]
   (naturality : ∀{X Y Z : C} {f : X ⟶ Y ⨿ X} {g : Y ⟶ Z},
     iterate (f ≫ coprod.map g (𝟙 X)) = (iterate f) ≫ g)
   (codiagonal : ∀{X Y : C} {f : X ⟶ (Y ⨿ X) ⨿ X},

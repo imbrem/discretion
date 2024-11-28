@@ -1,4 +1,5 @@
 import Discretion.Premonoidal.Braided
+import Discretion.Premonoidal.Distributive
 import Discretion.Premonoidal.Predicate.Basic
 import Discretion.Premonoidal.Property.Braided
 

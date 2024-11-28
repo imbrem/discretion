@@ -14,8 +14,10 @@ import Discretion.Wk.Set
 import Discretion.Wk.Order
 import Discretion.Correspondence.Definitions
 import Discretion.OrderOrder
-import Discretion.MorphismProperty.BinaryProducts
 import Discretion.MorphismProperty.Basic
+import Discretion.MorphismProperty.BinaryProducts
+import Discretion.MorphismProperty.FiniteProducts
+import Discretion.MorphismProperty.CartesianSubcategory
 import Discretion.Stream.Action
 import Discretion.Submonad.Basic
 import Discretion.Trace.Basic
@@ -26,6 +28,7 @@ import Discretion.Premonoidal.Category
 import Discretion.Premonoidal.Braided
 import Discretion.Premonoidal.Distributive
 import Discretion.Premonoidal.CopyDrop
+import Discretion.Premonoidal.Additive
 import Discretion.Premonoidal.Property.Basic
 import Discretion.Premonoidal.Property.Braided
 import Discretion.Premonoidal.Property.WideSubcategory
