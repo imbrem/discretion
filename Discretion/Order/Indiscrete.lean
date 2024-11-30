@@ -2,16 +2,16 @@ import Mathlib.Order.Basic
 import Mathlib.Logic.Equiv.Defs
 import Mathlib.Logic.Nontrivial.Defs
 import Mathlib.Data.Fintype.Basic
-import Mathlib.Order.BoundedOrder
+import Mathlib.Order.BoundedOrder.Basic
 
 /-- A type synonym to equip a type with the indiscrete preorder, i.e. `∀ a b, a ≤ b` -/
 def Indiscrete (α : Type u) : Type u := α
 
-instance Indiscrete.instNonemptyDisc {α} [h : Nonempty α] : Nonempty (Indiscrete α) := h
+instance Indiscrete.instNonempty {α} [h : Nonempty α] : Nonempty (Indiscrete α) := h
 
-instance Indiscrete.instSubsingletonDisc {α} [h : Subsingleton α] : Subsingleton (Indiscrete α) := h
+instance Indiscrete.instSubsingleton {α} [h : Subsingleton α] : Subsingleton (Indiscrete α) := h
 
-instance Indiscrete.instForAllInhabitedDisc {α} [h : Inhabited α] : Inhabited (Indiscrete α) := h
+instance Indiscrete.instForAllInhabited {α} [h : Inhabited α] : Inhabited (Indiscrete α) := h
 
 instance Indiscrete.instPreorder {α} : Preorder (Indiscrete α) where
   le _ _ := True

@@ -1,6 +1,6 @@
 import Mathlib.Algebra.Group.WithOne.Defs
 import Mathlib.Algebra.Group.Pi.Basic
-import Mathlib.Order.BoundedOrder
+import Mathlib.Order.BoundedOrder.Basic
 import Mathlib.Order.Lattice
 import Mathlib.Order.TypeTags
 

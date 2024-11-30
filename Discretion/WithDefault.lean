@@ -1,7 +1,8 @@
 /- Placeholder until [`#9181`](https://github.com/leanprover-community/mathlib4/pull/9181) -/
 /- Mostly copy-pased from https://github.com/leanprover-community/mathlib4/blob/64630834f1984a7b498ade5d5c895c4a335a093c/Mathlib/Order/WithBot.lean-/
 import Init
-import Mathlib.Order.BoundedOrder
+import Mathlib.Order.BoundedOrder.Basic
+import Mathlib.Order.Monotone.Basic
 import Mathlib.Tactic.Lift
 import Mathlib.Data.Option.Basic
 import Mathlib.Data.Option.NAry

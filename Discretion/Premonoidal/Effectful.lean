@@ -1,3 +1,5 @@
+import Mathlib.Order.BoundedOrder.Basic
+
 import Discretion.Premonoidal.Braided
 import Discretion.Premonoidal.Distributive
 import Discretion.Premonoidal.Predicate.Basic
@@ -11,7 +13,7 @@ open Monoidal
 
 open MorphismProperty
 
-class EffectSystem (C : Type v) [Category C] (E : Type u) [PartialOrder E]
+class EffectSystem (C : Type v) [Category C] (E : Type u) [BoundedOrder E]
   : Type _ where
   eff : E →o MorphismProperty C
   eff_multiplicative : ∀e, IsMultiplicative (eff e)

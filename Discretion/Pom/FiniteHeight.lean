@@ -2,8 +2,8 @@ import Mathlib.Data.Set.Finite
 import Mathlib.Data.Sum.Order
 import Mathlib.Order.Interval.Finset.Defs
 
-import Discretion.OrderOrder
-import Discretion.Discrete
+import Discretion.Order.Basic
+import Discretion.Order.Discrete
 
 def HasFiniteHeight {α : Type u} (_ : Preorder α) : Prop := ∀a : α, Set.Finite (Set.Iic a)
 

@@ -6,6 +6,7 @@ import Mathlib.Data.Finset.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset
 import Mathlib.Algebra.BigOperators.Fin
 import Batteries.Data.Fin.Lemmas
+import Batteries.Data.Fin.Fold
 
 import Discretion.Utils.Cast
 
@@ -13,7 +14,7 @@ theorem Fin.foldl_eq_foldr {α : Type u} {f : α → α → α} [Std.Commutative
   (x : α) (xs : Fin n → α)
   : foldl n (λa i => f a (xs i)) x = foldr n (λi a => f (xs i) a) x := by
   rw [
-    foldr_eq_foldr_list, foldl_eq_foldl_list,
+    foldr_eq_foldr_finRange, foldl_eq_foldl_finRange,
     <-List.foldl_map, <-List.foldr_map,
     List.foldl_eq_foldr
   ]

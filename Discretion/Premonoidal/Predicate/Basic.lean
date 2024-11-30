@@ -2,7 +2,7 @@ import Mathlib.CategoryTheory.Monoidal.Category
 import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 import Mathlib.CategoryTheory.Limits.Shapes.Terminal
 import Mathlib.CategoryTheory.Iso
-import Mathlib.Order.Defs
+import Mathlib.Order.Basic
 
 import Discretion.Premonoidal.Property.Basic
 import Discretion.Premonoidal.Property.Braided

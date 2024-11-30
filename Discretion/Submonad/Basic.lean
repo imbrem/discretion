@@ -1,6 +1,6 @@
 import Mathlib.Data.Set.Defs
 import Mathlib.Order.Basic
-import Mathlib.Order.BoundedOrder
+import Mathlib.Order.BoundedOrder.Basic
 import Mathlib.Data.Set.Operations
 
 import Discretion.Utils.Kleisli

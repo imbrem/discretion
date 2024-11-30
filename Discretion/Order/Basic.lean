@@ -1,5 +1,6 @@
 import Mathlib.Order.Basic
-import Mathlib.Order.BoundedOrder
+import Mathlib.Order.BoundedOrder.Basic
+import Mathlib.Order.Lattice
 
 /-- The empty order on a type `α` -/
 def EmptyLE (α : Type u) : LE α where

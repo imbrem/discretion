@@ -1,10 +1,11 @@
-import Discretion.Basic
+import Discretion.Disc
 import Discretion.OrderSupport
-import Discretion.Discrete
+import Discretion.Order.Basic
+import Discretion.Order.Discrete
+import Discretion.Order.Indiscrete
 import Discretion.FinExcept.Defs
 import Discretion.FinExcept.Option
 import Discretion.FinExcept.Order
-import Discretion.Indiscrete
 import Discretion.WithDefault
 import Discretion.Wk.Nat
 import Discretion.Wk.Fin
@@ -13,7 +14,6 @@ import Discretion.Wk.Multiset
 import Discretion.Wk.Set
 import Discretion.Wk.Order
 import Discretion.Correspondence.Definitions
-import Discretion.OrderOrder
 import Discretion.MorphismProperty.Basic
 import Discretion.MorphismProperty.BinaryProducts
 import Discretion.MorphismProperty.FiniteProducts

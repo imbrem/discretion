@@ -3,7 +3,7 @@ import Mathlib.Order.Interval.Finset.Defs
 
 import Discretion.Utils.Tuple
 
-import Discretion.OrderOrder
+import Discretion.Order.Basic
 
 def Fin.pocast {n m} (h : n = m) (p: PartialOrder (Fin n)) : PartialOrder (Fin m) where
   le a b := p.le (a.cast h.symm) (b.cast h.symm)

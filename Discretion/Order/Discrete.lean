@@ -1,5 +1,6 @@
-import Discretion.Discrete
+-- import Discretion.Order.Disc
 import Discretion.WithDefault
+import Discretion.Disc
 
 import Mathlib.Order.WithBot
 import Mathlib.Order.Bounds.Basic
