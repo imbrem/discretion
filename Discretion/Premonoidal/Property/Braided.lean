@@ -19,6 +19,10 @@ class ContainsBraidings (W : MorphismProperty C) : Prop where
   braiding_hom_mem : ∀ {X Y : C}, W (σ_ X Y)
   braiding_inv_mem : ∀ {X Y : C}, W (BraidedCategoryStruct.braiding X Y).inv
 
+class IsBraided (W : MorphismProperty C) extends ContainsBraidings W, IsMonoidal W : Prop where
+
+instance {W : MorphismProperty C} [ContainsBraidings W] [IsMonoidal W] : IsBraided W := ⟨⟩
+
 theorem braiding_hom_mem {W : MorphismProperty C} [ContainsBraidings W] {X Y : C}
   : W (σ_ X Y) := ContainsBraidings.braiding_hom_mem
 
@@ -329,9 +333,8 @@ instance IsStableUnderInverse.instBraided
   : IsStableUnderInverse (braided C)
   := instBraidedClosure
 
-variable [IsBraided C]
+variable [CategoryTheory.IsBraided C]
 
-instance ContainsBraidings.instCenter
-  [BraidedCategoryStruct C] [IsBraided C] : ContainsBraidings (center C) where
+instance ContainsBraidings.instCenter : ContainsBraidings (center C) where
   braiding_hom_mem := braiding_central
   braiding_inv_mem := braiding_inv_central
