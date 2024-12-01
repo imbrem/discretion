@@ -4,6 +4,7 @@ import Discretion.Premonoidal.Braided
 import Discretion.Premonoidal.Distributive
 import Discretion.Premonoidal.Predicate.Basic
 import Discretion.Premonoidal.Property.Braided
+import Discretion.Premonoidal.Property.Commutative
 
 namespace CategoryTheory
 
@@ -13,49 +14,42 @@ open Monoidal
 
 open MorphismProperty
 
-class EffectSystem (C : Type v) [Category C] (E : Type u) [BoundedOrder E]
+class EffectSystem
+  (C : Type v) [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
+  (E : Type u) [PartialOrder E] [BoundedOrder E]
   : Type _ where
   eff : E →o MorphismProperty C
-  eff_multiplicative : ∀e, IsMultiplicative (eff e)
+  eff_top : eff ⊤ = ⊤
+  -- TODO: merge to IsBraided or smt?
+  eff_monoidal : ∀e, (eff e).IsMonoidal
+  eff_braided : ∀e, (eff e).ContainsBraidings
+  commutes : E → E → Prop
+  commutes_symm : ∀e₁ e₂, commutes e₁ e₂ ↔ commutes e₂ e₁
+  commutes_mono : ∀e₁ e₂ e₂', e₂ ≤ e₂' → commutes e₁ e₂' → commutes e₁ e₂
+  commutes_bot : ∀e, commutes ⊥ e
+  eff_commutes : ∀e₁ e₂, commutes e₁ e₂ → Commutes (eff e₁) (eff e₂)
+
+attribute [simp] EffectSystem.eff_top
 
 namespace EffectSystem
 
-variable {E : Type u} [PartialOrder E]
-
--- class IsMonoidal
---   (C : Type v)
---   [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C] [EffectSystem C E]
---   (e : E)
---   : Prop where
---   eff_monoidal : (eff (C := C) e).IsMonoidal
-
--- class IsBraided
---   (C : Type v)
---   [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C] [EffectSystem C E]
---   (e : E)
---   extends IsMonoidal C e : Prop where
---   eff_braided : (eff (C := C) e).ContainsBraidings
-
-class Monoidal
+variable
   (C : Type v)
   [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
-  (E : Type u) [PartialOrder E] [EffectSystem C E]
-  : Prop where
-  eff_monoidal : ∀e : E, (eff (C := C) e).IsMonoidal
+  {E : Type u} [PartialOrder E] [BoundedOrder E]
+  [EffectSystem C E]
 
-class Braided
-  (C : Type v)
-  [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
-  (E : Type u) [PartialOrder E] [EffectSystem C E]
-  extends Monoidal C E : Prop where
-  eff_braided : ∀e: E, (eff (C := C) e).ContainsBraidings
+-- TODO: make typeclasses?
 
-class IsCentral
-  (C : Type v)
-  [Category C] [MonoidalCategoryStruct C] [EffectSystem C E]
-  (e : E)
-  : Prop where
-  eff_central : (eff (C := C) e).Central
+abbrev commutative (e : E) : Prop := commutes C e e
+
+abbrev central (e : E) : Prop := commutes C e ⊤
+
+theorem eff_central_central {e : E} (h : central C e) : (eff (C := C) e).Central
+  := Central.of_commutes_top (h := by convert eff_commutes _ _ h; rw [eff_top])
+
+instance eff_bot_central : (eff (C := C) (E := E) ⊥).Central
+  := eff_central_central C (commutes_bot ⊤)
 
 end EffectSystem
 

@@ -1,5 +1,6 @@
 import Discretion.Premonoidal.Category
 import Discretion.MorphismProperty.Basic
+import Discretion.MorphismProperty.Mul
 
 namespace CategoryTheory
 
@@ -272,21 +273,27 @@ class ContainsMonoidalStructure (W : MorphismProperty C) : Prop where
   rightUnitor_hom_mem : ∀ {X : C}, W (ρ_ X).hom
   rightUnitor_inv_mem : ∀ {X : C}, W (ρ_ X).inv
 
+@[simp]
 theorem associator_hom_mem {W : MorphismProperty C} [ContainsMonoidalStructure W] {X Y Z : C}
   : W (α_ X Y Z).hom := ContainsMonoidalStructure.associator_hom_mem
 
+@[simp]
 theorem associator_inv_mem {W : MorphismProperty C} [ContainsMonoidalStructure W] {X Y Z : C}
   : W (α_ X Y Z).inv := ContainsMonoidalStructure.associator_inv_mem
 
+@[simp]
 theorem leftUnitor_hom_mem {W : MorphismProperty C} [ContainsMonoidalStructure W] {X : C}
   : W (λ_ X).hom := ContainsMonoidalStructure.leftUnitor_hom_mem
 
+@[simp]
 theorem leftUnitor_inv_mem {W : MorphismProperty C} [ContainsMonoidalStructure W] {X : C}
   : W (λ_ X).inv := ContainsMonoidalStructure.leftUnitor_inv_mem
 
+@[simp]
 theorem rightUnitor_hom_mem {W : MorphismProperty C} [ContainsMonoidalStructure W] {X : C}
   : W (ρ_ X).hom := ContainsMonoidalStructure.rightUnitor_hom_mem
 
+@[simp]
 theorem rightUnitor_inv_mem {W : MorphismProperty C} [ContainsMonoidalStructure W] {X : C}
   : W (ρ_ X).inv := ContainsMonoidalStructure.rightUnitor_inv_mem
 
@@ -299,25 +306,30 @@ instance ContainsMonoidalStructure.instTop : ContainsMonoidalStructure (⊤ : Mo
   rightUnitor_hom_mem := True.intro
   rightUnitor_inv_mem := True.intro
 
+theorem ContainsMonoidalStructure.of_le {W W' : MorphismProperty C}
+  (h : W ≤ W') [ContainsMonoidalStructure W] : ContainsMonoidalStructure W' where
+  associator_hom_mem := h _ associator_hom_mem
+  associator_inv_mem := h _ associator_inv_mem
+  leftUnitor_hom_mem := h _ leftUnitor_hom_mem
+  leftUnitor_inv_mem := h _ leftUnitor_inv_mem
+  rightUnitor_hom_mem := h _ rightUnitor_hom_mem
+  rightUnitor_inv_mem := h _ rightUnitor_inv_mem
+
+-- TODO: should these be instances?
 instance ContainsMonoidalStructure.sup_left {W W' : MorphismProperty C}
-  [ContainsMonoidalStructure W]
-  : ContainsMonoidalStructure (W ⊔ W') where
-  associator_hom_mem := Or.inl associator_hom_mem
-  associator_inv_mem := Or.inl associator_inv_mem
-  leftUnitor_hom_mem := Or.inl leftUnitor_hom_mem
-  leftUnitor_inv_mem := Or.inl leftUnitor_inv_mem
-  rightUnitor_hom_mem := Or.inl rightUnitor_hom_mem
-  rightUnitor_inv_mem := Or.inl rightUnitor_inv_mem
+  [ContainsMonoidalStructure W] : ContainsMonoidalStructure (W ⊔ W') := of_le le_sup_left
 
 instance ContainsMonoidalStructure.sup_right {W W' : MorphismProperty C}
-  [ContainsMonoidalStructure W']
-  : ContainsMonoidalStructure (W ⊔ W') where
-  associator_hom_mem := Or.inr associator_hom_mem
-  associator_inv_mem := Or.inr associator_inv_mem
-  leftUnitor_hom_mem := Or.inr leftUnitor_hom_mem
-  leftUnitor_inv_mem := Or.inr leftUnitor_inv_mem
-  rightUnitor_hom_mem := Or.inr rightUnitor_hom_mem
-  rightUnitor_inv_mem := Or.inr rightUnitor_inv_mem
+  [ContainsMonoidalStructure W'] : ContainsMonoidalStructure (W ⊔ W') := of_le le_sup_right
+
+instance ContainsMonoidalStructure.cc {W : MorphismProperty C} [ContainsMonoidalStructure W]
+  : ContainsMonoidalStructure (cc W) := of_le (cc_increasing W)
+
+instance ContainsMonoidalStructure.mul_left {W W' : MorphismProperty C}
+  [ContainsMonoidalStructure W] : ContainsMonoidalStructure (W * W') := of_le le_mul_left
+
+instance ContainsMonoidalStructure.mul_right {W W' : MorphismProperty C}
+  [ContainsMonoidalStructure W'] : ContainsMonoidalStructure (W * W') := of_le le_mul_right
 
 instance ContainsMonoidalStructure.inf {W W' : MorphismProperty C}
   [ContainsMonoidalStructure W] [ContainsMonoidalStructure W']
@@ -347,6 +359,26 @@ instance {W : MorphismProperty C}
   [ContainsMonoidalStructure W] [IsMultiplicative W] [IsStableUnderWhisker W]
   : IsMonoidal W := ⟨⟩
 
+@[simp]
+theorem monoidal_le {W : MorphismProperty C} [IsMonoidal W] : monoidal C ≤ W :=
+  by intro X Y f hf; induction hf using monoidal.induction' with
+  | comp _ _ hf hg => exact comp_mem _ _ _ hf hg
+  | whiskerLeft _ hf => exact whiskerLeft_mem hf
+  | whiskerRight _ hf => exact whiskerRight_mem hf
+  | _ => simp [id_mem, *]
+
+theorem sup_monoidal {W : MorphismProperty C} [IsMonoidal W] : W ⊔ monoidal C = W := by simp
+
+theorem monoidal_sup {W : MorphismProperty C} [IsMonoidal W] : monoidal C ⊔ W = W := by simp
+
+@[simp]
+theorem mul_monoidal {W : MorphismProperty C} [IsMonoidal W] : W * monoidal C = W
+  := by simp [mul_def, cc_of_stable]
+
+@[simp]
+theorem monoidal_mul {W : MorphismProperty C} [IsMonoidal W] : monoidal C * W = W
+  := by simp [mul_def, cc_of_stable]
+
 instance IsMonoidal.instWhiskerClosure {W : MorphismProperty C} [ContainsMonoidalStructure W]
   : IsMonoidal (whiskerClosure W) where
   id_mem _ := whiskerClosure.id
@@ -366,6 +398,9 @@ instance IsMonoidal.instMonoidalClosure {W : MorphismProperty C}
 instance IsMonoidal.instMonoidal {C : Type _} [Category C] [MonoidalCategoryStruct C]
   : IsMonoidal (monoidal C) := instMonoidalClosure
 
+theorem IsMonoidal.inf {W W' : MorphismProperty C}
+  [IsMonoidal W] [IsMonoidal W'] : IsMonoidal (W ⊓ W') := inferInstance
+
 -- TODO: inf lore; monoidal is the smallest ContainsMonoidal
 
 def center (C) [Category C] [MonoidalCategoryStruct C] : MorphismProperty C
@@ -376,6 +411,22 @@ class Central (W : MorphismProperty C) : Prop where
 
 instance Central.instCenter : Central (center C) where
   central hf := hf
+
+instance Central.instBot : Central (⊥ : MorphismProperty C) where
+  central hf := False.elim hf
+
+instance Central.sup {W W' : MorphismProperty C} [Central W] [Central W']
+  : Central (W ⊔ W') where
+  central hf := by cases hf with
+    | inl hf => exact central hf
+    | inr hf => exact central hf
+
+-- TODO: should these be instances?
+instance Central.inf_left {W W' : MorphismProperty C} [Central W] : Central (W ⊓ W') where
+  central hf := central hf.1
+
+instance Central.inf_right {W W' : MorphismProperty C} [Central W'] : Central (W ⊓ W') where
+  central hf := central hf.2
 
 theorem mem_central {W : MorphismProperty C} [Central W] {X Y : C} {f : X ⟶ Y}
   (hf : W f) : Monoidal.Central f := Central.central hf
@@ -426,6 +477,30 @@ section IsBinoidal
 
 variable [IsBinoidal C]
 
+instance IsStableUnderWhisker.cc {W : MorphismProperty C} [IsStableUnderWhisker W]
+  : IsStableUnderWhisker (cc W) where
+  whiskerLeft_mem f hf := by induction hf with
+    | base f hf => exact cc.base _  (whiskerLeft_mem f hf)
+    | comp f g hf hg If Ig => convert cc.comp _ _ If Ig; simp
+  whiskerRight_mem f hf := by induction hf with
+    | base f hf => exact cc.base _  (whiskerRight_mem f hf)
+    | comp f g hf hg If Ig => convert cc.comp _ _ If Ig; simp
+
+theorem IsMonoidal.cc {W : MorphismProperty C} [IsMonoidal W] : IsMonoidal (cc W) := inferInstance
+
+instance Central.cc {W : MorphismProperty C} [Central W] : Central (cc W) where
+  central hf := by induction hf with
+    | base f hf => exact central hf
+    | comp f g hf hg If Ig => exact Central.comp
+
+instance IsStableUnderWhisker.mul {W W' : MorphismProperty C}
+  [IsStableUnderWhisker W] [IsStableUnderWhisker W'] : IsStableUnderWhisker (W * W') := cc
+
+theorem IsMonoidal.mul {W W' : MorphismProperty C}
+  [IsMonoidal W] [IsMonoidal W'] : IsMonoidal (W * W') := inferInstance
+
+instance Central.mul {W W' : MorphismProperty C} [Central W] [Central W'] : Central (W * W') := cc
+
 theorem tensorHom_mem {W : MorphismProperty C}
   [IsStableUnderWhisker W] [IsStableUnderComposition W] {X Y X' Y' : C}
   {f : X ⟶ Y} {g : X' ⟶ Y'} (hf : W f) (hg : W g) : W (f ⊗ g)
@@ -472,7 +547,7 @@ instance IsStableUnderInverse.instWhiskerClosure {W : MorphismProperty C}
   )
 
 instance IsStableUnderInverse.instMonoidalStructure : IsStableUnderInverse (monoidalStructure C)
-  := of_inv_mem (λ{X Y} f {hfi} hf => by cases hf <;> simp <;> constructor)
+  := of_inv_mem (λ{X Y} f {hfi} hf => by cases hf <;> simp)
 
 instance IsStableUnderInverse.instMonoidalClosure {W : MorphismProperty C}
   [IsIso W] [IsStableUnderInverse W]

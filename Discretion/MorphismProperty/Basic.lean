@@ -6,6 +6,10 @@ def identities (C) [Category C] : MorphismProperty C := λ X Y f => ∃p: X = Y,
 
 variable {C} [Category C]
 
+@[simp]
+theorem le_identities {W : MorphismProperty C} [ContainsIdentities W] : identities C ≤ W
+  := λX Y f ⟨pf, hf⟩ => by cases pf; cases hf; simp [id_mem]
+
 instance IsMultiplicative.instIdentities : IsMultiplicative (identities C) where
   id_mem X := ⟨rfl, rfl⟩
   comp_mem _ _

@@ -23,20 +23,20 @@ class Central {X Y : C} (f : X ⟶ Y) : Prop where
 
 @[reassoc]
 theorem left_sliding {X Y X' Y' : C}
-  (f : X ⟶ Y) (g : X' ⟶ Y') [Central f] : f ⋉ g = f ⋊ g := Central.left_sliding g
+  (f : X ⟶ Y) (g : X' ⟶ Y') [hf : Central f] : f ⋉ g = f ⋊ g := Central.left_sliding g
 
 @[reassoc]
 theorem right_sliding {X Y X' Y' : C}
-  (f : X ⟶ Y) (g : X' ⟶ Y') [Central g] : f ⋉ g = f ⋊ g := Central.right_sliding f
+  (f : X ⟶ Y) (g : X' ⟶ Y') [hg : Central g] : f ⋉ g = f ⋊ g := Central.right_sliding f
 
 @[reassoc]
 theorem left_exchange {X Y X' Y' : C}
-  (f : X ⟶ Y) (g : X' ⟶ Y') [Central f] : (f ▷ X') ≫ (Y ◁ g) = (X ◁ g) ≫ (f ▷ Y')
+  (f : X ⟶ Y) (g : X' ⟶ Y') [hf : Central f] : (f ▷ X') ≫ (Y ◁ g) = (X ◁ g) ≫ (f ▷ Y')
   := left_sliding f g
 
 @[reassoc]
 theorem right_exchange {X Y X' Y' : C}
-  (f : X ⟶ Y) (g : X' ⟶ Y') [Central g] : (f ▷ X') ≫ (Y ◁ g) = (X ◁ g) ≫ (f ▷ Y')
+  (f : X ⟶ Y) (g : X' ⟶ Y') [hg : Central g] : (f ▷ X') ≫ (Y ◁ g) = (X ◁ g) ≫ (f ▷ Y')
   := right_sliding f g
 
 -- TODO: in fact, everything is central in a _binoidal_ category with sliding; can use this
