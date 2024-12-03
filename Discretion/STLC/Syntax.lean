@@ -1,4 +1,4 @@
-import Discretion.Wk.Fun
+import Discretion.Wk.Fin
 import Discretion.Wk.Multiset
 
 namespace STLC
