@@ -11,6 +11,15 @@ Definitions and utilities for weakening finite de-Bruijn indices (represented as
 def Fin.stepWk {n m} (ρ : Fin n -> Fin m) : Fin n -> Fin (m + 1)
   := Fin.succ ∘ ρ
 
+theorem Fin.stepWk_injective (n m) : Function.Injective (@stepWk n m) := λ ρ σ h => by
+  funext k
+  have h := congr_fun h k
+  simp only [stepWk, Function.comp_apply, succ_inj] at h
+  exact h
+
+theorem Fin.stepWk_inj {n m} {ρ σ : Fin n -> Fin m} : stepWk ρ = stepWk σ ↔ ρ = σ
+  := ⟨λh => stepWk_injective _ _ h, λh => by cases h; rfl⟩
+
 /-- Lift a finite weakening under a binder -/
 def Fin.liftWk {n m} (ρ : Fin n -> Fin m) : Fin (n + 1) -> Fin (m + 1)
   := Fin.cases 0 (Fin.succ ∘ ρ)
@@ -30,6 +39,26 @@ theorem Fin.liftWk_injective (n m) : Function.Injective (@liftWk n m) := by
   funext k
   have H': liftWk ρ k.succ = liftWk σ k.succ := by rw [H]
   exact Fin.succ_injective _ H'
+
+theorem Fin.liftWk_inj {n m} {ρ σ : Fin n -> Fin m} : liftWk ρ = liftWk σ ↔ ρ = σ
+  := ⟨λh => liftWk_injective _ _ h, λh => by cases h; rfl⟩
+
+@[simp]
+theorem Fin.liftWk_ne_stepWk {n m}
+  (ρ : Fin n → Fin m)
+  (σ : Fin (n + 1) → Fin m)
+  : liftWk ρ ≠ stepWk σ := by
+  intro h
+  have h' := congr_fun h 0
+  simp only [liftWk, cases_zero, stepWk, Function.comp_apply] at h'
+  cases h'
+
+@[simp]
+theorem Fin.stepWk_ne_liftWk {n m}
+  (ρ : Fin n → Fin m)
+  (σ : Fin (n + 1) → Fin m)
+  : stepWk σ ≠ liftWk ρ := Ne.symm (Fin.liftWk_ne_stepWk _ _)
+
 
 theorem Fin.liftWk_comp {n m} (ρ : Fin m -> Fin k) (σ : Fin n -> Fin m)
     : liftWk (ρ ∘ σ) = liftWk ρ ∘ liftWk σ := by
@@ -210,3 +239,62 @@ theorem Fin.FWkn.comp {n m o : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {Ξ 
 theorem Fin.FEWkn.toFWkn {n m : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {ρ : Fin m → Fin n}
   (h : Fin.FEWkn Γ Δ ρ) : Fin.FWkn Γ Δ ρ
   := le_of_eq h
+
+inductive Nat.Wk : Nat → Nat → Type
+  | nil : Wk 0 0
+  | step {n m} : Wk n m -> Wk (n + 1) m
+  | lift {n m} : Wk n m -> Wk (n + 1) (m + 1)
+
+def Nat.Wk.id : ∀n, Wk n n
+  | 0 => .nil
+  | n + 1 => (id n).lift
+
+def Nat.Wk.ix {n m} : Nat.Wk n m -> Fin m → Fin n
+  | .nil => _root_.id
+  | .step ρ => Fin.stepWk (ix ρ)
+  | .lift ρ => Fin.liftWk (ix ρ)
+
+@[simp]
+theorem Nat.Wk.ix_id {n} : ix (id n) = _root_.id := by
+  induction n <;> simp [id, ix, Fin.liftWk_id, *]
+
+theorem Nat.Wk.ix_injective {n m} : Function.Injective (@ix n m) := λρ σ h => by induction ρ with
+  | nil => cases σ; rfl
+  | step _ I => cases σ with
+    | step =>
+      simp only [ix, Fin.stepWk_inj] at h
+      rw [I _ h]
+    | lift => simp [ix] at h
+  | lift _ I => cases σ with
+    | step => simp [ix] at h
+    | lift =>
+      simp only [ix, Fin.liftWk_inj] at h
+      rw [I _ h]
+
+theorem Nat.Wk.ix_inj {n m} {ρ σ : Nat.Wk n m} : ix ρ = ix σ ↔ ρ = σ
+  := ⟨λh => ix_injective h, λh => by cases h; rfl⟩
+
+structure Nat.Split (n m k : ℕ) where
+  lwk : Wk n m
+  rwk : Wk n k
+
+def Nat.Split.symm {n m k} (ρ : Nat.Split n m k) : Nat.Split n k m
+  := ⟨ρ.rwk, ρ.lwk⟩
+
+@[match_pattern]
+def Nat.Split.nil : Nat.Split 0 0 0 := ⟨Wk.nil, Wk.nil⟩
+
+@[match_pattern]
+def Nat.Split.left {n m k} (ρ : Nat.Split n m k) : Nat.Split (n + 1) (m + 1) k
+  := ⟨ρ.lwk.lift, ρ.rwk.step⟩
+
+@[match_pattern]
+def Nat.Split.right {n m k} (ρ : Nat.Split n m k) : Nat.Split (n + 1) m (k + 1)
+  := ⟨ρ.lwk.step, ρ.rwk.lift⟩
+
+@[match_pattern]
+def Nat.Split.both {n m k} (ρ : Nat.Split n m k) : Nat.Split (n + 1) (m + 1) (k + 1)
+  := ⟨ρ.lwk.lift, ρ.rwk.lift⟩
+
+def Nat.Split.bwk {n} (ρ : Wk n n) : Nat.Split n n n
+  := ⟨ρ, ρ⟩
