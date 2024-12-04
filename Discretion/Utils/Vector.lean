@@ -85,14 +85,22 @@ theorem cons_le_iff {a b : Vector α n} {x y : α}
   : x ::ᵥ a ≤ y ::ᵥ b ↔ x ≤ y ∧ a ≤ b := ⟨λh => ⟨head_le h, tail_le h⟩, λh => cons_le h.1 h.2⟩
 
 theorem inductionOn_le {motive : ∀{n} (a b : Vector α n), a ≤ b → Prop}
-  {n} {a b : Vector α n} (h : a ≤ b)
   (nil : motive Vector.nil Vector.nil nil_le)
   (cons : ∀{n} (x y : α) (a b : Vector α n),
     (h : x ≤ y) → (h' : a ≤ b) → motive a b h' → motive (x ::ᵥ a) (y ::ᵥ b) (cons_le h h')
-  ) : motive a b h := by cases a, b using casesOn₂ with
+  ) {n} {a b : Vector α n} (h : a ≤ b) : motive a b h := by cases a, b using casesOn₂ with
   | nil => exact nil
   | cons x y xs ys =>
-    exact cons x y xs ys (head_le h) (tail_le h) (inductionOn_le (tail_le h) nil cons)
+    exact cons x y xs ys (head_le h) (tail_le h) (inductionOn_le nil cons (tail_le h))
+
+theorem casesOn_le {motive : ∀{n} (a b : Vector α n), a ≤ b → Prop}
+  (nil : motive Vector.nil Vector.nil nil_le)
+  (cons : ∀{n} (x y : α) (a b : Vector α n),
+    (h : x ≤ y) → (h' : a ≤ b) → motive (x ::ᵥ a) (y ::ᵥ b) (cons_le h h')
+  ) {n} {a b : Vector α n} (h : a ≤ b) : motive a b h := by cases a, b using casesOn₂ with
+  | nil => exact nil
+  | cons x y xs ys =>
+    exact cons x y xs ys (head_le h) (tail_le h)
 
 end LE
 

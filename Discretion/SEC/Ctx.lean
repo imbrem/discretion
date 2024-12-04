@@ -1,9 +1,10 @@
 import Mathlib.CategoryTheory.Monoidal.Free.Basic
 import Mathlib.Order.CompleteBooleanAlgebra
 import Mathlib.Data.Fintype.Order
-import Mathlib.Data.Vector.Basic
 
-import Discretion.Utils.Vector
+import Discretion.Vector.Basic
+
+open Mathlib
 
 open CategoryTheory.MonoidalCategory
 
@@ -23,12 +24,31 @@ def Ctx.cons {τ} (Γ : Ctx τ) (A : τ) : Ctx τ := A :: Γ
 
 infixr:67 " ;; " => Ctx.cons
 
+inductive Nat.Split : ℕ → ℕ → ℕ → Type where
+  | nil : Split 0 0 0
+  | both {n m k} (ρ : Split n m k) : Split (n + 1) (m + 1) (k + 1)
+  | left {n m k} (ρ : Split n m k) : Split (n + 1) (m + 1) k
+  | right {n m k} (ρ : Split n m k) : Split (n + 1) m (k + 1)
+  | skip {n m k} (ρ : Split n m k) : Split (n + 1) m k
+
+def Nat.Wk (n m : ℕ) := Nat.Split n 0 m
+
+-- TODO: and friends... but also, just a Wk pair might work? might even be cleaner?
+
 inductive Ctx.Split {τ} : Ctx τ → Ctx τ → Ctx τ → Type where
   | nil : Split [] [] []
-  | skip (ρ : Split Γ Δ Ξ) (A) : Split (Γ ;; A) Δ Ξ
+  | both (ρ : Split Γ Δ Ξ) (A) : Split (Γ ;; A) (Δ ;; A) (Ξ ;; A)
   | left (ρ : Split Γ Δ Ξ) (A) : Split (Γ ;; A) (Δ ;; A) Ξ
   | right (ρ : Split Γ Δ Ξ) (A) : Split (Γ ;; A) Δ (Ξ ;; A)
-  | both (ρ : Split Γ Δ Ξ) (A) : Split (Γ ;; A) (Δ ;; A) (Ξ ;; A)
+  | skip (ρ : Split Γ Δ Ξ) (A) : Split (Γ ;; A) Δ Ξ
+
+theorem Ctx.Split.length_left_le {τ} {Γ Δ Ξ : Ctx τ}
+  (ρ : Γ.Split Δ Ξ) : Δ.length ≤ Γ.length := by
+  induction ρ <;> simp only [cons, List.length_cons, List.length_nil] <;> omega
+
+theorem Ctx.Split.length_right_le {τ} {Γ Δ Ξ : Ctx τ}
+  (ρ : Γ.Split Δ Ξ) : Ξ.length ≤ Γ.length := by
+  induction ρ <;> simp only [cons, List.length_cons, List.length_nil] <;> omega
 
 def Ctx.Wk {τ} (Γ : Ctx τ) (Δ : Ctx τ) := Ctx.Split Γ [] Δ
 
@@ -173,6 +193,12 @@ theorem Quant.c_del : c del = {0, 1} := by ext n; simp [Quant.c, or_comm]
 @[simp]
 theorem Quant.c_bot : c ⊥ = {1} := by ext n; simp [Quant.c]
 
+theorem Quant.is_del_mono {l r : Quant} : l ≤ r → l.is_del → r.is_del := by
+  cases l <;> cases r <;> simp [copy, Top.top, Bot.bot, del, LE.le]
+
+theorem Quant.is_copy_mono {l r : Quant} : l ≤ r → l.is_copy → r.is_copy := by
+  cases l <;> cases r <;> simp [copy, Top.top, Bot.bot, del, LE.le]
+
 theorem Quant.inf_is_del {l r : Quant} : (l ⊓ r).is_del ↔ l.is_del ∧ r.is_del
   := by simp [is_del, min, SemilatticeInf.inf, Lattice.inf]
 
@@ -236,99 +262,116 @@ def PQuant.c (q : PQuant) : Set ℕ := q.q.c
 
 -- TODO: dc/q/c are monotone, join/meet preserving, etc
 
-def QVec (n : ℕ) := Mathlib.Vector Quant n
-
-def QVec.toList {n} (qs : QVec n) : List Quant := Mathlib.Vector.toList qs
-
-protected theorem QVec.eq {n} (qs₁ qs₂ : QVec n) : QVec.toList qs₁ = QVec.toList qs₂ → qs₁ = qs₂
-  := Mathlib.Vector.eq qs₁ qs₂
-
-protected theorem QVec.eq_iff {n} (qs₁ qs₂ : QVec n) : QVec.toList qs₁ = QVec.toList qs₂ ↔ qs₁ = qs₂
-  := ⟨qs₁.eq qs₂, λh => by simp [h]⟩
-
-@[match_pattern]
-def QVec.nil : QVec 0 := Mathlib.Vector.nil
-
-@[match_pattern]
-def QVec.cons {n} (qs : QVec n) (q : Quant) : QVec (n + 1) := q ::ᵥ qs
-
-infixr:67 " ;;ₙ " => QVec.cons
-
-instance QVec.instPartialOrder {n} : PartialOrder (QVec n)
-  := (inferInstance : PartialOrder (Mathlib.Vector Quant n))
-
-@[elab_as_elim, induction_eliminator]
-def QVec.inductionOn
-  {motive : ∀{n}, QVec n → Sort _} {n} (qs : QVec n)
-  (nil : motive QVec.nil)
-  (cons : ∀{n} (qs : QVec n) (q : Quant), motive qs → motive (qs ;;ₙ q))
-  : motive qs := Mathlib.Vector.inductionOn (C := motive) qs nil (λ{_ qs q} h => cons q qs h)
-
-@[elab_as_elim, cases_eliminator]
-def QVec.casesOn
-  {motive : ∀{n}, QVec n → Sort _} {n} (qs : QVec n)
-  (nil : motive QVec.nil)
-  (cons : ∀{n} (qs : QVec n) (q : Quant), motive (qs ;;ₙ q))
-  : motive qs := Mathlib.Vector.casesOn (motive := motive) qs nil (λhd tl => cons tl hd)
-
-@[simp]
-theorem QVec.toList_nil : QVec.toList QVec.nil = [] := rfl
-
-@[simp]
-theorem QVec.toList_cons {n} (qs : QVec n) (q : Quant)
-  : QVec.toList (qs ;;ₙ q) = q :: QVec.toList qs := rfl
-
-@[simp]
-theorem QVec.toList_length {n} (qs : QVec n) : qs.toList.length = n
-  := Mathlib.Vector.toList_length qs
-
-theorem QVec.cons_eq {n} (qs₁ qs₂ : QVec n) (q₁ q₂ : Quant)
-  : qs₁ ;;ₙ q₁ = qs₂ ;;ₙ q₂ → qs₁ = qs₂ ∧ q₁ = q₂
-  := by simp only [←QVec.eq_iff, toList_cons, List.cons.injEq, and_imp]; aesop
-
-@[simp]
-theorem QVec.cons_eq_iff {n} (qs₁ qs₂ : QVec n) (q₁ q₂ : Quant)
-  : qs₁ ;;ₙ q₁ = qs₂ ;;ₙ q₂ ↔ qs₁ = qs₂ ∧ q₁ = q₂
-  := ⟨QVec.cons_eq qs₁ qs₂ q₁ q₂, λ⟨h₁, h₂⟩ => by simp [h₁, h₂]⟩
-
 inductive Ctx.Split.WQ {τ}
-  : ∀{Γ Δ Ξ : Ctx τ}, Γ.Split Δ Ξ → QVec Γ.length → QVec Δ.length → QVec Ξ.length → Prop
-  | nil : WQ Split.nil QVec.nil QVec.nil QVec.nil
-  | skip {ρ : Split Γ Δ Ξ} (h : WQ ρ qΓ qΔ qΞ) (A) (q)
-    : q.is_del → WQ (Split.skip ρ A) (qΓ ;;ₙ q) qΔ qΞ
-  | left {ρ : Split Γ Δ Ξ} (h : WQ ρ qΓ qΔ qΞ) (A) (q q')
-    : q ≥ q' → WQ (Split.left ρ A) (qΓ ;;ₙ q) (qΔ ;;ₙ q') qΞ
-  | right {ρ : Split Γ Δ Ξ} (h : WQ ρ qΓ qΔ qΞ) (A) (q q')
-    : q ≥ q' → WQ (Split.right ρ A) (qΓ ;;ₙ q) qΔ (qΞ ;;ₙ q')
+  : ∀{Γ Δ Ξ : Ctx τ}, Γ.Split Δ Ξ
+    → Vector' Quant Γ.length
+    → Vector' Quant Δ.length
+    → Vector' Quant Ξ.length → Prop
+  | nil : WQ Split.nil Vector'.nil Vector'.nil Vector'.nil
   | both {ρ : Split Γ Δ Ξ} (h : WQ ρ qΓ qΔ qΞ) (A) (q q' q'')
-    : q ≥ q' → q' ≥ q'' → WQ (Split.both ρ A) (qΓ ;;ₙ q) (qΔ ;;ₙ q') (qΞ ;;ₙ q'')
+    : q.is_copy → q ≥ q' → q ≥ q'' → WQ (Split.both ρ A) (qΓ.cons q) (qΔ.cons q') (qΞ.cons q'')
+  | left {ρ : Split Γ Δ Ξ} (h : WQ ρ qΓ qΔ qΞ) (A) (q q')
+    : q ≥ q' → WQ (Split.left ρ A) (qΓ.cons q) (qΔ.cons q') qΞ
+  | right {ρ : Split Γ Δ Ξ} (h : WQ ρ qΓ qΔ qΞ) (A) (q q')
+    : q ≥ q' → WQ (Split.right ρ A) (qΓ.cons q) qΔ (qΞ.cons q')
+  | skip {ρ : Split Γ Δ Ξ} (h : WQ ρ qΓ qΔ qΞ) (A) (q)
+    : q.is_del → WQ (Split.skip ρ A) (qΓ.cons q) qΔ qΞ
 
--- TODO Q lore; Q ==> WQ
+theorem Ctx.Split.WQ.le_congr
+  {τ} {Γ Δ Ξ : Ctx τ} {ρ : Γ.Split Δ Ξ} {qΓ qΔ qΞ} {qΓ' qΔ' qΞ'}
+  (h : WQ ρ qΓ qΔ qΞ) (hΓ : qΓ ≤ qΓ') (hΔ : qΔ' ≤ qΔ) (hΞ : qΞ' ≤ qΞ)
+  : WQ ρ qΓ' qΔ' qΞ' := by
+  induction h with
+  | nil => cases qΓ'; cases qΔ'; cases qΞ'; constructor
+  | both _ _ _ _ _ hd hxy hxz I =>
+    cases hΓ; cases hΔ; cases hΞ
+    constructor
+    apply I <;> assumption
+    apply Quant.is_copy_mono _ hd
+    assumption
+    apply le_trans _ (le_trans hxy _) <;> assumption
+    apply le_trans _ (le_trans hxz _) <;> assumption
+  | left _ _ _ _ hxy I =>
+    cases hΓ; cases hΔ;
+    constructor
+    apply I <;> assumption
+    apply le_trans _ (le_trans hxy _) <;> assumption
+  | right _ _ _ _ hxy I =>
+    cases hΓ; cases hΞ;
+    constructor
+    apply I <;> assumption
+    apply le_trans _ (le_trans hxy _) <;> assumption
+  | skip _ _ _ hd I =>
+    cases hΓ
+    constructor
+    apply I <;> assumption
+    apply Quant.is_del_mono _ hd
+    assumption
 
-def EVec (ε) (n : ℕ) := Mathlib.Vector ε n
+inductive Ctx.Split.Q {τ}
+  : ∀{Γ Δ Ξ : Ctx τ}, Γ.Split Δ Ξ
+    → Vector' Quant Γ.length
+    → Vector' Quant Δ.length
+    → Vector' Quant Ξ.length → Prop
+  | nil : Q Split.nil Vector'.nil Vector'.nil Vector'.nil
+  | both {ρ : Split Γ Δ Ξ} (h : Q ρ qΓ qΔ qΞ) (A) (q)
+    : q.is_copy → Q (Split.both ρ A) (qΓ.cons q) (qΔ.cons q) (qΞ.cons q)
+  | left {ρ : Split Γ Δ Ξ} (h : Q ρ qΓ qΔ qΞ) (A) (q)
+    : Q (Split.left ρ A) (qΓ.cons q) (qΔ.cons q) qΞ
+  | right {ρ : Split Γ Δ Ξ} (h : Q ρ qΓ qΔ qΞ) (A) (q)
+    : Q (Split.right ρ A) (qΓ.cons q) qΔ (qΞ.cons q)
+  | skip {ρ : Split Γ Δ Ξ} (h : Q ρ qΓ qΔ qΞ) (A) (q)
+    : q.is_del → Q (Split.skip ρ A) (qΓ.cons q) qΔ qΞ
 
-@[match_pattern]
-def EVec.nil {ε} : EVec ε 0 := Mathlib.Vector.nil
+theorem Ctx.Split.Q.toWQ {τ} {Γ Δ Ξ : Ctx τ} {ρ : Γ.Split Δ Ξ}
+  {qΓ qΔ qΞ} (h : Q ρ qΓ qΔ qΞ) : WQ ρ qΓ qΔ qΞ := by induction h <;> constructor <;> simp [*]
 
-@[match_pattern]
-def EVec.cons {ε n} (es : EVec ε n) (e : ε) : EVec ε (n + 1) := e ::ᵥ es
+inductive Ctx.Split.WV {τ} {ε} [LE ε]
+  : ∀{Γ Δ Ξ : Ctx τ}, Γ.Split Δ Ξ
+    → Vector' ε Γ.length
+    → Vector' ε Δ.length
+    → Vector' ε Ξ.length → Prop
+  | nil : WV Split.nil Vector'.nil Vector'.nil Vector'.nil
+  | both {ρ : Split Γ Δ Ξ} (h : WV ρ qΓ qΔ qΞ) (A) (q q' q'')
+    : q ≤ q' → q' ≤ q'' → WV (Split.both ρ A) (qΓ.cons q) (qΔ.cons q') (qΞ.cons q'')
+  | left {ρ : Split Γ Δ Ξ} (h : WV ρ qΓ qΔ qΞ) (A) (q q')
+    : q ≤ q' → WV (Split.left ρ A) (qΓ.cons q) (qΔ.cons q') qΞ
+  | right {ρ : Split Γ Δ Ξ} (h : WV ρ qΓ qΔ qΞ) (A) (q q')
+    : q ≤ q' → WV (Split.right ρ A) (qΓ.cons q) qΔ (qΞ.cons q')
+  | skip {ρ : Split Γ Δ Ξ} (h : WV ρ qΓ qΔ qΞ) (A) (q)
+    : WV (Split.skip ρ A) (qΓ.cons q) qΔ qΞ
 
-infixr:67 " ;;ₑ " => EVec.cons
+def Ctx.Split.leftV {τ ε} {Γ Δ Ξ : Ctx τ}
+  : Γ.Split Δ Ξ → Vector' ε Γ.length → Vector' ε Δ.length
+  | .nil, .nil => .nil
+  | .both ρ _, .cons a v
+  | .left ρ _, .cons a v => (ρ.leftV v).cons a
+  | .right ρ _, .cons a v
+  | .skip ρ _, .cons a v => ρ.leftV v
 
--- TODO: EVec lore
+def Ctx.Split.rightV {τ ε} {Γ Δ Ξ : Ctx τ}
+  : Γ.Split Δ Ξ → Vector' ε Γ.length → Vector' ε Ξ.length
+  | .nil, .nil => .nil
+  | .both ρ _, .cons a v
+  | .right ρ _, .cons a v => (ρ.rightV v).cons a
+  | .left ρ _, .cons a v
+  | .skip ρ _, .cons a v => ρ.rightV v
 
--- TODO WE, E; E ==> WE
+inductive Ctx.Split.V {τ} {ε}
+  : ∀{Γ Δ Ξ : Ctx τ}, Γ.Split Δ Ξ
+    → Vector' ε Γ.length
+    → Vector' ε Δ.length
+    → Vector' ε Ξ.length → Prop
+  | nil : V Split.nil Vector'.nil Vector'.nil Vector'.nil
+  | both {ρ : Split Γ Δ Ξ} (h : V ρ qΓ qΔ qΞ) (A) (q)
+    : V (Split.both ρ A) (qΓ.cons q) (qΔ.cons q) (qΞ.cons q)
+  | left {ρ : Split Γ Δ Ξ} (h : V ρ qΓ qΔ qΞ) (A) (q)
+    : V (Split.left ρ A) (qΓ.cons q) (qΔ.cons q) qΞ
+  | right {ρ : Split Γ Δ Ξ} (h : V ρ qΓ qΔ qΞ) (A) (q)
+    : V (Split.right ρ A) (qΓ.cons q) qΔ (qΞ.cons q)
+  | skip {ρ : Split Γ Δ Ξ} (h : V ρ qΓ qΔ qΞ) (A) (q)
+    : V (Split.skip ρ A) (qΓ.cons q) qΔ qΞ
 
-def UVec (n : ℕ) := Mathlib.Vector Bool n
-
-@[match_pattern]
-def UVec.nil : UVec 0 := Mathlib.Vector.nil
-
-@[match_pattern]
-def UVec.cons {n} (us : UVec n) (u : Bool) : UVec (n + 1) := u ::ᵥ us
-
-infixr:67 " ;;ᵤ " => UVec.cons
-
--- TODO: UVec lore
-
--- TODO WU, U; U ==> WU
+theorem Ctx.Split.V.toWV {τ ε} [Preorder ε] {Γ Δ Ξ : Ctx τ} {ρ : Γ.Split Δ Ξ}
+  {qΓ qΔ qΞ} (h : V (ε := ε) ρ qΓ qΔ qΞ) : WV ρ qΓ qΔ qΞ
+  := by induction h <;> constructor <;> simp [*]
