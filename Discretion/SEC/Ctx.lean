@@ -3,6 +3,8 @@ import Mathlib.Order.CompleteBooleanAlgebra
 import Mathlib.Data.Fintype.Order
 import Mathlib.Data.Vector.Basic
 
+import Discretion.Utils.Vector
+
 open CategoryTheory.MonoidalCategory
 
 namespace SEC
@@ -236,6 +238,14 @@ def PQuant.c (q : PQuant) : Set ℕ := q.q.c
 
 def QVec (n : ℕ) := Mathlib.Vector Quant n
 
+def QVec.toList {n} (qs : QVec n) : List Quant := Mathlib.Vector.toList qs
+
+protected theorem QVec.eq {n} (qs₁ qs₂ : QVec n) : QVec.toList qs₁ = QVec.toList qs₂ → qs₁ = qs₂
+  := Mathlib.Vector.eq qs₁ qs₂
+
+protected theorem QVec.eq_iff {n} (qs₁ qs₂ : QVec n) : QVec.toList qs₁ = QVec.toList qs₂ ↔ qs₁ = qs₂
+  := ⟨qs₁.eq qs₂, λh => by simp [h]⟩
+
 @[match_pattern]
 def QVec.nil : QVec 0 := Mathlib.Vector.nil
 
@@ -243,6 +253,43 @@ def QVec.nil : QVec 0 := Mathlib.Vector.nil
 def QVec.cons {n} (qs : QVec n) (q : Quant) : QVec (n + 1) := q ::ᵥ qs
 
 infixr:67 " ;;ₙ " => QVec.cons
+
+instance QVec.instPartialOrder {n} : PartialOrder (QVec n)
+  := (inferInstance : PartialOrder (Mathlib.Vector Quant n))
+
+@[elab_as_elim, induction_eliminator]
+def QVec.inductionOn
+  {motive : ∀{n}, QVec n → Sort _} {n} (qs : QVec n)
+  (nil : motive QVec.nil)
+  (cons : ∀{n} (qs : QVec n) (q : Quant), motive qs → motive (qs ;;ₙ q))
+  : motive qs := Mathlib.Vector.inductionOn (C := motive) qs nil (λ{_ qs q} h => cons q qs h)
+
+@[elab_as_elim, cases_eliminator]
+def QVec.casesOn
+  {motive : ∀{n}, QVec n → Sort _} {n} (qs : QVec n)
+  (nil : motive QVec.nil)
+  (cons : ∀{n} (qs : QVec n) (q : Quant), motive (qs ;;ₙ q))
+  : motive qs := Mathlib.Vector.casesOn (motive := motive) qs nil (λhd tl => cons tl hd)
+
+@[simp]
+theorem QVec.toList_nil : QVec.toList QVec.nil = [] := rfl
+
+@[simp]
+theorem QVec.toList_cons {n} (qs : QVec n) (q : Quant)
+  : QVec.toList (qs ;;ₙ q) = q :: QVec.toList qs := rfl
+
+@[simp]
+theorem QVec.toList_length {n} (qs : QVec n) : qs.toList.length = n
+  := Mathlib.Vector.toList_length qs
+
+theorem QVec.cons_eq {n} (qs₁ qs₂ : QVec n) (q₁ q₂ : Quant)
+  : qs₁ ;;ₙ q₁ = qs₂ ;;ₙ q₂ → qs₁ = qs₂ ∧ q₁ = q₂
+  := by simp only [←QVec.eq_iff, toList_cons, List.cons.injEq, and_imp]; aesop
+
+@[simp]
+theorem QVec.cons_eq_iff {n} (qs₁ qs₂ : QVec n) (q₁ q₂ : Quant)
+  : qs₁ ;;ₙ q₁ = qs₂ ;;ₙ q₂ ↔ qs₁ = qs₂ ∧ q₁ = q₂
+  := ⟨QVec.cons_eq qs₁ qs₂ q₁ q₂, λ⟨h₁, h₂⟩ => by simp [h₁, h₂]⟩
 
 inductive Ctx.Split.WQ {τ}
   : ∀{Γ Δ Ξ : Ctx τ}, Γ.Split Δ Ξ → QVec Γ.length → QVec Δ.length → QVec Ξ.length → Prop
@@ -271,3 +318,17 @@ infixr:67 " ;;ₑ " => EVec.cons
 -- TODO: EVec lore
 
 -- TODO WE, E; E ==> WE
+
+def UVec (n : ℕ) := Mathlib.Vector Bool n
+
+@[match_pattern]
+def UVec.nil : UVec 0 := Mathlib.Vector.nil
+
+@[match_pattern]
+def UVec.cons {n} (us : UVec n) (u : Bool) : UVec (n + 1) := u ::ᵥ us
+
+infixr:67 " ;;ᵤ " => UVec.cons
+
+-- TODO: UVec lore
+
+-- TODO WU, U; U ==> WU
