@@ -5,19 +5,68 @@ import Mathlib.Data.Fintype.Card
 
 -- TODO: general relation edition...
 inductive List.Wk {α} : List α → List α → Type
-  | nil : List.Wk [] []
-  | step (A) {Γ Δ} : List.Wk Γ Δ → List.Wk (A :: Γ) Δ
-  | lift (A) {Γ Δ} : List.Wk Γ Δ → List.Wk (A :: Γ) (A :: Δ)
+  | nil : Wk [] []
+  | step (A) {Γ Δ} : Wk Γ Δ → Wk (A :: Γ) Δ
+  | lift (A) {Γ Δ} : Wk Γ Δ → Wk (A :: Γ) (A :: Δ)
 
-def List.Wk.id {α} : ∀(Γ : List α), List.Wk Γ Γ
-  | [] => List.Wk.nil
-  | A :: Γ => (List.Wk.id Γ).lift A
+def List.Wk.id {α} : ∀(Γ : List α), Wk Γ Γ
+  | [] => .nil
+  | A :: Γ => (Wk.id Γ).lift A
 
-def List.Wk.drop {α} : ∀(Γ : List α), List.Wk Γ []
-  | [] => List.Wk.nil
-  | A :: Γ => (List.Wk.drop Γ).step A
+def List.Wk.drop {α} : ∀(Γ : List α), Wk Γ []
+  | [] => .nil
+  | A :: Γ => (Wk.drop Γ).step A
+
+def List.Wk.comp {α} {Γ Δ Ξ : List α} : Wk Γ Δ → Wk Δ Ξ → Wk Γ Ξ
+  | .nil, .nil => .nil
+  | .step A ρ, σ | .lift A ρ, .step _ σ => .step A (ρ.comp σ)
+  | .lift A ρ, .lift _ σ => .lift A (ρ.comp σ)
+
+def List.Wk.nw {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Nat.Wk Γ.length Δ.length
+  | _, _, .nil => .nil
+  | _, _, .step _ ρ => ρ.nw.step
+  | _, _, .lift _ ρ => ρ.nw.lift
+
+@[simp]
+theorem List.Wk.nw_id {α} {Γ : List α} : List.Wk.nw (List.Wk.id Γ) = Nat.Wk.id Γ.length
+  := by induction Γ <;> simp only [nw, id, Nat.Wk.id, *]
+
+@[simp]
+theorem List.Wk.nw_comp {α} {Γ Δ Ξ : List α} (ρ : Wk Γ Δ) (σ : Wk Δ Ξ)
+  : List.Wk.nw (ρ.comp σ) = (List.Wk.nw ρ).comp (List.Wk.nw σ) := by
+  induction ρ generalizing Ξ <;> cases σ <;> simp only [nw, comp, Nat.Wk.comp, *]
+
+theorem List.Wk.nw_injective {α} {Γ Δ : List α} : Function.Injective (@List.Wk.nw α Γ Δ)
+  := λ ρ σ h => by
+  induction ρ <;> cases σ
+  <;> simp only [length_cons, nw, Nat.Wk.lift.injEq, Nat.Wk.step.injEq, reduceCtorEq] at h
+  <;> congr
+  <;> apply_assumption
+  <;> rw [h]
+
+@[simp]
+theorem List.Wk.comp_id {α} {Γ Δ : List α} (ρ : Wk Γ Δ) : ρ.comp (Wk.id Δ) = ρ
+  := List.Wk.nw_injective (by simp)
+
+@[simp]
+theorem List.Wk.id_comp {α} {Γ Δ : List α} (ρ : Wk Γ Δ) : (Wk.id Γ).comp ρ = ρ
+  := List.Wk.nw_injective (by simp)
+
+theorem List.Wk.comp_assoc {α} {Γ Δ Ξ Ω : List α} (ρ : Wk Γ Δ) (σ : Wk Δ Ξ) (τ : Wk Ξ Ω)
+  : (ρ.comp σ).comp τ = ρ.comp (σ.comp τ)
+  := List.Wk.nw_injective (by simp [Nat.Wk.comp_assoc])
+
+theorem List.Wk.nw_inj {α} {Γ Δ : List α} {ρ σ : Wk Γ Δ} : List.Wk.nw ρ = List.Wk.nw σ ↔ ρ = σ
+  := nw_injective.eq_iff
+
+-- TODO: List.Wk is a subsingleton if Γ has no duplicates of elements of Δ
+-- (and therefore, in particular, if it has no duplicates at all!)
 
 def List.Split {α} (Γ Δ Ξ : List α) := List.Wk Γ Ξ × List.Wk Δ Ξ
+
+-- TODO: split lore
+
+-- TODO: quant compatibility
 
 /-- The function `ρ` sends `Γ` to `Δ` -/
 def List.FEWkn (Γ Δ : List α) (ρ : Fin Δ.length → Fin Γ.length) : Prop

@@ -1,4 +1,5 @@
 import Discretion.Wk.Fin
+import Discretion.Wk.Quant
 import Discretion.Vector.Basic
 
 inductive Nat.Wk : Nat → Nat → Type
@@ -13,6 +14,12 @@ def Nat.Wk.id : ∀n, Wk n n
 def Nat.Wk.drop : ∀n, Wk n 0
   | 0 => .nil
   | n + 1 => (drop n).step
+
+@[simp]
+def Nat.Wk.comp {n m k} : Nat.Wk n m → Nat.Wk m k → Nat.Wk n k
+  | .nil, .nil => .nil
+  | .step ρ, σ | .lift ρ, .step σ => .step (ρ.comp σ)
+  | .lift ρ, .lift σ => .lift (ρ.comp σ)
 
 @[simp]
 def Nat.Wk.ix {n m} : Nat.Wk n m -> Fin m → Fin n
@@ -32,6 +39,12 @@ abbrev Vector'.wk {n m} (v : Vector' α n) (ρ : Nat.Wk n m) : Vector' α m := �
 theorem Nat.Wk.ix_id {n} : ix (id n) = _root_.id := by
   induction n <;> simp [id, ix, Fin.liftWk_id, *]
 
+@[simp]
+theorem Nat.Wk.ix_comp {n m k} (ρ : Nat.Wk n m) (σ : Nat.Wk m k) : ix (ρ.comp σ) = ix ρ ∘ ix σ := by
+  induction ρ generalizing k <;> cases σ <;> funext i
+  case lift.lift => cases i using Fin.cases <;> simp [*]
+  all_goals simp [*]
+
 theorem Nat.Wk.ix_drop {n} : ix (drop n) = Fin.elim0 := funext (λi => i.elim0)
 
 theorem Nat.Wk.ix_injective {n m} : Function.Injective (@ix n m) := λρ σ h => by induction ρ with
@@ -46,6 +59,22 @@ theorem Nat.Wk.ix_injective {n m} : Function.Injective (@ix n m) := λρ σ h =>
     | lift =>
       simp only [ix, Fin.liftWk_inj] at h
       rw [I _ h]
+
+@[simp]
+theorem Nat.Wk.ix_apply_injective {n m} (ρ : Wk n m) : Function.Injective (ix ρ) := by
+  induction ρ with
+  | nil => exact (λi => i.elim0)
+  | step ρ I => exact Fin.stepWk_apply_injective I
+  | lift ρ I => exact Fin.liftWk_apply_injective I
+
+@[simp]
+theorem Nat.Wk.comp_id {n m} (ρ : Nat.Wk n m) : ρ.comp (id m) = ρ := by apply ix_injective; simp
+
+@[simp]
+theorem Nat.Wk.id_comp {n m} (ρ : Nat.Wk n m) : (id n).comp ρ = ρ := by apply ix_injective; simp
+
+theorem Nat.Wk.comp_assoc {n m k l} (ρ : Nat.Wk n m) (σ : Nat.Wk m k) (τ : Nat.Wk k l)
+  : (ρ.comp σ).comp τ = ρ.comp (σ.comp τ) := by apply ix_injective; simp [Function.comp_assoc]
 
 theorem Nat.Wk.ix_inj {n m} {ρ σ : Nat.Wk n m} : ix ρ = ix σ ↔ ρ = σ
   := ⟨λh => ix_injective h, λh => by cases h; rfl⟩
@@ -119,13 +148,30 @@ abbrev Nat.Split.lwk {n m k} (ρ : Nat.Split n m k) : Wk n m := ρ.1
 
 abbrev Nat.Split.rwk {n m k} (ρ : Nat.Split n m k) : Wk n k := ρ.2
 
+def Nat.Split.wkIn {i n m k} (ρ : Wk i n) (σ : Nat.Split n m k) : Split i m k
+  := ⟨ρ.comp σ.lwk, ρ.comp σ.rwk⟩
+
+def Nat.Split.wkOut {n m k m' k'}
+  (ρ : Nat.Split n m k) (σl : Wk m m') (σr : Wk k k') : Split n m' k'
+  := ⟨ρ.lwk.comp σl, ρ.rwk.comp σr⟩
+
+-- TODO: wkIn_wkOut = wkOut_wkIn
+
 theorem Nat.Split.le {n m k} (ρ : Nat.Split n m k) : m ⊔ k ≤ n := by simp [ρ.lwk.le, ρ.rwk.le]
 
 def Nat.Split.symm {n m k} (ρ : Nat.Split n m k) : Nat.Split n k m
   := ⟨ρ.rwk, ρ.lwk⟩
 
+@[simp]
+theorem Nat.Split.symm_pair {n m k} (ρ : Nat.Wk n m) (σ : Nat.Wk n k)
+  : symm (ρ, σ) = (σ, ρ) := rfl
+
 @[match_pattern]
 def Nat.Split.nil : Nat.Split 0 0 0 := ⟨Wk.nil, Wk.nil⟩
+
+@[match_pattern]
+def Nat.Split.both {n m k} (ρ : Nat.Split n m k) : Nat.Split (n + 1) (m + 1) (k + 1)
+  := ⟨ρ.lwk.lift, ρ.rwk.lift⟩
 
 @[match_pattern]
 def Nat.Split.left {n m k} (ρ : Nat.Split n m k) : Nat.Split (n + 1) (m + 1) k
@@ -136,8 +182,53 @@ def Nat.Split.right {n m k} (ρ : Nat.Split n m k) : Nat.Split (n + 1) m (k + 1)
   := ⟨ρ.lwk.step, ρ.rwk.lift⟩
 
 @[match_pattern]
-def Nat.Split.both {n m k} (ρ : Nat.Split n m k) : Nat.Split (n + 1) (m + 1) (k + 1)
-  := ⟨ρ.lwk.lift, ρ.rwk.lift⟩
+def Nat.Split.skip {n m k} (ρ : Nat.Split n m k) : Nat.Split (n + 1) m k
+  := ⟨ρ.lwk.step, ρ.rwk.step⟩
+
+@[simp]
+theorem Nat.Split.symm_nil : Nat.Split.symm nil = nil := rfl
+
+@[simp]
+theorem Nat.Split.symm_left {n m k} (ρ : Nat.Split n m k)
+  : Nat.Split.symm (left ρ) = right (symm ρ) := rfl
+
+@[simp]
+theorem Nat.Split.symm_right {n m k} (ρ : Nat.Split n m k)
+  : Nat.Split.symm (right ρ) = left (symm ρ) := rfl
+
+@[simp]
+theorem Nat.Split.symm_both {n m k} (ρ : Nat.Split n m k)
+  : Nat.Split.symm (both ρ) = both (symm ρ) := rfl
+
+@[simp]
+theorem Nat.Split.symm_symm {n m k} (ρ : Nat.Split n m k)
+  : Nat.Split.symm (symm ρ) = ρ := rfl
+
+def Nat.Split.induction' {motive : ∀{n m k}, Nat.Split n m k → Sort u}
+  (nil : motive nil)
+  (both : ∀{n m k} (ρ : Nat.Split n m k), motive ρ → motive (both ρ))
+  (left : ∀{n m k} (ρ : Nat.Split n m k), motive ρ → motive (left ρ))
+  (right : ∀{n m k} (ρ : Nat.Split n m k), motive ρ → motive (right ρ))
+  (skip : ∀{n m k} (ρ : Nat.Split n m k), motive ρ → motive (skip ρ))
+  : ∀{n m k} (ρ : Nat.Split n m k), motive ρ
+  | _, _, _, .nil => nil
+  | _, _, _, ⟨.lift ρ, .lift σ⟩ => both (ρ, σ) (induction' nil both left right skip (ρ, σ))
+  | _, _, _, ⟨.lift ρ, .step σ⟩ => left (ρ, σ) (induction' nil both left right skip (ρ, σ))
+  | _, _, _, ⟨.step ρ, .lift σ⟩ => right (ρ, σ) (induction' nil both left right skip (ρ, σ))
+  | _, _, _, ⟨.step ρ, .step σ⟩ => skip (ρ, σ) (induction' nil both left right skip (ρ, σ))
+
+def Nat.Split.cases' {motive : ∀{n m k}, Nat.Split n m k → Sort u}
+  (nil : motive nil)
+  (both : ∀{n m k} (ρ : Nat.Split n m k), motive (both ρ))
+  (left : ∀{n m k} (ρ : Nat.Split n m k), motive (left ρ))
+  (right : ∀{n m k} (ρ : Nat.Split n m k), motive (right ρ))
+  (skip : ∀{n m k} (ρ : Nat.Split n m k), motive (skip ρ))
+  : ∀{n m k} (ρ : Nat.Split n m k), motive ρ
+  | _, _, _, .nil => nil
+  | _, _, _, ⟨.lift ρ, .lift σ⟩ => both (ρ, σ)
+  | _, _, _, ⟨.lift ρ, .step σ⟩ => left (ρ, σ)
+  | _, _, _, ⟨.step ρ, .lift σ⟩ => right (ρ, σ)
+  | _, _, _, ⟨.step ρ, .step σ⟩ => skip (ρ, σ)
 
 abbrev Nat.Wk.sb (ρ : Wk n m) : Nat.Split n m m := ⟨ρ, ρ⟩
 
@@ -159,3 +250,42 @@ instance Nat.Split.ridSubsingleton {n} : Subsingleton (Nat.Split n 0 n)
   := (inferInstance : Subsingleton (Wk n 0 × Wk n n))
 
 instance Nat.Split.ridInhabited {n} : Inhabited (Nat.Split n 0 n) := ⟨(Wk.id n).sr⟩
+
+def Nat.Wk.ixu {n m} : Nat.Wk n m → Fin n → Bool
+  | .nil => Fin.elim0
+  | .step ρ => Fin.cases false ρ.ixu
+  | .lift ρ => Fin.cases true ρ.ixu
+
+inductive Nat.Wk.uv : ∀{n m}, (bs : Vector' Bool n) → Wk n m → Prop
+  | nil : uv .nil .nil
+  | step {n m} {bs : Vector' Bool n} {ρ : Wk n m} : uv bs ρ -> uv (bs.cons false) (ρ.step)
+  | lift {n m} {bs : Vector' Bool n} {ρ : Wk n m} : uv bs ρ -> uv (bs.cons true) (ρ.lift)
+
+inductive Nat.Split.Strict : ∀{n m k}, Nat.Split n m k → Prop
+  | nil : Strict .nil
+  | left {n m k} {ρ : Nat.Split n m k} : Strict ρ -> Strict (ρ.left)
+  | right {n m k} {ρ : Nat.Split n m k} : Strict ρ -> Strict (ρ.right)
+
+attribute [simp] Nat.Split.Strict.nil Nat.Split.Strict.left Nat.Split.Strict.right
+
+theorem Nat.Split.Strict.add_eq {n m k} {ρ : Split n m k} (h : Strict ρ) : m + k = n
+  := by induction h <;> omega
+
+@[simp]
+theorem Nat.Split.Strict.symm {n m k} {ρ : Nat.Split n m k} (h : Strict ρ) : Strict ρ.symm
+  := by induction h <;> simp [*]
+
+inductive Nat.Split.Wf : ∀{n m k}, Nat.Split n m k → Vector' Quant n → Prop
+  | nil : Wf .nil .nil
+  | both {n m k} {ρ : Nat.Split n m k} {q : Quant} {qs}
+    : q.is_copy → Wf ρ qs -> Wf (ρ.both) (qs.cons q)
+  | left {n m k} {ρ : Nat.Split n m k} {q : Quant} {qs}
+    : Wf ρ qs  -> Wf (ρ.left) (qs.cons q)
+  | right {n m k} {ρ : Nat.Split n m k} {q : Quant} {qs}
+    : Wf ρ qs -> Wf (ρ.right) (qs.cons q)
+  | skip {n m k} {ρ : Nat.Split n m k} {q : Quant} {qs}
+    : q.is_del → Wf ρ qs -> Wf (ρ.left) (qs.cons q)
+
+theorem Nat.Split.Strict.wf
+  {n m k} {ρ : Nat.Split n m k} {qs : Vector' Quant n} (h : Strict ρ) : Wf ρ qs
+  := by induction h <;> cases qs <;> constructor <;> apply_assumption

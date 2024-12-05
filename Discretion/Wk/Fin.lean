@@ -11,6 +11,9 @@ Definitions and utilities for weakening finite de-Bruijn indices (represented as
 def Fin.stepWk {n m} (ρ : Fin n -> Fin m) : Fin n -> Fin (m + 1)
   := Fin.succ ∘ ρ
 
+@[simp]
+theorem Fin.stepWk_def {n m} (ρ : Fin n -> Fin m) (k : Fin n) : stepWk ρ k = (ρ k).succ := rfl
+
 theorem Fin.stepWk_injective (n m) : Function.Injective (@stepWk n m) := λ ρ σ h => by
   funext k
   have h := congr_fun h k
@@ -20,8 +23,9 @@ theorem Fin.stepWk_injective (n m) : Function.Injective (@stepWk n m) := λ ρ �
 theorem Fin.stepWk_inj {n m} {ρ σ : Fin n -> Fin m} : stepWk ρ = stepWk σ ↔ ρ = σ
   := ⟨λh => stepWk_injective _ _ h, λh => by cases h; rfl⟩
 
-@[simp]
-theorem Fin.stepWk_def {n m} (ρ : Fin n -> Fin m) (k : Fin n) : stepWk ρ k = (ρ k).succ := rfl
+theorem Fin.stepWk_apply_injective
+  {n m} {ρ : Fin n -> Fin m} (hρ : Function.Injective ρ) : Function.Injective (stepWk ρ)
+  := λ i j h => by convert h using 0; simp [hρ.eq_iff]
 
 /-- Lift a finite weakening under a binder -/
 def Fin.liftWk {n m} (ρ : Fin n -> Fin m) : Fin (n + 1) -> Fin (m + 1)
@@ -51,6 +55,13 @@ theorem Fin.liftWk_injective (n m) : Function.Injective (@liftWk n m) := by
 
 theorem Fin.liftWk_inj {n m} {ρ σ : Fin n -> Fin m} : liftWk ρ = liftWk σ ↔ ρ = σ
   := ⟨λh => liftWk_injective _ _ h, λh => by cases h; rfl⟩
+
+theorem Fin.liftWk_apply_injective
+  {n m} {ρ : Fin n -> Fin m} (hρ : Function.Injective ρ) : Function.Injective (liftWk ρ)
+  := λ i j => by
+    cases i using Fin.cases <;> cases j using Fin.cases
+    case succ.succ => simp [hρ.eq_iff]
+    all_goals intro h; cases h <;> rfl
 
 @[simp]
 theorem Fin.liftWk_ne_stepWk {n m}

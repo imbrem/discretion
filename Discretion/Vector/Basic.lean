@@ -265,6 +265,43 @@ instance instSub [Sub α] : Sub (Vector' α n) where
 instance instMul [Mul α] : Mul (Vector' α n) where
   mul := zipWith (· * ·)
 
+def foldr {β : Type} (f : α → β → β) (init : β) {n : Nat} : Vector' α n → β
+  | .nil => init
+  | .cons a v => f a (foldr f init v)
+
+@[simp]
+theorem foldr_nil {β : Type} {f : α → β → β} {init : β} : foldr f init nil = init := rfl
+
+@[simp]
+theorem foldr_cons {β : Type} {f : α → β → β} {init : β} {a : α} (v : Vector' α n)
+  : foldr f init (cons a v) = f a (foldr f init v) := rfl
+
+theorem foldr_toList {β : Type} (f : α → β → β) (init : β) {n : Nat} (v : Vector' α n)
+  : v.toList.foldr f init = v.foldr f init := by induction v <;> simp [*]
+
+def foldl {β : Type} (f : β → α → β) (init : β) {n : Nat} : Vector' α n → β
+  | .nil => init
+  | .cons a v => foldl f (f init a) v
+
+@[simp]
+theorem foldl_nil {β : Type} {f : β → α → β} {init : β} : foldl f init nil = init := rfl
+
+@[simp]
+theorem foldl_cons {β : Type} {f : β → α → β} {init : β} {a : α} (v : Vector' α n)
+  : foldl f init (cons a v) = foldl f (f init a) v := rfl
+
+theorem foldl_toList {β : Type} (f : β → α → β) (init : β) {n : Nat} (v : Vector' α n)
+  : v.foldl f init = v.toList.foldl f init := by induction v generalizing init <;> simp [*]
+
+def cast {m n : Nat} (h : m = n) (v : Vector' α m) : Vector' α n := h ▸ v
+
+@[simp]
+theorem cast_rfl {n : Nat} (v : Vector' α n) : v.cast rfl = v := rfl
+
+@[simp]
+theorem cast_cast {m n k : Nat} (h : m = n) (h' : n = k) (v : Vector' α m)
+  : (v.cast h).cast h' = v.cast (h.trans h') := by cases h; cases h'; simp
+
 section LE
 
 variable [LE α]
