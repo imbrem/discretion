@@ -74,6 +74,36 @@ noncomputable def ofDc (dc : Set DupCap) : Quant
 
 -- TODO: dc is a lattice isomorphism with inverse ofDc
 
+@[simp]
+theorem Quant.top_ne_bot : (⊤ : Quant) ≠ ⊥ := by intro h; cases h
+
+@[simp]
+theorem Quant.bot_ne_top : (⊥ : Quant) ≠ ⊤ := by intro h; cases h
+
+@[simp]
+theorem Quant.copy_ne_bot : Quant.copy ≠ ⊥ := by intro h; cases h
+
+@[simp]
+theorem Quant.bot_ne_copy : ⊥ ≠ Quant.copy := by intro h; cases h
+
+@[simp]
+theorem Quant.copy_ne_top : Quant.copy ≠ ⊤ := by intro h; cases h
+
+@[simp]
+theorem Quant.top_ne_copy : ⊤ ≠ Quant.copy := by intro h; cases h
+
+@[simp]
+theorem Quant.del_ne_bot : Quant.del ≠ ⊥ := by intro h; cases h
+
+@[simp]
+theorem Quant.bot_ne_del : ⊥ ≠ Quant.del := by intro h; cases h
+
+@[simp]
+theorem Quant.del_ne_top : Quant.del ≠ ⊤ := by intro h; cases h
+
+@[simp]
+theorem Quant.top_ne_del : ⊤ ≠ Quant.del := by intro h; cases h
+
 @[elab_as_elim, cases_eliminator]
 def Quant.casesOn {motive : Quant → Sort _}
   (top : motive ⊤)
@@ -85,6 +115,38 @@ def Quant.casesOn {motive : Quant → Sort _}
   | Quant.copy => copy
   | Quant.del => del
   | ⊥ => bot
+
+def Quant.casesOn_le {motive : ∀(q q' : Quant), q ≤ q' → Sort _}
+  (top : ∀q, motive q ⊤ (by simp))
+  (copy : motive .copy .copy (by rfl))
+  (del : motive .del .del (by rfl))
+  (bot_copy : motive ⊥ .copy (by simp))
+  (bot_del : motive ⊥ .del (by simp))
+  (bot : motive ⊥ ⊥ (by simp))
+  (q q') (h : q ≤ q') : motive q q' h
+  := match q, q' with
+  | q, ⊤ => top q
+  | .copy, .copy => copy
+  | .del, .del => del
+  | ⊥, .copy => bot_copy
+  | ⊥, .del => bot_del
+  | ⊥, ⊥ => bot
+
+def Quant.casesOn_le_db {motive : ∀{q q' : Quant}, q ≤ q' → Sort _}
+  (diag : ∀q, @motive q q (by rfl))
+  (top : ∀q, q ≠ ⊤ → @motive q ⊤ (by simp))
+  (bot : ∀q, q ≠ ⊥ → @motive ⊥ q (by simp))
+  {q q'} (h : q ≤ q') : @motive q q' h
+  := match q, q' with
+  | ⊤, ⊤ => diag ⊤
+  | .copy, ⊤ => top .copy (by simp)
+  | .del, ⊤ => top .del (by simp)
+  | ⊥, ⊤ => top ⊥ (by simp)
+  | .copy, .copy => diag .copy
+  | .del, .del => diag .del
+  | ⊥, .copy => bot .copy (by simp)
+  | ⊥, .del => bot .del (by simp)
+  | ⊥, ⊥ => diag ⊥
 
 instance Quant.instFintype : Fintype Quant where
   elems := {⊥, copy, del, ⊤}
@@ -157,6 +219,45 @@ theorem Quant.one_in_c {q : Quant} : 1 ∈ q.c := by simp [Quant.c]
 theorem Quant.n_plus_two_in_c_iff {q : Quant} {n} : n + 2 ∈ q.c ↔ q.is_copy := by simp [Quant.c]
 
 theorem Quant.two_in_c_iff {q : Quant} : 2 ∈ q.c ↔ q.is_copy := by simp
+
+instance Quant.instMonoid : Monoid Quant where
+  mul
+  | .del, q => q
+  | q, .del => q
+  | ⊤, _ => ⊤
+  | _, ⊤ => ⊤
+  | _, _ => .copy
+  one := .del
+  mul_assoc a b c := by cases a <;> cases b <;> cases c <;> rfl
+  one_mul a := by cases a <;> rfl
+  mul_one a := by cases a <;> rfl
+
+@[simp]
+theorem Quant.mul_del {q : Quant} : .del * q = q := by cases q <;> rfl
+
+@[simp]
+theorem Quant.del_mul {q : Quant} : q * .del = q := by cases q <;> rfl
+
+@[simp]
+theorem Quant.mul_top {q : Quant} : q * ⊤ = ⊤ := by cases q <;> rfl
+
+@[simp]
+theorem Quant.top_mul {q : Quant} : ⊤ * q = ⊤ := by cases q <;> rfl
+
+@[simp]
+theorem Quant.copy_mul_copy : Quant.copy * .copy = .copy := rfl
+
+@[simp]
+theorem Quant.copy_mul_bot : Quant.copy * ⊥ = .copy := rfl
+
+@[simp]
+theorem Quant.bot_mul_copy : ⊥ * Quant.copy = .copy := rfl
+
+@[simp]
+theorem Quant.bot_mul_bot : ⊥ * ⊥ = Quant.copy := rfl
+
+@[simp]
+theorem Quant.le_mul_self {q : Quant} : q ≤ q * q := by cases q <;> simp
 
 inductive Polarity : Type
   | pos

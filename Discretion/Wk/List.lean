@@ -70,24 +70,38 @@ theorem List.Wk.comp_assoc {α} {Γ Δ Ξ Ω : List α} (ρ : Wk Γ Δ) (σ : Wk
 theorem List.Wk.nw_inj {α} {Γ Δ : List α} {ρ σ : Wk Γ Δ} : List.Wk.nw ρ = List.Wk.nw σ ↔ ρ = σ
   := nw_injective.eq_iff
 
-def List.Wk.pv {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' α Γ.length → Vector' α Δ.length
+def List.Wk.pv {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' β Γ.length → Vector' β Δ.length
   | _, _, .nil, _ => Vector'.nil
   | _, _, .step A ρ, .cons _ v => ρ.pv v
   | _, _, .lift A ρ, .cons a v => (ρ.pv v).cons a
 
 @[simp]
-theorem List.Wk.pv_nil {α} {v} : (.nil : Wk (α := α) [] []).pv v = .nil := rfl
+theorem List.Wk.pv_nil {α} {v : Vector' β 0} : (.nil : Wk (α := α) [] []).pv v = .nil := rfl
 
 @[simp]
-theorem List.Wk.pv_step_cons {α} {A} {Γ Δ : List α} (ρ : Wk Γ Δ) (a) (v)
+theorem List.Wk.pv_step_cons {α} {A} {Γ Δ : List α} (ρ : Wk Γ Δ) (a) (v : Vector' β _)
   : (ρ.step A).pv (v.cons a) = ρ.pv v := rfl
 
 @[simp]
-theorem List.Wk.pv_lift_cons {α} {A} {Γ Δ : List α} (ρ : Wk Γ Δ) (a) (v)
+theorem List.Wk.pv_lift_cons {α} {A} {Γ Δ : List α} (ρ : Wk Γ Δ) (a) (v : Vector' β _)
   : (ρ.lift A).pv (v.cons a) = (ρ.pv v).cons a := rfl
 
 theorem List.Wk.pv_nw {α} {Γ Δ : List α} (ρ : Wk Γ Δ)
-  : ρ.nw.pv = ρ.pv := by funext v; induction ρ <;> cases v <;> simp [*]
+  : ρ.nw.pv = ρ.pv (β := β) := by funext v; induction ρ <;> cases v <;> simp [*]
+
+inductive List.Wk.Wf {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' Quant Γ.length → Prop
+  | nil : Wf .nil Vector'.nil
+  | step (A) {Γ Δ} (ρ : Wk Γ Δ) (q qs)
+    : .del ≤ q → Wf ρ qs → Wf (ρ.step A) (qs.cons q)
+  | lift (A) {Γ Δ} (ρ : Wk Γ Δ) (q qs)
+    : Wf ρ qs → Wf (ρ.lift A) (qs.cons q)
+
+def List.Wk.minQ {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' Quant Γ.length
+  | _, _, .nil => .nil
+  | _, _, .step _ ρ => (ρ.minQ).cons .del
+  | _, _, .lift _ ρ => (ρ.minQ).cons ⊥
+
+def List.QWk (Γ Δ : List α) (qs : Vector' Quant Γ.length) := {ρ : Wk Γ Δ | ρ.Wf qs}
 
 -- TODO: List.Wk is a subsingleton if Γ has no duplicates of elements of Δ
 -- (and therefore, in particular, if it has no duplicates at all!)
@@ -185,6 +199,10 @@ inductive List.Split.Wf {α} : ∀{Γ Δ Ξ : List α}, List.Split Γ Δ Ξ → 
     : List.Split.Wf ρ qs → List.Split.Wf (ρ.right A) (qs.cons q)
   | skip (A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ) (q qs)
     : .del ≤ q → List.Split.Wf ρ qs → List.Split.Wf (ρ.skip A) (qs.cons q)
+
+def List.QSplit (Γ Δ Ξ : List α)
+  (qΓ : Vector' Quant Γ.length) (qΔ : Vector' Quant Δ.length) (qΞ : Vector' Quant Ξ.length)
+  := {ρ : List.Split Γ Δ Ξ | ρ.Wf qΓ ∧ ρ.lwk.pv qΓ = qΔ ∧ ρ.rwk.pv qΓ = qΞ}
 
 def List.Split.minQ {α} : ∀{Γ Δ Ξ : List α}, Split Γ Δ Ξ → Vector' Quant Γ.length
   | _, _, _, .nil => .nil
