@@ -204,7 +204,8 @@ theorem Nat.Split.symm_both {n m k} (ρ : Nat.Split n m k)
 theorem Nat.Split.symm_symm {n m k} (ρ : Nat.Split n m k)
   : Nat.Split.symm (symm ρ) = ρ := rfl
 
-def Nat.Split.induction' {motive : ∀{n m k}, Nat.Split n m k → Sort u}
+@[elab_as_elim, induction_eliminator]
+def Nat.Split.induction {motive : ∀{n m k}, Nat.Split n m k → Sort u}
   (nil : motive nil)
   (both : ∀{n m k} (ρ : Nat.Split n m k), motive ρ → motive (both ρ))
   (left : ∀{n m k} (ρ : Nat.Split n m k), motive ρ → motive (left ρ))
@@ -212,10 +213,10 @@ def Nat.Split.induction' {motive : ∀{n m k}, Nat.Split n m k → Sort u}
   (skip : ∀{n m k} (ρ : Nat.Split n m k), motive ρ → motive (skip ρ))
   : ∀{n m k} (ρ : Nat.Split n m k), motive ρ
   | _, _, _, .nil => nil
-  | _, _, _, ⟨.lift ρ, .lift σ⟩ => both (ρ, σ) (induction' nil both left right skip (ρ, σ))
-  | _, _, _, ⟨.lift ρ, .step σ⟩ => left (ρ, σ) (induction' nil both left right skip (ρ, σ))
-  | _, _, _, ⟨.step ρ, .lift σ⟩ => right (ρ, σ) (induction' nil both left right skip (ρ, σ))
-  | _, _, _, ⟨.step ρ, .step σ⟩ => skip (ρ, σ) (induction' nil both left right skip (ρ, σ))
+  | _, _, _, ⟨.lift ρ, .lift σ⟩ => both (ρ, σ) (induction nil both left right skip (ρ, σ))
+  | _, _, _, ⟨.lift ρ, .step σ⟩ => left (ρ, σ) (induction nil both left right skip (ρ, σ))
+  | _, _, _, ⟨.step ρ, .lift σ⟩ => right (ρ, σ) (induction nil both left right skip (ρ, σ))
+  | _, _, _, ⟨.step ρ, .step σ⟩ => skip (ρ, σ) (induction nil both left right skip (ρ, σ))
 
 def Nat.Split.cases' {motive : ∀{n m k}, Nat.Split n m k → Sort u}
   (nil : motive nil)

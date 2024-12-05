@@ -38,6 +38,10 @@ theorem Quant.del_is_del : del.is_del := rfl
 instance Quant.instBooleanAlgebra : BooleanAlgebra Quant
   := (inferInstance : BooleanAlgebra (Bool × Bool))
 
+theorem Quant.is_copy_le {q : Quant} (h : q.is_copy) : .copy ≤ q := ⟨by simp [h], by simp⟩
+
+theorem Quant.is_del_le {q : Quant} (h : q.is_del) : .del ≤ q := ⟨by simp, by simp [h]⟩
+
 instance Quant.instDecidableEq : DecidableEq Quant
   := (inferInstance : DecidableEq (Bool × Bool))
 

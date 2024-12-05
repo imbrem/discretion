@@ -28,6 +28,17 @@ def List.Wk.nw {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Nat.Wk Γ.length Δ.len
   | _, _, .lift _ ρ => ρ.nw.lift
 
 @[simp]
+theorem List.Wk.nw_nil {α} : List.Wk.nw (α := α) .nil = .nil := rfl
+
+@[simp]
+theorem List.Wk.nw_step {α} {Γ Δ : List α} (A) (ρ : Wk Γ Δ)
+  : List.Wk.nw (ρ.step A) = ρ.nw.step := rfl
+
+@[simp]
+theorem List.Wk.nw_lift {α} {Γ Δ : List α} (A) (ρ : Wk Γ Δ)
+  : List.Wk.nw (ρ.lift A) = ρ.nw.lift := rfl
+
+@[simp]
 theorem List.Wk.nw_id {α} {Γ : List α} : List.Wk.nw (List.Wk.id Γ) = Nat.Wk.id Γ.length
   := by induction Γ <;> simp only [nw, id, Nat.Wk.id, *]
 
@@ -59,12 +70,149 @@ theorem List.Wk.comp_assoc {α} {Γ Δ Ξ Ω : List α} (ρ : Wk Γ Δ) (σ : Wk
 theorem List.Wk.nw_inj {α} {Γ Δ : List α} {ρ σ : Wk Γ Δ} : List.Wk.nw ρ = List.Wk.nw σ ↔ ρ = σ
   := nw_injective.eq_iff
 
+def List.Wk.pv {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' α Γ.length → Vector' α Δ.length
+  | _, _, .nil, _ => Vector'.nil
+  | _, _, .step A ρ, .cons _ v => ρ.pv v
+  | _, _, .lift A ρ, .cons a v => (ρ.pv v).cons a
+
+@[simp]
+theorem List.Wk.pv_nil {α} {v} : (.nil : Wk (α := α) [] []).pv v = .nil := rfl
+
+@[simp]
+theorem List.Wk.pv_step_cons {α} {A} {Γ Δ : List α} (ρ : Wk Γ Δ) (a) (v)
+  : (ρ.step A).pv (v.cons a) = ρ.pv v := rfl
+
+@[simp]
+theorem List.Wk.pv_lift_cons {α} {A} {Γ Δ : List α} (ρ : Wk Γ Δ) (a) (v)
+  : (ρ.lift A).pv (v.cons a) = (ρ.pv v).cons a := rfl
+
+theorem List.Wk.pv_nw {α} {Γ Δ : List α} (ρ : Wk Γ Δ)
+  : ρ.nw.pv = ρ.pv := by funext v; induction ρ <;> cases v <;> simp [*]
+
 -- TODO: List.Wk is a subsingleton if Γ has no duplicates of elements of Δ
 -- (and therefore, in particular, if it has no duplicates at all!)
 
-def List.Split {α} (Γ Δ Ξ : List α) := List.Wk Γ Ξ × List.Wk Δ Ξ
+def List.Split {α} (Γ Δ Ξ : List α) := List.Wk Γ Δ × List.Wk Γ Ξ
 
--- TODO: split lore
+abbrev List.Split.lwk {α} {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) : List.Wk Γ Δ := ρ.1
+
+abbrev List.Split.rwk {α} {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) : List.Wk Γ Ξ := ρ.2
+
+def List.Split.nw {α} {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) : Nat.Split Γ.length Δ.length Ξ.length
+  := (ρ.lwk.nw, ρ.rwk.nw)
+
+theorem List.Split.nw_injective {α} {Γ Δ Ξ : List α} : Function.Injective (@List.Split.nw α Γ Δ Ξ)
+  := λ ρ σ h => by
+  rw [Prod.eq_iff_fst_eq_snd_eq] at *
+  cases h; constructor <;> apply List.Wk.nw_injective <;> assumption
+
+theorem List.Split.nw_inj {α} {Γ Δ Ξ : List α} {ρ σ : List.Split Γ Δ Ξ}
+  : List.Split.nw ρ = List.Split.nw σ ↔ ρ = σ
+  := nw_injective.eq_iff
+
+@[match_pattern]
+def List.Split.nil {α} : List.Split (α := α) [] [] [] := (List.Wk.id _, List.Wk.id _)
+
+@[match_pattern]
+def List.Split.both {α} (A : α) {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ)
+  : List.Split (A :: Γ) (A :: Δ) (A :: Ξ) := (ρ.1.lift A, ρ.2.lift A)
+
+@[match_pattern]
+def List.Split.left {α} (A : α) {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ)
+  : List.Split (A :: Γ) (A :: Δ) Ξ := (ρ.1.lift A, ρ.2.step A)
+
+@[match_pattern]
+def List.Split.right {α} (A : α) {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ)
+  : List.Split (A :: Γ) Δ (A :: Ξ) := (ρ.1.step A, ρ.2.lift A)
+
+@[match_pattern]
+def List.Split.skip {α} (A : α) {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ)
+  : List.Split (A :: Γ) Δ Ξ := (ρ.1.step A, ρ.2.step A)
+
+@[elab_as_elim, induction_eliminator]
+def List.Split.induction {α} {motive : ∀{Γ Δ Ξ}, List.Split Γ Δ Ξ → Sort _}
+  (nil : motive (List.Split.nil (α := α)))
+  (both : ∀(A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ), motive ρ → motive (ρ.both A))
+  (left : ∀(A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ), motive ρ → motive (ρ.left A))
+  (right : ∀(A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ), motive ρ → motive (ρ.right A))
+  (skip : ∀(A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ), motive ρ → motive (ρ.skip A))
+  {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) : motive ρ := match Γ, Δ, Ξ, ρ with
+  | _, _, _, ⟨.nil, .nil⟩ => nil
+  | _, _, _, ⟨.lift A ρ, .lift _ σ⟩ => both A (ρ, σ) (induction nil both left right skip (ρ, σ))
+  | _, _, _, ⟨.lift A ρ, .step _ σ⟩ => left A (ρ, σ) (induction nil both left right skip (ρ, σ))
+  | _, _, _, ⟨.step A ρ, .lift _ σ⟩ => right A (ρ, σ) (induction nil both left right skip (ρ, σ))
+  | _, _, _, ⟨.step A ρ, .step _ σ⟩ => skip A (ρ, σ) (induction nil both left right skip (ρ, σ))
+
+def List.Split.cases' {α} {motive : ∀{Γ Δ Ξ}, List.Split Γ Δ Ξ → Sort _}
+  (nil : motive (List.Split.nil (α := α)))
+  (both : ∀(A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ), motive (ρ.both A))
+  (left : ∀(A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ), motive (ρ.left A))
+  (right : ∀(A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ), motive (ρ.right A))
+  (skip : ∀(A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ), motive (ρ.skip A))
+  {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) : motive ρ := match Γ, Δ, Ξ, ρ with
+  | _, _, _, ⟨.nil, .nil⟩ => nil
+  | _, _, _, ⟨.lift A ρ, .lift _ σ⟩ => both A (ρ, σ)
+  | _, _, _, ⟨.lift A ρ, .step _ σ⟩ => left A (ρ, σ)
+  | _, _, _, ⟨.step A ρ, .lift _ σ⟩ => right A (ρ, σ)
+  | _, _, _, ⟨.step A ρ, .step _ σ⟩ => skip A (ρ, σ)
+
+@[simp]
+theorem List.Split.nw_nil {α} : List.Split.nw (α := α) .nil = .nil := rfl
+
+@[simp]
+theorem List.Split.nw_both {α} {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) (A : α)
+  : (ρ.both A).nw = ρ.nw.both := rfl
+
+@[simp]
+theorem List.Split.nw_left {α} {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) (A : α)
+  : (ρ.left A).nw = ρ.nw.left := rfl
+
+@[simp]
+theorem List.Split.nw_right {α} {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) (A : α)
+  : (ρ.right A).nw = ρ.nw.right := rfl
+
+@[simp]
+theorem List.Split.nw_skip {α} {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) (A : α)
+  : (ρ.skip A).nw = ρ.nw.skip := rfl
+
+inductive List.Split.Wf {α} : ∀{Γ Δ Ξ : List α}, List.Split Γ Δ Ξ → Vector' Quant Γ.length → Prop
+  | nil : List.Split.Wf .nil .nil
+  | both (A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ) (q qs)
+    : .copy ≤ q → List.Split.Wf ρ qs → List.Split.Wf (ρ.both A) (qs.cons q)
+  | left (A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ) (q qs)
+    : List.Split.Wf ρ qs → List.Split.Wf (ρ.left A) (qs.cons q)
+  | right (A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ) (q qs)
+    : List.Split.Wf ρ qs → List.Split.Wf (ρ.right A) (qs.cons q)
+  | skip (A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ) (q qs)
+    : .del ≤ q → List.Split.Wf ρ qs → List.Split.Wf (ρ.skip A) (qs.cons q)
+
+def List.Split.minQ {α} : ∀{Γ Δ Ξ : List α}, Split Γ Δ Ξ → Vector' Quant Γ.length
+  | _, _, _, .nil => .nil
+  | _, _, _, ⟨.lift _ ρ, .lift _ σ⟩ => .cons .copy (minQ (ρ, σ))
+  | _, _, _, ⟨.lift _ ρ, .step _ σ⟩ => .cons ⊥ (minQ (ρ, σ))
+  | _, _, _, ⟨.step _ ρ, .lift _ σ⟩ => .cons ⊥ (minQ (ρ, σ))
+  | _, _, _, ⟨.step _ ρ, .step _ σ⟩ => .cons .del (minQ (ρ, σ))
+
+theorem List.Split.Wf.minQ_le {α}
+  {Γ Δ Ξ : List α} {ρ : List.Split Γ Δ Ξ} {qs : Vector' Quant Γ.length}
+  (h : List.Split.Wf ρ qs) : ρ.minQ ≤ qs := by induction h <;> simp [minQ, *]
+
+theorem List.Split.Wf.of_minQ_le {α}
+  {Γ Δ Ξ : List α} {ρ : List.Split Γ Δ Ξ} {qs : Vector' Quant Γ.length}
+  (h : ρ.minQ ≤ qs) : List.Split.Wf ρ qs := by
+  induction ρ with
+  | nil => cases qs; constructor
+  | both A ρ I => cases qs; apply both _ _ _ _ h.head (I h.tail)
+  | left A ρ I => cases qs; apply left _ _ _ _ (I h.tail)
+  | right A ρ I => cases qs; apply right _ _ _ _ (I h.tail)
+  | skip A ρ I => cases qs; apply skip _ _ _ _ h.head (I h.tail)
+
+theorem List.Split.Wf.minQ {α}
+  {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) : List.Split.Wf ρ ρ.minQ := of_minQ_le (le_refl _)
+
+theorem List.Split.Wf.le_minQ_iff {α}
+  {Γ Δ Ξ : List α} {ρ : List.Split Γ Δ Ξ} {qs : Vector' Quant Γ.length}
+  : List.Split.Wf ρ qs ↔ ρ.minQ ≤ qs := ⟨List.Split.Wf.minQ_le, List.Split.Wf.of_minQ_le⟩
 
 -- TODO: quant compatibility
 
