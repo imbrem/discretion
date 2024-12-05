@@ -1,8 +1,23 @@
 import Discretion.Wk.Nat
 import Discretion.Wk.Fin
+import Discretion.Wk.NatInductive
 import Mathlib.Data.Fintype.Card
 
 -- TODO: general relation edition...
+inductive List.Wk {α} : List α → List α → Type
+  | nil : List.Wk [] []
+  | step (A) {Γ Δ} : List.Wk Γ Δ → List.Wk (A :: Γ) Δ
+  | lift (A) {Γ Δ} : List.Wk Γ Δ → List.Wk (A :: Γ) (A :: Δ)
+
+def List.Wk.id {α} : ∀(Γ : List α), List.Wk Γ Γ
+  | [] => List.Wk.nil
+  | A :: Γ => (List.Wk.id Γ).lift A
+
+def List.Wk.drop {α} : ∀(Γ : List α), List.Wk Γ []
+  | [] => List.Wk.nil
+  | A :: Γ => (List.Wk.drop Γ).step A
+
+def List.Split {α} (Γ Δ Ξ : List α) := List.Wk Γ Ξ × List.Wk Δ Ξ
 
 /-- The function `ρ` sends `Γ` to `Δ` -/
 def List.FEWkn (Γ Δ : List α) (ρ : Fin Δ.length → Fin Γ.length) : Prop
