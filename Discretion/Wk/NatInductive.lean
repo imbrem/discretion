@@ -22,10 +22,16 @@ def Nat.Wk.comp {n m k} : Nat.Wk n m → Nat.Wk m k → Nat.Wk n k
   | .lift ρ, .lift σ => .lift (ρ.comp σ)
 
 @[simp]
-def Nat.Wk.ix {n m} : Nat.Wk n m -> Fin m → Fin n
+def Nat.Wk.ix {n m} : Nat.Wk n m -> ℕ → ℕ
   | .nil => _root_.id
-  | .step ρ => Fin.stepWk (ix ρ)
-  | .lift ρ => Fin.liftWk (ix ρ)
+  | .step ρ => Nat.stepWk (ix ρ)
+  | .lift ρ => Nat.liftWk (ix ρ)
+
+@[simp]
+def Nat.Wk.ixf {n m} : Nat.Wk n m -> Fin m → Fin n
+  | .nil => _root_.id
+  | .step ρ => Fin.stepWk (ixf ρ)
+  | .lift ρ => Fin.liftWk (ixf ρ)
 
 @[simp]
 def Nat.Wk.pv {n m} : Nat.Wk n m → Vector' α n → Vector' α m
@@ -37,61 +43,65 @@ abbrev Vector'.wk {n m} (v : Vector' α n) (ρ : Nat.Wk n m) : Vector' α m := �
 
 @[simp]
 theorem Nat.Wk.ix_id {n} : ix (id n) = _root_.id := by
-  induction n <;> simp [id, ix, Fin.liftWk_id, *]
+  induction n <;> simp [id, ix, *]
 
 @[simp]
-theorem Nat.Wk.ix_comp {n m k} (ρ : Nat.Wk n m) (σ : Nat.Wk m k) : ix (ρ.comp σ) = ix ρ ∘ ix σ := by
+theorem Nat.Wk.ixf_id {n} : ixf (id n) = _root_.id := by
+  induction n <;> simp [id, ixf, *]
+
+@[simp]
+theorem Nat.Wk.ixf_comp {n m k} (ρ : Nat.Wk n m) (σ : Nat.Wk m k) : ixf (ρ.comp σ) = ixf ρ ∘ ixf σ := by
   induction ρ generalizing k <;> cases σ <;> funext i
   case lift.lift => cases i using Fin.cases <;> simp [*]
   all_goals simp [*]
 
-theorem Nat.Wk.ix_drop {n} : ix (drop n) = Fin.elim0 := funext (λi => i.elim0)
+theorem Nat.Wk.ixf_drop {n} : ixf (drop n) = Fin.elim0 := funext (λi => i.elim0)
 
-theorem Nat.Wk.ix_injective {n m} : Function.Injective (@ix n m) := λρ σ h => by induction ρ with
+theorem Nat.Wk.ixf_injective {n m} : Function.Injective (@ixf n m) := λρ σ h => by induction ρ with
   | nil => cases σ; rfl
   | step _ I => cases σ with
     | step =>
-      simp only [ix, Fin.stepWk_inj] at h
+      simp only [ixf, Fin.stepWk_inj] at h
       rw [I _ h]
     | lift => simp at h
   | lift _ I => cases σ with
     | step => simp at h
     | lift =>
-      simp only [ix, Fin.liftWk_inj] at h
+      simp only [ixf, Fin.liftWk_inj] at h
       rw [I _ h]
 
 @[simp]
-theorem Nat.Wk.ix_apply_injective {n m} (ρ : Wk n m) : Function.Injective (ix ρ) := by
+theorem Nat.Wk.ixf_apply_injective {n m} (ρ : Wk n m) : Function.Injective (ixf ρ) := by
   induction ρ with
   | nil => exact (λi => i.elim0)
   | step ρ I => exact Fin.stepWk_apply_injective I
   | lift ρ I => exact Fin.liftWk_apply_injective I
 
 @[simp]
-theorem Nat.Wk.comp_id {n m} (ρ : Nat.Wk n m) : ρ.comp (id m) = ρ := by apply ix_injective; simp
+theorem Nat.Wk.comp_id {n m} (ρ : Nat.Wk n m) : ρ.comp (id m) = ρ := by apply ixf_injective; simp
 
 @[simp]
-theorem Nat.Wk.id_comp {n m} (ρ : Nat.Wk n m) : (id n).comp ρ = ρ := by apply ix_injective; simp
+theorem Nat.Wk.id_comp {n m} (ρ : Nat.Wk n m) : (id n).comp ρ = ρ := by apply ixf_injective; simp
 
 theorem Nat.Wk.comp_assoc {n m k l} (ρ : Nat.Wk n m) (σ : Nat.Wk m k) (τ : Nat.Wk k l)
-  : (ρ.comp σ).comp τ = ρ.comp (σ.comp τ) := by apply ix_injective; simp [Function.comp_assoc]
+  : (ρ.comp σ).comp τ = ρ.comp (σ.comp τ) := by apply ixf_injective; simp [Function.comp_assoc]
 
-theorem Nat.Wk.ix_inj {n m} {ρ σ : Nat.Wk n m} : ix ρ = ix σ ↔ ρ = σ
-  := ⟨λh => ix_injective h, λh => by cases h; rfl⟩
+theorem Nat.Wk.ixf_inj {n m} {ρ σ : Nat.Wk n m} : ixf ρ = ixf σ ↔ ρ = σ
+  := ⟨λh => ixf_injective h, λh => by cases h; rfl⟩
 
 @[simp]
 theorem Nat.Wk.pv_id {n} (v : Vector' α n) : (id n).pv v = v := by induction v <;> simp [*]
 
 @[simp]
 theorem Nat.Wk.get_pv {n m} (ρ : Nat.Wk n m) (v : Vector' α n) (i : Fin m)
-  : (ρ.pv v).get i = v.get (ρ.ix i) := by induction ρ with
+  : (ρ.pv v).get i = v.get (ρ.ixf i) := by induction ρ with
   | nil => exact i.elim0
   | step _ I => cases v; simp [I]
   | lift _ I => cases v; cases i using Fin.cases <;> simp [I]
 
 @[simp]
 theorem Nat.Wk.pv_ofFn {n m} (ρ : Nat.Wk n m) (f : Fin n -> α) :
-  (ρ.pv (Vector'.ofFn f)) = Vector'.ofFn (f ∘ ρ.ix) := by
+  (ρ.pv (Vector'.ofFn f)) = Vector'.ofFn (f ∘ ρ.ixf) := by
   apply Vector'.get_injective
   funext i
   simp
@@ -127,7 +137,7 @@ def Nat.Wk.casesId {motive : ∀{n}, Wk n n → Sort u}
 theorem Nat.Wk.eq_id {n} (ρ : Nat.Wk n n) : ρ = id n
   := by induction ρ using inductionId <;> simp [id, *]
 
-theorem Nat.Wk.ix_id' {n} (ρ : Nat.Wk n n) : ix ρ = _root_.id := by simp
+theorem Nat.Wk.ixf_id' {n} (ρ : Nat.Wk n n) : ixf ρ = _root_.id := by simp
 
 instance Nat.Wk.idSubsingleton {n} : Subsingleton (Wk n n) := ⟨λ_ _ => by simp⟩
 
@@ -252,10 +262,10 @@ instance Nat.Split.ridSubsingleton {n} : Subsingleton (Nat.Split n 0 n)
 
 instance Nat.Split.ridInhabited {n} : Inhabited (Nat.Split n 0 n) := ⟨(Wk.id n).sr⟩
 
-def Nat.Wk.ixu {n m} : Nat.Wk n m → Fin n → Bool
+def Nat.Wk.ixfu {n m} : Nat.Wk n m → Fin n → Bool
   | .nil => Fin.elim0
-  | .step ρ => Fin.cases false ρ.ixu
-  | .lift ρ => Fin.cases true ρ.ixu
+  | .step ρ => Fin.cases false ρ.ixfu
+  | .lift ρ => Fin.cases true ρ.ixfu
 
 inductive Nat.Wk.uv : ∀{n m}, (bs : Vector' Bool n) → Wk n m → Prop
   | nil : uv .nil .nil

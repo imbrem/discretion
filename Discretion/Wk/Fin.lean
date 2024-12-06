@@ -41,6 +41,7 @@ theorem Fin.liftWk_succ {n m} (ρ : Fin n -> Fin m) (k : Fin n) : liftWk ρ k.su
 def Fin.extendWk {n m} (ρ : Fin n -> Fin m) : Fin (n + 1) -> Fin (m + 1)
   := Fin.lastCases (Fin.last m) (Fin.castSucc ∘ ρ)
 
+@[simp]
 theorem Fin.liftWk_id (n) : liftWk (@id (Fin n)) = id := by
   funext ⟨k, H⟩
   cases k with

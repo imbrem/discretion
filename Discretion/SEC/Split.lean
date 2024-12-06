@@ -10,20 +10,24 @@ namespace SEC
 
 open FreeSignature
 
-namespace Intrinsic
+namespace Split
 
 inductive Term (τ : Type _) [FreeSignature τ] : List (Ty τ) → Ty τ → Type _
   | var {Γ A} : Γ.Wk [A] → Term τ Γ A
   | op {Γ A B} : Inst A B → Term τ Γ A → Term τ Γ B
-  | let₁ {Γ A B} : Term τ Γ A → Term τ (A::Γ) B → Term τ Γ B
+  | let₁ {Γ A B} : Γ.Split Δ Ξ → Term τ Δ A → Term τ (A::Ξ) B → Term τ Γ B
   | unit {Γ} : Term τ Γ (𝟙_ _)
-  | pair {Γ A B} : Term τ Γ A → Term τ Γ B → Term τ Γ (A ⊗ B)
-  | let₂ {Γ A B C} : Term τ Γ (A ⊗ B) → Term τ (A::B::Γ) C → Term τ Γ C
+  | pair {Γ A B} : Γ.Split Δ Ξ → Term τ Δ A → Term τ Ξ B → Term τ Γ (A ⊗ B)
+  | let₂ {Γ A B C} : Γ.Split Δ Ξ → Term τ Δ (A ⊗ B) → Term τ (A::B::Ξ) C → Term τ Γ C
 
 def Term.erase {τ} [FreeSignature τ] {Γ A} : Term τ Γ A → Untyped τ
   | .var ρ => .var (ρ.ix 0)
   | .op f t => .op f.erase t.erase
-  | .let₁ t u => .let₁ t.erase u.erase
+  | .let₁ ρ t u => .let₁ (t.erase.wk ρ.lwk.ix) (u.erase.wk ρ.rwk.ix)
   | .unit => .unit
-  | .pair t u => .pair t.erase u.erase
-  | .let₂ t u => .let₂ t.erase u.erase
+  | .pair ρ t u => .pair (t.erase.wk ρ.lwk.ix) (u.erase.wk ρ.rwk.ix)
+  | .let₂ ρ t u => .let₂ (t.erase.wk ρ.lwk.ix) (u.erase.wk ρ.rwk.ix)
+
+end Split
+
+end SEC

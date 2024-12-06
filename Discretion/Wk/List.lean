@@ -70,6 +70,16 @@ theorem List.Wk.comp_assoc {α} {Γ Δ Ξ Ω : List α} (ρ : Wk Γ Δ) (σ : Wk
 theorem List.Wk.nw_inj {α} {Γ Δ : List α} {ρ σ : Wk Γ Δ} : List.Wk.nw ρ = List.Wk.nw σ ↔ ρ = σ
   := nw_injective.eq_iff
 
+def List.Wk.ix {α} : ∀{Γ Δ : List α}, Wk Γ Δ → ℕ → ℕ
+  | _, _, .nil => _root_.id
+  | _, _, .step A ρ => Nat.stepWk ρ.ix
+  | _, _, .lift A ρ => Nat.liftWk ρ.ix
+
+def List.Wk.ixf {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Fin Δ.length → Fin Γ.length
+  | _, _, .nil => Fin.elim0
+  | _, _, .step A ρ => Fin.stepWk ρ.ixf
+  | _, _, .lift A ρ => Fin.liftWk ρ.ixf
+
 def List.Wk.pv {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' β Γ.length → Vector' β Δ.length
   | _, _, .nil, _ => Vector'.nil
   | _, _, .step A ρ, .cons _ v => ρ.pv v
