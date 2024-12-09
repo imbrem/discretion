@@ -322,11 +322,13 @@ theorem List.IsWk.toIsFWk (Γ Δ : List α) (ρ : ℕ → ℕ)
 
 -- ... TODO: IsWks
 
+@[simp]
 theorem List.IsWk.id (Γ : List α) : List.IsWk Γ Γ id
   := λ_ hΓ => ⟨hΓ, rfl⟩
 
 -- ... TODO: len_le
 
+@[simp]
 theorem List.IsWk.drop_all (Γ : List α) (ρ) : List.IsWk Γ [] ρ
   := λi h => by cases h
 
@@ -392,6 +394,9 @@ theorem List.IsWk.liftn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.leng
 theorem List.IsWk.step {ρ : ℕ → ℕ} (A : α) (hρ : List.IsWk Γ Δ ρ)
     : List.IsWk (A :: Γ) Δ (Nat.succ ∘ ρ)
   := λn hΔ => have ⟨hΔ, hρ⟩ := hρ n hΔ; ⟨Nat.succ_lt_succ hΔ, hρ⟩
+
+@[simp]
+theorem List.IsWk.succ (A : α) : List.IsWk (A :: Γ) Γ .succ := step (ρ := _root_.id) A (id _)
 
 theorem List.IsWk.step_tail {ρ : ℕ → ℕ} (h : List.IsWk (A :: Γ) Δ (Nat.succ ∘ ρ)) : List.IsWk Γ Δ ρ
   := λi hΔ => have ⟨hΔ, hρ⟩ := h i hΔ; ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
