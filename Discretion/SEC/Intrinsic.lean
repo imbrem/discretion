@@ -20,7 +20,7 @@ inductive Term (τ : Type _) [FreeSignature τ] : List (Ty τ) → Ty τ → Typ
   | pair {Γ A B} : Term τ Γ A → Term τ Γ B → Term τ Γ (A ⊗ B)
   | let₂ {Γ A B C} : Term τ Γ (A ⊗ B) → Term τ (A::B::Γ) C → Term τ Γ C
 
-def Term.erase {τ} [FreeSignature τ] {Γ A} : Term τ Γ A → Untyped τ
+def Term.erase {τ} [FreeSignature τ] {Γ A} : Term τ Γ A → SEC.Term τ
   | .var ρ => .var (ρ.ix 0)
   | .op f t => .op f.erase t.erase
   | .let₁ t u => .let₁ t.erase u.erase

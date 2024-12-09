@@ -286,17 +286,17 @@ theorem Nat.Split.Strict.add_eq {n m k} {ρ : Split n m k} (h : Strict ρ) : m +
 theorem Nat.Split.Strict.symm {n m k} {ρ : Nat.Split n m k} (h : Strict ρ) : Strict ρ.symm
   := by induction h <;> simp [*]
 
-inductive Nat.Split.Wf : ∀{n m k}, Nat.Split n m k → Vector' Quant n → Prop
+inductive Nat.Split.Wf : ∀{n m k}, Nat.Split n m k → Vector' EQuant n → Prop
   | nil : Wf .nil .nil
-  | both {n m k} {ρ : Nat.Split n m k} {q : Quant} {qs}
-    : q.is_copy → Wf ρ qs -> Wf (ρ.both) (qs.cons q)
-  | left {n m k} {ρ : Nat.Split n m k} {q : Quant} {qs}
-    : Wf ρ qs  -> Wf (ρ.left) (qs.cons q)
-  | right {n m k} {ρ : Nat.Split n m k} {q : Quant} {qs}
-    : Wf ρ qs -> Wf (ρ.right) (qs.cons q)
-  | skip {n m k} {ρ : Nat.Split n m k} {q : Quant} {qs}
-    : q.is_del → Wf ρ qs -> Wf (ρ.left) (qs.cons q)
+  | both {n m k} {ρ : Nat.Split n m k} {q : EQuant} {qs}
+    : .copy ≤ q → Wf ρ qs -> Wf (ρ.both) (qs.cons q)
+  | left {n m k} {ρ : Nat.Split n m k} {q : EQuant} {qs}
+    : 1 ≤ q → Wf ρ qs  -> Wf (ρ.left) (qs.cons q)
+  | right {n m k} {ρ : Nat.Split n m k} {q : EQuant} {qs}
+    : 1 ≤ q → Wf ρ qs -> Wf (ρ.right) (qs.cons q)
+  | skip {n m k} {ρ : Nat.Split n m k} {q : EQuant} {qs}
+    : 0 ≤ q → Wf ρ qs -> Wf (ρ.left) (qs.cons q)
 
-theorem Nat.Split.Strict.wf
-  {n m k} {ρ : Nat.Split n m k} {qs : Vector' Quant n} (h : Strict ρ) : Wf ρ qs
-  := by induction h <;> cases qs <;> constructor <;> apply_assumption
+-- theorem Nat.Split.Strict.wf
+--   {n m k} {ρ : Nat.Split n m k} {qs : Vector' EQuant n} (h : Strict ρ) : Wf ρ qs
+--   := by induction h <;> cases qs <;> constructor <;> apply_assumption

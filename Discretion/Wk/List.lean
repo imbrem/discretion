@@ -99,19 +99,25 @@ theorem List.Wk.pv_lift_cons {α} {A} {Γ Δ : List α} (ρ : Wk Γ Δ) (a) (v :
 theorem List.Wk.pv_nw {α} {Γ Δ : List α} (ρ : Wk Γ Δ)
   : ρ.nw.pv = ρ.pv (β := β) := by funext v; induction ρ <;> cases v <;> simp [*]
 
-inductive List.Wk.Wf {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' Quant Γ.length → Prop
+inductive List.Wk.Wf {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' EQuant Γ.length → Prop
   | nil : Wf .nil Vector'.nil
   | step (A) {Γ Δ} (ρ : Wk Γ Δ) (q qs)
-    : .del ≤ q → Wf ρ qs → Wf (ρ.step A) (qs.cons q)
+    : 0 ≤ q → Wf ρ qs → Wf (ρ.step A) (qs.cons q)
   | lift (A) {Γ Δ} (ρ : Wk Γ Δ) (q qs)
-    : Wf ρ qs → Wf (ρ.lift A) (qs.cons q)
+    : 1 ≤ q → Wf ρ qs → Wf (ρ.lift A) (qs.cons q)
 
-def List.Wk.minQ {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' Quant Γ.length
+inductive List.Wk.EWf {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' EQuant Γ.length → Prop
+
+def List.Wk.minQ {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' EQuant Γ.length
   | _, _, .nil => .nil
-  | _, _, .step _ ρ => (ρ.minQ).cons .del
-  | _, _, .lift _ ρ => (ρ.minQ).cons ⊥
+  | _, _, .step _ ρ => (ρ.minQ).cons 0
+  | _, _, .lift _ ρ => (ρ.minQ).cons 1
 
-def List.QWk (Γ Δ : List α) (qs : Vector' Quant Γ.length) := {ρ : Wk Γ Δ | ρ.Wf qs}
+-- TODO: Wk wf iff minQ leq qs...
+
+-- TODO: Split wf iff sum minQ leq qs...
+
+def List.QWk (Γ Δ : List α) (qs : Vector' EQuant Γ.length) := {ρ : Wk Γ Δ | ρ.Wf qs}
 
 -- TODO: List.Wk is a subsingleton if Γ has no duplicates of elements of Δ
 -- (and therefore, in particular, if it has no duplicates at all!)
@@ -199,67 +205,100 @@ theorem List.Split.nw_right {α} {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ)
 theorem List.Split.nw_skip {α} {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) (A : α)
   : (ρ.skip A).nw = ρ.nw.skip := rfl
 
-inductive List.Split.Wf {α} : ∀{Γ Δ Ξ : List α}, List.Split Γ Δ Ξ → Vector' Quant Γ.length → Prop
+inductive List.Split.Wf {α} : ∀{Γ Δ Ξ : List α}, List.Split Γ Δ Ξ → Vector' EQuant Γ.length → Prop
   | nil : List.Split.Wf .nil .nil
   | both (A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ) (q qs)
     : .copy ≤ q → List.Split.Wf ρ qs → List.Split.Wf (ρ.both A) (qs.cons q)
   | left (A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ) (q qs)
-    : List.Split.Wf ρ qs → List.Split.Wf (ρ.left A) (qs.cons q)
+    : 1 ≤ q → List.Split.Wf ρ qs → List.Split.Wf (ρ.left A) (qs.cons q)
   | right (A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ) (q qs)
-    : List.Split.Wf ρ qs → List.Split.Wf (ρ.right A) (qs.cons q)
+    : 1 ≤ q → List.Split.Wf ρ qs → List.Split.Wf (ρ.right A) (qs.cons q)
   | skip (A) {Γ Δ Ξ} (ρ : List.Split Γ Δ Ξ) (q qs)
-    : .del ≤ q → List.Split.Wf ρ qs → List.Split.Wf (ρ.skip A) (qs.cons q)
+    : 0 ≤ q → List.Split.Wf ρ qs → List.Split.Wf (ρ.skip A) (qs.cons q)
 
 def List.QSplit (Γ Δ Ξ : List α)
-  (qΓ : Vector' Quant Γ.length) (qΔ : Vector' Quant Δ.length) (qΞ : Vector' Quant Ξ.length)
+  (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length) (qΞ : Vector' EQuant Ξ.length)
   := {ρ : List.Split Γ Δ Ξ | ρ.Wf qΓ ∧ ρ.lwk.pv qΓ = qΔ ∧ ρ.rwk.pv qΓ = qΞ}
 
-def List.Split.minQ {α} : ∀{Γ Δ Ξ : List α}, Split Γ Δ Ξ → Vector' Quant Γ.length
-  | _, _, _, .nil => .nil
-  | _, _, _, ⟨.lift _ ρ, .lift _ σ⟩ => .cons .copy (minQ (ρ, σ))
-  | _, _, _, ⟨.lift _ ρ, .step _ σ⟩ => .cons ⊥ (minQ (ρ, σ))
-  | _, _, _, ⟨.step _ ρ, .lift _ σ⟩ => .cons ⊥ (minQ (ρ, σ))
-  | _, _, _, ⟨.step _ ρ, .step _ σ⟩ => .cons .del (minQ (ρ, σ))
+def List.Split.minQ {α} {Γ Δ Ξ : List α} (ρ : Split Γ Δ Ξ) : Vector' EQuant Γ.length
+  := ρ.lwk.minQ + ρ.rwk.minQ
+
+@[simp]
+theorem List.Split.minQ_nil {α} : List.Split.minQ (α := α) .nil = .nil := rfl
+
+@[simp]
+theorem List.Split.minQ_both {α} {Γ Δ Ξ : List α} (A) (ρ : List.Split Γ Δ Ξ)
+  : (ρ.both A).minQ = ρ.minQ.cons .copy := rfl
+
+@[simp]
+theorem List.Split.minQ_lift_lift {α} {Γ Δ Ξ : List α} (A) (ρ : List.Wk Γ Δ) (σ : List.Wk Γ Ξ)
+  : minQ ⟨ρ.lift A, σ.lift A⟩ = (minQ ⟨ρ, σ⟩).cons .copy := rfl
+
+@[simp]
+theorem List.Split.minQ_left {α} {Γ Δ Ξ : List α} (A) (ρ : List.Split Γ Δ Ξ)
+  : (ρ.left A).minQ = ρ.minQ.cons 1 := rfl
+
+@[simp]
+theorem List.Split.minQ_lift_step {α} {Γ Δ Ξ : List α} (A) (ρ : List.Wk Γ Δ) (σ : List.Wk Γ Ξ)
+  : minQ ⟨ρ.lift A, σ.step A⟩ = (minQ ⟨ρ, σ⟩).cons 1 := rfl
+
+@[simp]
+theorem List.Split.minQ_right {α} {Γ Δ Ξ : List α} (A) (ρ : List.Split Γ Δ Ξ)
+  : (ρ.right A).minQ = ρ.minQ.cons 1 := rfl
+
+@[simp]
+theorem List.Split.minQ_step_lift {α} {Γ Δ Ξ : List α} (A) (ρ : List.Wk Γ Δ) (σ : List.Wk Γ Ξ)
+  : minQ ⟨ρ.step A, σ.lift A⟩ = (minQ ⟨ρ, σ⟩).cons 1 := rfl
+
+@[simp]
+theorem List.Split.minQ_skip {α} {Γ Δ Ξ : List α} (A) (ρ : List.Split Γ Δ Ξ)
+  : (ρ.skip A).minQ = ρ.minQ.cons 0 := rfl
+
+@[simp]
+theorem List.Split.minQ_step_step {α} {Γ Δ Ξ : List α} (A) (ρ : List.Wk Γ Δ) (σ : List.Wk Γ Ξ)
+  : minQ ⟨ρ.step A, σ.step A⟩ = (minQ ⟨ρ, σ⟩).cons 0 := rfl
 
 theorem List.Split.Wf.minQ_le {α}
-  {Γ Δ Ξ : List α} {ρ : List.Split Γ Δ Ξ} {qs : Vector' Quant Γ.length}
-  (h : List.Split.Wf ρ qs) : ρ.minQ ≤ qs := by induction h <;> simp [minQ, *]
+  {Γ Δ Ξ : List α} {ρ : List.Split Γ Δ Ξ} {qs : Vector' EQuant Γ.length}
+  (h : List.Split.Wf ρ qs) : ρ.minQ ≤ qs := by induction h <;> simp [*]
 
 theorem List.Split.Wf.of_minQ_le {α}
-  {Γ Δ Ξ : List α} {ρ : List.Split Γ Δ Ξ} {qs : Vector' Quant Γ.length}
+  {Γ Δ Ξ : List α} {ρ : List.Split Γ Δ Ξ} {qs : Vector' EQuant Γ.length}
   (h : ρ.minQ ≤ qs) : List.Split.Wf ρ qs := by
   induction ρ with
   | nil => cases qs; constructor
   | both A ρ I => cases qs; apply both _ _ _ _ h.head (I h.tail)
-  | left A ρ I => cases qs; apply left _ _ _ _ (I h.tail)
-  | right A ρ I => cases qs; apply right _ _ _ _ (I h.tail)
+  | left A ρ I => cases qs; apply left _ _ _ _ h.head (I h.tail)
+  | right A ρ I => cases qs; apply right _ _ _ _ h.head (I h.tail)
   | skip A ρ I => cases qs; apply skip _ _ _ _ h.head (I h.tail)
 
-theorem List.Split.Wf.minQ {α}
+theorem List.Split.Wf.minQ' {α}
   {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) : List.Split.Wf ρ ρ.minQ := of_minQ_le (le_refl _)
 
 theorem List.Split.Wf.le_minQ_iff {α}
-  {Γ Δ Ξ : List α} {ρ : List.Split Γ Δ Ξ} {qs : Vector' Quant Γ.length}
+  {Γ Δ Ξ : List α} {ρ : List.Split Γ Δ Ξ} {qs : Vector' EQuant Γ.length}
   : List.Split.Wf ρ qs ↔ ρ.minQ ≤ qs := ⟨List.Split.Wf.minQ_le, List.Split.Wf.of_minQ_le⟩
+
+-- TODO: HVector split...
 
 -- TODO: quant compatibility
 
 /-- The function `ρ` sends `Γ` to `Δ` -/
-def List.FEWkn (Γ Δ : List α) (ρ : Fin Δ.length → Fin Γ.length) : Prop
+def List.IsFWk (Γ Δ : List α) (ρ : Fin Δ.length → Fin Γ.length) : Prop
   := Fin.FEWkn Γ.get Δ.get ρ
 
-theorem List.FEWkn.get {Γ Δ : List α} {ρ : Fin Δ.length → Fin Γ.length} (h : List.FEWkn Γ Δ ρ)
+theorem List.IsFWk.get {Γ Δ : List α} {ρ : Fin Δ.length → Fin Γ.length} (h : List.IsFWk Γ Δ ρ)
   : ∀i, Γ.get (ρ i) = Δ.get i := h.apply
 
-theorem List.FEWkn.getElem {Γ Δ : List α} {ρ : Fin Δ.length → Fin Γ.length} (h : List.FEWkn Γ Δ ρ)
+theorem List.IsFWk.getElem {Γ Δ : List α} {ρ : Fin Δ.length → Fin Γ.length} (h : List.IsFWk Γ Δ ρ)
   : ∀i, Γ[ρ i] = Δ[i] := h.apply
 
-theorem List.FEWkn.comp {ρ : Fin Δ.length → Fin Γ.length} {σ : Fin Ξ.length → Fin Δ.length}
-  (hρ : List.FEWkn Γ Δ ρ) (hσ : List.FEWkn Δ Ξ σ) : List.FEWkn Γ Ξ (ρ ∘ σ)
+theorem List.IsFWk.comp {ρ : Fin Δ.length → Fin Γ.length} {σ : Fin Ξ.length → Fin Δ.length}
+  (hρ : List.IsFWk Γ Δ ρ) (hσ : List.IsFWk Δ Ξ σ) : List.IsFWk Γ Ξ (ρ ∘ σ)
   := Fin.FEWkn.comp hρ hσ
 
-theorem List.FEWkn.lift {ρ : Fin Δ.length → Fin Γ.length} (hρ : List.FEWkn Γ Δ ρ)
-    : List.FEWkn (A :: Γ) (A :: Δ) (Fin.liftWk ρ)
+theorem List.IsFWk.lift {ρ : Fin Δ.length → Fin Γ.length} (hρ : List.IsFWk Γ Δ ρ)
+    : List.IsFWk (A :: Γ) (A :: Δ) (Fin.liftWk ρ)
   := by funext i; cases i using Fin.cases with
   | zero => rfl
   | succ i =>
@@ -268,114 +307,112 @@ theorem List.FEWkn.lift {ρ : Fin Δ.length → Fin Γ.length} (hρ : List.FEWkn
     apply hρ.getElem
 
 /-- The function `ρ` sends `Γ` to `Δ` -/
-def List.NEWkn (Γ Δ : List α) (ρ : ℕ → ℕ) : Prop
+def List.IsWk (Γ Δ : List α) (ρ : ℕ → ℕ) : Prop
   := ∀n, (hΔ : n < Δ.length) → ∃hΓ : ρ n < Γ.length, Γ[ρ n] = Δ[n]
 
-theorem List.NEWkn.bounded {ρ : ℕ → ℕ} (h : List.NEWkn Γ Δ ρ) (n : ℕ) (hΔ : n < Δ.length)
+theorem List.IsWk.bounded {ρ : ℕ → ℕ} (h : List.IsWk Γ Δ ρ) (n : ℕ) (hΔ : n < Δ.length)
   : ρ n < Γ.length := match h n hΔ with | ⟨hΓ, _⟩ => hΓ
 
-def List.NEWkn.toFinWk {ρ : ℕ → ℕ} (h : List.NEWkn Γ Δ ρ) : Fin (Δ.length) → Fin (Γ.length)
+def List.IsWk.toFinWk {ρ : ℕ → ℕ} (h : List.IsWk Γ Δ ρ) : Fin (Δ.length) → Fin (Γ.length)
   := Fin.wkOfBounded ρ h.bounded
 
-
-theorem List.NEWkn.toFEWkn (Γ Δ : List α) (ρ : ℕ → ℕ)
-  (h : List.NEWkn Γ Δ ρ) : List.FEWkn Γ Δ (List.NEWkn.toFinWk h)
+theorem List.IsWk.toIsFWk (Γ Δ : List α) (ρ : ℕ → ℕ)
+  (h : List.IsWk Γ Δ ρ) : List.IsFWk Γ Δ (List.IsWk.toFinWk h)
   := funext λ⟨i, hi⟩ => have ⟨_, h⟩ := h i hi; h
 
--- ... TODO: NEWkns
+-- ... TODO: IsWks
 
-theorem List.NEWkn.id (Γ : List α) : List.NEWkn Γ Γ id
+theorem List.IsWk.id (Γ : List α) : List.IsWk Γ Γ id
   := λ_ hΓ => ⟨hΓ, rfl⟩
 
 -- ... TODO: len_le
 
-theorem List.NEWkn.drop_all (Γ : List α) (ρ) : List.NEWkn Γ [] ρ
+theorem List.IsWk.drop_all (Γ : List α) (ρ) : List.IsWk Γ [] ρ
   := λi h => by cases h
 
-theorem List.NEWkn.comp {ρ : ℕ → ℕ} {σ : ℕ → ℕ} (hρ : List.NEWkn Γ Δ ρ) (hσ : List.NEWkn Δ Ξ σ)
-  : List.NEWkn Γ Ξ (ρ ∘ σ) := λn hΞ =>
+theorem List.IsWk.comp {ρ : ℕ → ℕ} {σ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ) (hσ : List.IsWk Δ Ξ σ)
+  : List.IsWk Γ Ξ (ρ ∘ σ) := λn hΞ =>
     have ⟨hΔ, hσ⟩ := hσ n hΞ;
     have ⟨hΓ, hρ⟩ := hρ _ hΔ;
     ⟨hΓ, hρ ▸ hσ⟩
 
-theorem List.NEWkn.lift {ρ : ℕ → ℕ} (hρ : List.NEWkn Γ Δ ρ)
-  : List.NEWkn (A :: Γ) (A :: Δ) (Nat.liftWk ρ) := λn hΔ => match n with
+theorem List.IsWk.lift {ρ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ)
+  : List.IsWk (A :: Γ) (A :: Δ) (Nat.liftWk ρ) := λn hΔ => match n with
   | 0 => ⟨Nat.zero_lt_succ _, rfl⟩
   | n+1 => have ⟨hΔ, hρ⟩ := hρ n (Nat.lt_of_succ_lt_succ hΔ); ⟨Nat.succ_lt_succ hΔ, hρ⟩
 
-theorem List.NEWkn.lift_tail {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
-    : List.NEWkn Γ Δ ρ
+theorem List.IsWk.lift_tail {ρ : ℕ → ℕ} (h : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
+    : List.IsWk Γ Δ ρ
   := λi hΔ => have ⟨hΔ, hρ⟩ := h i.succ (Nat.succ_lt_succ hΔ); ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
 
-theorem List.NEWkn.lift_head {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ)) : A = B
+theorem List.IsWk.lift_head {ρ : ℕ → ℕ} (h : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ)) : A = B
   := (h 0 (Nat.zero_lt_succ _)).2
 
-theorem List.NEWkn.lift_iff (A B) (Γ Δ : List α) (ρ : ℕ → ℕ)
-  : List.NEWkn (A :: Γ) (B :: Δ) (Nat.liftWk ρ) ↔ A = B ∧ List.NEWkn Γ Δ ρ
+theorem List.IsWk.lift_iff (A B) (Γ Δ : List α) (ρ : ℕ → ℕ)
+  : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ) ↔ A = B ∧ List.IsWk Γ Δ ρ
   := ⟨
-    λh => ⟨h.lift_head, List.NEWkn.lift_tail h⟩,
-    λ⟨rfl, hρ⟩ => List.NEWkn.lift hρ
+    λh => ⟨h.lift_head, List.IsWk.lift_tail h⟩,
+    λ⟨rfl, hρ⟩ => List.IsWk.lift hρ
   ⟩
 
-theorem List.NEWkn.lift_id (hρ : List.NEWkn Γ Δ _root_.id)
-  : List.NEWkn (A :: Γ) (A :: Δ) _root_.id := Nat.liftWk_id ▸ hρ.lift
+theorem List.IsWk.lift_id (hρ : List.IsWk Γ Δ _root_.id)
+  : List.IsWk (A :: Γ) (A :: Δ) _root_.id := Nat.liftWk_id ▸ hρ.lift
 
-theorem List.NEWkn.lift_id_tail (h : List.NEWkn (left :: Γ) (right :: Δ) _root_.id)
-    : List.NEWkn Γ Δ _root_.id
+theorem List.IsWk.lift_id_tail (h : List.IsWk (left :: Γ) (right :: Δ) _root_.id)
+    : List.IsWk Γ Δ _root_.id
   := (Nat.liftWk_id ▸ h).lift_tail
 
-theorem List.NEWkn.lift_id_head (h : List.NEWkn (left :: Γ) (right :: Δ) _root_.id)
+theorem List.IsWk.lift_id_head (h : List.IsWk (left :: Γ) (right :: Δ) _root_.id)
   : left = right
   := (Nat.liftWk_id ▸ h).lift_head
 
-theorem List.NEWkn.lift_id_iff (h : List.NEWkn (left :: Γ) (right :: Δ) _root_.id)
-  : left = right ∧ List.NEWkn Γ Δ _root_.id
+theorem List.IsWk.lift_id_iff (h : List.IsWk (left :: Γ) (right :: Δ) _root_.id)
+  : left = right ∧ List.IsWk Γ Δ _root_.id
   := ⟨h.lift_id_head, h.lift_id_tail⟩
 
-theorem List.NEWkn.lift₂ {ρ : ℕ → ℕ} (hρ : List.NEWkn Γ Δ ρ)
-    : List.NEWkn (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftWk (Nat.liftWk ρ))
+theorem List.IsWk.lift₂ {ρ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ)
+    : List.IsWk (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftWk (Nat.liftWk ρ))
   := hρ.lift.lift
 
-theorem List.NEWkn.liftn₂ {ρ : ℕ → ℕ} (hρ : List.NEWkn Γ Δ ρ)
-    : List.NEWkn (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftnWk 2 ρ)
+theorem List.IsWk.liftn₂ {ρ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ)
+    : List.IsWk (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftnWk 2 ρ)
   := by rw [Nat.liftnWk_two]; exact hρ.lift₂
 
-theorem List.NEWkn.liftn_append {ρ : ℕ → ℕ} (Ξ : List α) (hρ : List.NEWkn Γ Δ ρ)
-    : List.NEWkn (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk Ξ.length ρ) := by
+theorem List.IsWk.liftn_append {ρ : ℕ → ℕ} (Ξ : List α) (hρ : List.IsWk Γ Δ ρ)
+    : List.IsWk (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk Ξ.length ρ) := by
   induction Ξ with
   | nil => exact hρ
   | cons A Ξ I =>
     rw [List.length, Nat.liftnWk_succ']
     exact I.lift
 
-theorem List.NEWkn.liftn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.length = n)
-  (hρ : List.NEWkn Γ Δ ρ) : List.NEWkn (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk n ρ) := hΞ ▸ hρ.liftn_append Ξ
+theorem List.IsWk.liftn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.length = n)
+  (hρ : List.IsWk Γ Δ ρ) : List.IsWk (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk n ρ) := hΞ ▸ hρ.liftn_append Ξ
 
-theorem List.NEWkn.step {ρ : ℕ → ℕ} (A : α) (hρ : List.NEWkn Γ Δ ρ)
-    : List.NEWkn (A :: Γ) Δ (Nat.succ ∘ ρ)
+theorem List.IsWk.step {ρ : ℕ → ℕ} (A : α) (hρ : List.IsWk Γ Δ ρ)
+    : List.IsWk (A :: Γ) Δ (Nat.succ ∘ ρ)
   := λn hΔ => have ⟨hΔ, hρ⟩ := hρ n hΔ; ⟨Nat.succ_lt_succ hΔ, hρ⟩
 
-theorem List.NEWkn.step_tail {ρ : ℕ → ℕ} (h : List.NEWkn (A :: Γ) Δ (Nat.succ ∘ ρ)) : List.NEWkn Γ Δ ρ
+theorem List.IsWk.step_tail {ρ : ℕ → ℕ} (h : List.IsWk (A :: Γ) Δ (Nat.succ ∘ ρ)) : List.IsWk Γ Δ ρ
   := λi hΔ => have ⟨hΔ, hρ⟩ := h i hΔ; ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
 
-theorem List.NEWkn.step_iff (A) (Γ Δ : List α) (ρ : ℕ → ℕ)
-  : List.NEWkn (A :: Γ) Δ (Nat.succ ∘ ρ) ↔ List.NEWkn Γ Δ ρ
+theorem List.IsWk.step_iff (A) (Γ Δ : List α) (ρ : ℕ → ℕ)
+  : List.IsWk (A :: Γ) Δ (Nat.succ ∘ ρ) ↔ List.IsWk Γ Δ ρ
   := ⟨
-    List.NEWkn.step_tail,
-    List.NEWkn.step A
+    List.IsWk.step_tail,
+    List.IsWk.step A
   ⟩
 
-theorem List.NEWkn.stepn_append {ρ : ℕ → ℕ} (Ξ : List α) (hρ : List.NEWkn Γ Δ ρ)
-    : List.NEWkn (Ξ ++ Γ) Δ (Nat.stepnWk Ξ.length ρ)
+theorem List.IsWk.stepn_append {ρ : ℕ → ℕ} (Ξ : List α) (hρ : List.IsWk Γ Δ ρ)
+    : List.IsWk (Ξ ++ Γ) Δ (Nat.stepnWk Ξ.length ρ)
   := by induction Ξ with
     | nil => exact hρ
     | cons A Ξ I =>
       rw [List.length, Nat.stepnWk_succ']
       exact I.step _
 
-theorem List.NEWkn.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.length = n)
-  (hρ : List.NEWkn Γ Δ ρ) : List.NEWkn (Ξ ++ Γ) Δ (Nat.stepnWk n ρ) := hΞ ▸ hρ.stepn_append Ξ
-
+theorem List.IsWk.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.length = n)
+  (hρ : List.IsWk Γ Δ ρ) : List.IsWk (Ξ ++ Γ) Δ (Nat.stepnWk n ρ) := hΞ ▸ hρ.stepn_append Ξ
 
 variable [PartialOrder α] {Γ Δ Ξ : List α}
 
@@ -570,8 +607,8 @@ theorem List.NWkn.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.leng
 -- TODO: if the order is discrete and there are no duplicates in the source, then the are none
 --       in the target
 
-theorem List.NEWkn.toNWkn (Γ Δ : List α) (ρ : ℕ → ℕ)
-  (h : List.NEWkn Γ Δ ρ) : List.NWkn Γ Δ ρ
+theorem List.IsWk.toNWkn (Γ Δ : List α) (ρ : ℕ → ℕ)
+  (h : List.IsWk Γ Δ ρ) : List.NWkn Γ Δ ρ
   := λn hΔ => match h n hΔ with | ⟨hΓ, h⟩ => ⟨hΓ, le_of_eq h⟩
 
 /-- The list Γ has a member compatible with `A` at index `n` -/

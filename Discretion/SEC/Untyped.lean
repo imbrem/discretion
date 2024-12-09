@@ -4,20 +4,20 @@ namespace SEC
 
 open FreeSignature
 
-inductive Untyped (τ : Type _) [FreeSignature τ] : Type _
-  | var : ℕ → Untyped τ
-  | op : Untyped.Inst τ → Untyped τ → Untyped τ
-  | let₁ : Untyped τ → Untyped τ → Untyped τ
-  | unit : Untyped τ
-  | pair : Untyped τ → Untyped τ → Untyped τ
-  | let₂ : Untyped τ → Untyped τ → Untyped τ
+inductive Term (τ : Type _) [FreeSignature τ] : Type _
+  | var : ℕ → Term τ
+  | op : Untyped.Inst τ → Term τ → Term τ
+  | let₁ : Term τ → Term τ → Term τ
+  | unit : Term τ
+  | pair : Term τ → Term τ → Term τ
+  | let₂ : Term τ → Term τ → Term τ
 
 variable {τ} [FreeSignature τ]
 
-namespace Untyped
+namespace Term
 
 @[simp]
-def wk (ρ : ℕ → ℕ) : Untyped τ → Untyped τ
+def wk (ρ : ℕ → ℕ) : Term τ → Term τ
   | .var v => .var (ρ v)
   | .op f t => .op f (t.wk ρ)
   | .let₁ t u => .let₁ (t.wk ρ) (u.wk (Nat.liftWk ρ))
@@ -25,9 +25,9 @@ def wk (ρ : ℕ → ℕ) : Untyped τ → Untyped τ
   | .pair t u => .pair (t.wk ρ) (u.wk ρ)
   | .let₂ t u => .let₂ (t.wk ρ) (u.wk (Nat.liftWk (Nat.liftWk ρ)))
 
-theorem wk_id (t : Untyped τ) : t.wk id = t := by induction t <;> simp [*]
+theorem wk_id (t : Term τ) : t.wk id = t := by induction t <;> simp [*]
 
-theorem wk_comp (ρ σ : ℕ → ℕ) (t : Untyped τ)
+theorem wk_comp (ρ σ : ℕ → ℕ) (t : Term τ)
   : t.wk (ρ ∘ σ) = (t.wk σ).wk ρ
   := by induction t generalizing ρ σ <;> simp [Nat.liftWk_comp, *]
 
@@ -41,7 +41,7 @@ notation "wk3" => wk (Nat.liftWk (Nat.liftWk (Nat.liftWk Nat.succ)))
 
 notation "wk4" => wk (Nat.liftWk (Nat.liftWk (Nat.liftWk (Nat.liftWk Nat.succ))))
 
-def fvi : Untyped τ → ℕ
+def fvi : Term τ → ℕ
   | .var v => v + 1
   | .op _ t => t.fvi
   | .let₁ t u => t.fvi ⊔ (u.fvi - 1)
@@ -49,7 +49,7 @@ def fvi : Untyped τ → ℕ
   | .pair t u => t.fvi ⊔ u.fvi
   | .let₂ t u => t.fvi ⊔ (u.fvi - 2)
 
-def fvu (i : ℕ) : Untyped τ → Bool
+def fvu (i : ℕ) : Term τ → Bool
   | .var v => v = i
   | .op _ t => t.fvu i
   | .let₁ t u => t.fvu i ⊔ if i >= 1 then u.fvu (i - 1) else false
@@ -57,9 +57,9 @@ def fvu (i : ℕ) : Untyped τ → Bool
   | .pair t u => t.fvu i ⊔ u.fvu i
   | .let₂ t u => t.fvu i ⊔ if i >= 2 then u.fvu (i - 2) else false
 
-open Untyped
+open Term
 
-abbrev Subst (τ : Type _) [FreeSignature τ] := ℕ → Untyped τ
+abbrev Subst (τ : Type _) [FreeSignature τ] := ℕ → Term τ
 
 namespace Subst
 
@@ -76,14 +76,14 @@ theorem lift_succ {σ : Subst τ} (i : ℕ) : σ.lift (i + 1) = wk0 (σ i) := rf
 abbrev id : Subst τ := .var
 
 @[simp]
-theorem lift_id : id.lift = id (τ := τ) := funext (λn => by cases n <;> simp [lift, Untyped.wk])
+theorem lift_id : id.lift = id (τ := τ) := funext (λn => by cases n <;> simp [lift, Term.wk])
 
 def fromWk (ρ : ℕ → ℕ) : Subst τ := .var ∘ ρ
 
 end Subst
 
 @[simp]
-def subst (σ : Subst τ) : Untyped τ → Untyped τ
+def subst (σ : Subst τ) : Term τ → Term τ
   | .var v => σ v
   | .op f t => .op f (t.subst σ)
   | .let₁ t u => .let₁ (t.subst σ) (u.subst (σ.lift))
@@ -92,9 +92,9 @@ def subst (σ : Subst τ) : Untyped τ → Untyped τ
   | .let₂ t u => .let₂ (t.subst σ) (u.subst (σ.lift).lift)
 
 @[simp]
-theorem subst_id (t : Untyped τ) : t.subst Subst.id = t := by induction t <;> simp [*]
+theorem subst_id (t : Term τ) : t.subst Subst.id = t := by induction t <;> simp [*]
 
--- theorem subst_liftn_wkn (σ : Subst τ) (t : Untyped τ) (n : ℕ)
+-- theorem subst_liftn_wkn (σ : Subst τ) (t : Term τ) (n : ℕ)
 --   : (t.wk (Nat.liftWk^[n] .succ)).subst (Subst.lift^[n] σ) = (t.subst σ).wk (Nat.liftWk^[n] .succ)
 --   := by
 --   induction t generalizing n <;> simp only [subst, wk, let₁.injEq, let₂.injEq, true_and, *]
@@ -104,7 +104,7 @@ theorem subst_id (t : Untyped τ) : t.subst Subst.id = t := by induction t <;> s
 --   case let₁ => sorry
 --   case let₂ => sorry
 
--- theorem subst_lift_wk0 (σ : Subst τ) (t : Untyped τ)
+-- theorem subst_lift_wk0 (σ : Subst τ) (t : Term τ)
 --   : (wk0 t).subst σ.lift = wk0 (t.subst σ) := by sorry
 
 namespace Subst
@@ -124,9 +124,9 @@ theorem id_comp (σ : Subst τ) : comp Subst.id σ = σ := funext (λi => by sim
 end Subst
 
 -- @[simp]
--- theorem subst_comp (σ σ' : Subst τ) (t : Untyped τ) : t.subst (σ.comp σ') = (t.subst σ).subst σ' := by
+-- theorem subst_comp (σ σ' : Subst τ) (t : Term τ) : t.subst (σ.comp σ') = (t.subst σ).subst σ' := by
 --   induction t <;> simp [Subst.comp, *]
 
-end Untyped
+end Term
 
 end SEC
