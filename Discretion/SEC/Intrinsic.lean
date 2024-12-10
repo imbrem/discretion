@@ -27,3 +27,5 @@ def Term.erase {τ} [FreeSignature τ] {Γ A} : Term τ Γ A → SEC.Term τ
   | .unit => .unit
   | .pair t u => .pair t.erase u.erase
   | .let₂ t u => .let₂ t.erase u.erase
+
+-- TODO: erase is faithful

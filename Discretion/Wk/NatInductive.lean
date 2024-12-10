@@ -87,7 +87,51 @@ theorem Nat.Wk.comp_assoc {n m k l} (ρ : Nat.Wk n m) (σ : Nat.Wk m k) (τ : Na
   : (ρ.comp σ).comp τ = ρ.comp (σ.comp τ) := by apply ixf_injective; simp [Function.comp_assoc]
 
 theorem Nat.Wk.ixf_inj {n m} {ρ σ : Nat.Wk n m} : ixf ρ = ixf σ ↔ ρ = σ
-  := ⟨λh => ixf_injective h, λh => by cases h; rfl⟩
+  := ixf_injective.eq_iff
+
+theorem Nat.Wk.coe_ixf_eq_ix_coe {n m} (ρ : Nat.Wk n m) (i : Fin m) : ρ.ixf i = ρ.ix i := by
+  induction ρ with
+  | nil => exact i.elim0
+  | step => simp [*]
+  | lift => cases i using Fin.cases <;> simp [*]
+
+theorem Nat.Wk.ix_eq_ixf_of_bounded {n m} (ρ : Nat.Wk n m) (i : ℕ) (hi : i < m)
+  : ρ.ix i = ρ.ixf ⟨i, hi⟩ := by rw [coe_ixf_eq_ix_coe]
+
+theorem Nat.Wk.ix_bounded_on' {n m} (ρ : Nat.Wk n m) (i : ℕ) (hi : i < m)
+  : ρ.ix i < n := by simp [ix_eq_ixf_of_bounded ρ i hi]
+
+theorem Nat.Wk.ix_above_above {n m} (ρ : Nat.Wk n m) (i : ℕ) (hi : i ≥ m)
+  : ρ.ix i ≥ n := by induction ρ generalizing i with
+  | nil => exact hi
+  | step _ I => simp [I i hi]
+  | lift _ I => cases i with
+    | zero => cases hi
+    | succ i => simp [I i (by convert hi using 0; simp)]
+
+theorem Nat.Wk.ix_bounded_from' {n m} (ρ : Nat.Wk n m) (i : ℕ) : ρ.ix i < n → i < m := by
+  convert ρ.ix_above_above i using 0; omega
+
+instance Nat.Wk.ix_bounded_on {n m} (ρ : Nat.Wk n m) : BoundedOn m n ρ.ix where
+  bounded_on := ρ.ix_bounded_on'
+
+instance Nat.Wk.ix_bounded_from {n m} (ρ : Nat.Wk n m) : BoundedFrom m n ρ.ix where
+  bounded_from := ρ.ix_bounded_from'
+
+theorem Nat.Wk.ixf_eq_sub_ix {n m} (ρ : Nat.Wk n m) (i : Fin m)
+  : ρ.ixf i = ⟨ρ.ix i, ρ.ix_bounded_on' i i.is_lt⟩
+  := by ext; rw [coe_ixf_eq_ix_coe]
+
+theorem Nat.Wk.val_comp_ixf {n m} (ρ : Nat.Wk n m) : Fin.val ∘ ρ.ixf = ρ.ix ∘ Fin.val
+  := funext ρ.coe_ixf_eq_ix_coe
+
+theorem Nat.Wk.ix_injective {n m} : Function.Injective (@ix n m) := λρ σ h => by
+  have h' := ρ.val_comp_ixf; rw [h, <-val_comp_ixf] at h'
+  apply ixf_injective; ext i
+  exact congrFun h' i
+
+theorem Nat.Wk.ix_inj {n m} {ρ σ : Nat.Wk n m} : ρ.ix = σ.ix ↔ ρ = σ
+  := ix_injective.eq_iff
 
 @[simp]
 theorem Nat.Wk.pv_id {n} (v : Vector' α n) : (id n).pv v = v := by induction v <;> simp [*]

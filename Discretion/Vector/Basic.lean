@@ -244,6 +244,15 @@ theorem get_top [Top α] {n : Nat} : (⊤ : Vector' α n).get = ⊤ := by simp [
 theorem get_top_applied [Top α] {n : Nat} (i : Fin n) : (⊤ : Vector' α n).get i = ⊤
   := by simp
 
+instance instZero [Zero α] : Zero (Vector' α n) where
+  zero := ofFn 0
+
+instance instOne [One α] : One (Vector' α n) where
+  one := ofFn 1
+
+def oneHot [Zero α] {n : Nat} (i : Fin n) (a : α) : Vector' α n
+  := ofFn (λj => if j = i then a else 0)
+
 instance instBot [Bot α] : Bot (Vector' α n) where
   bot := ofFn ⊥
 

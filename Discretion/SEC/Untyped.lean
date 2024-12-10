@@ -83,6 +83,14 @@ def fvu (i : ℕ) : Term τ → Bool
   | .let₂ t u => t.fvu i ⊔ if i >= 2 then u.fvu (i - 2) else false
   | _ => false
 
+def fvq (i : ℕ) : Term τ → EQuant
+  | .var v => if v = i then 1 else 0
+  | .op _ t => t.fvq i
+  | .let₁ t u => t.fvq i + u.fvq (i + 1)
+  | .pair t u => t.fvq i + u.fvq i
+  | .let₂ t u => t.fvq i + u.fvq (i + 2)
+  | _ => 0
+
 open Term
 
 abbrev Subst (τ : Type _) [FreeSignature τ] := ℕ → Term τ

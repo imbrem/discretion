@@ -16,7 +16,7 @@ namespace Term
 
 variable {τ} [FreeSignature τ]
 
-inductive Wf : List (Ty τ) → Term τ → (outParam (Ty τ)) → Prop
+inductive Wf : List (Ty τ) → Term τ → Ty τ → Prop
   | var {Γ i A} (hΓ : i < Γ.length) : Γ[i] = A → Wf Γ (.var i) A
   | op {Γ f a A B} (hA : f.src = A) (hB : f.trg = B) : Wf Γ a A → Wf Γ (.op f a) B
   | let₁ {Γ a b A B} : Wf Γ a A → Wf (A::Γ) b B → Wf Γ (.let₁ a b) B
@@ -388,3 +388,50 @@ theorem LSubst.Wf.iff_var {Γ σ Δ}
   := ⟨λh => ⟨h.length, h.var⟩, λ⟨h, h'⟩ => by convert h'.lsubst_of_var; simp [h]⟩
 
 -- TODO: Subst.Wf iff LSubst.Wf ofFn
+
+inductive WfqD : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ → Ty τ → Type _
+  | var {Γ qs i A} (hi : i < Γ.length) : Γ.QVar qs i A → WfqD Γ qs (.var i) A
+  | op {Γ qs f a A B} (hA : f.src = A) (hB : f.trg = B) : WfqD Γ qs a A → WfqD Γ qs (.op f a) B
+  | let₁ {Γ} {qs qs' : Vector' EQuant Γ.length} {a b A B}
+    : WfqD Γ qs a A → WfqD (A::Γ) (qs'.cons (quant A)) b B → WfqD Γ (qs + qs') (.let₁ a b) B
+  | unit {Γ qs} : 0 ≤ qs → WfqD Γ qs .unit (𝟙_ _)
+  | pair {Γ} {qs qs' : Vector' EQuant Γ.length} {a b A B}
+    : WfqD Γ qs a A → WfqD Γ qs' b B → WfqD Γ (qs + qs') (.pair a b) (A ⊗ B)
+  | let₂ {Γ} {qs qs' : Vector' EQuant Γ.length} {a c A B C} : WfqD Γ qs a (A ⊗ B)
+    → WfqD (B::A::Γ) ((qs.cons ↑(quant A)).cons ↑(quant B)) c C
+    → WfqD Γ (qs + qs') (.let₂ a c) C
+
+inductive WfqM : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ → Ty τ → Prop
+  | var {Γ qs i A} (hi : i < Γ.length)
+    : Γ[i] = A ∧ qs = Vector'.oneHot ⟨i, hi⟩ 1 → WfqM Γ qs (.var i) A
+  | op {Γ qs f a A B} (hA : f.src = A) (hB : f.trg = B) : WfqM Γ qs a A → WfqM Γ qs (.op f a) B
+  | let₁ {Γ} {qs qs' : Vector' EQuant Γ.length} {qA a b A B}
+    : WfqM Γ qs a A → qA = ↑(quant A)
+    → WfqM (A::Γ) (qs'.cons qA) b B → WfqM Γ (qs + qs') (.let₁ a b) B
+  | unit {Γ qs} : qs = 0 → WfqM Γ qs .unit (𝟙_ _)
+  | pair {Γ} {qs qs' : Vector' EQuant Γ.length} {a b A B}
+    : WfqM Γ qs a A → WfqM Γ qs' b B → WfqM Γ (qs + qs') (.pair a b) (A ⊗ B)
+  | let₂ {Γ} {qs qs' : Vector' EQuant Γ.length} {qA qB a c A B C} : WfqM Γ qs a (A ⊗ B)
+    → qA = ↑(quant A) → qB = ↑(quant B)
+    → WfqM (B::A::Γ) ((qs.cons qA).cons qB) c C
+    → WfqM Γ (qs + qs') (.let₂ a c) C
+
+inductive Wfq : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ → Ty τ → Prop
+  | var {Γ qs i A} (hi : i < Γ.length) : Γ.QVar qs i A → Wfq Γ qs (.var i) A
+  | op {Γ qs f a A B} (hA : f.src = A) (hB : f.trg = B) : Wfq Γ qs a A → Wfq Γ qs (.op f a) B
+  | let₁ {Γ} {qs qs' : Vector' EQuant Γ.length} {a b A B}
+    : Wfq Γ qs a A → Wfq (A::Γ) (qs'.cons (quant A)) b B → Wfq Γ (qs + qs') (.let₁ a b) B
+  | unit {Γ qs} : 0 ≤ qs → Wfq Γ qs .unit (𝟙_ _)
+  | pair {Γ} {qs qs' : Vector' EQuant Γ.length} {a b A B}
+    : Wfq Γ qs a A → Wfq Γ qs' b B → Wfq Γ (qs + qs') (.pair a b) (A ⊗ B)
+  | let₂ {Γ} {qs qs' : Vector' EQuant Γ.length} {a c A B C} : Wfq Γ qs a (A ⊗ B)
+    → Wfq (B::A::Γ) ((qs.cons ↑(quant A)).cons ↑(quant B)) c C
+    → Wfq Γ (qs + qs') (.let₂ a c) C
+
+-- TODO: WfqM has a unique quantity q
+
+-- TODO: Nonempty (WfqD qs) iff Wfq qs iff WfqM qs' and qs' ≤ qs
+
+-- TODO: Wfq ==> Wf (and therefore WfqM, WfqD, etc...)
+
+-- TODO: Wq/WqM using inferTy; WqM iff Wq and 

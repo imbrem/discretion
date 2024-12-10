@@ -75,10 +75,74 @@ def List.Wk.ix {α} : ∀{Γ Δ : List α}, Wk Γ Δ → ℕ → ℕ
   | _, _, .step A ρ => Nat.stepWk ρ.ix
   | _, _, .lift A ρ => Nat.liftWk ρ.ix
 
+theorem List.Wk.ix_nw {α} {Γ Δ : List α} (ρ : Wk Γ Δ) : ρ.nw.ix = ρ.ix := by
+  induction ρ <;> simp only [nw, ix, Nat.Wk.ix, *]
+
+theorem List.Wk.ix_comp_nw {α Γ Δ} : Nat.Wk.ix ∘ nw = ix (α := α) (Γ := Γ) (Δ := Δ)
+  := funext ix_nw
+
+theorem List.Wk.ix_injective {α} {Γ Δ : List α} : Function.Injective (@List.Wk.ix α Γ Δ) := by
+  rw [<-ix_comp_nw]; apply Function.Injective.comp; apply Nat.Wk.ix_injective; apply nw_injective
+
+theorem List.Wk.ix_inj {α} {Γ Δ : List α} {ρ σ : Wk Γ Δ} : List.Wk.ix ρ = List.Wk.ix σ ↔ ρ = σ
+  := ix_injective.eq_iff
+
 def List.Wk.ixf {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Fin Δ.length → Fin Γ.length
   | _, _, .nil => Fin.elim0
   | _, _, .step A ρ => Fin.stepWk ρ.ixf
   | _, _, .lift A ρ => Fin.liftWk ρ.ixf
+
+theorem List.Wk.ixf_nw {α} {Γ Δ : List α} (ρ : Wk Γ Δ) : ρ.nw.ixf = ρ.ixf := by
+  induction ρ with
+  | nil => funext i; exact i.elim0
+  | _ => simp only [nw, ixf, Nat.Wk.ixf, *]
+
+theorem List.Wk.ixf_comp_nw {α Γ Δ} : Nat.Wk.ixf ∘ nw = ixf (α := α) (Γ := Γ) (Δ := Δ)
+  := funext ixf_nw
+
+theorem List.Wk.ixf_injective {α} {Γ Δ : List α} : Function.Injective (@ixf α Γ Δ) := by
+  rw [<-ixf_comp_nw]; apply Function.Injective.comp; apply Nat.Wk.ixf_injective; apply nw_injective
+
+theorem List.Wk.ixf_inj {α} {Γ Δ : List α} {ρ σ : Wk Γ Δ} : List.Wk.ixf ρ = List.Wk.ixf σ ↔ ρ = σ
+  := ixf_injective.eq_iff
+
+def List.Wk.ixf0 {α} {Γ Δ : List α} {A} : Wk Γ (A::Δ) → Fin Γ.length
+  | .step A ρ => ρ.ixf0.succ
+  | .lift A ρ => (0 : Fin (_ + 1))
+
+theorem List.Wk.ixf0_eq {α} {Γ Δ : List α} {A} (ρ : Wk Γ (A::Δ))
+  : ρ.ixf (0 : Fin (_ + 1)) = ρ.ixf0 := by induction Γ <;> cases ρ <;> simp [ixf0, ixf, *]
+
+def List.Wk.ix0 {α} {Γ Δ : List α} {A} : Wk Γ (A::Δ) → ℕ
+  | .step A ρ => ρ.ix0 + 1
+  | .lift A ρ => 0
+
+theorem List.Wk.ix0_eq {α} {Γ Δ : List α} {A} (ρ : Wk Γ (A::Δ))
+  : ρ.ix 0 = ρ.ix0 := by induction Γ <;> cases ρ <;> simp [ix0, ix, *]
+
+def List.Wk.varIx {α} {Γ : List α} (i : ℕ) (hi : i < Γ.length) : Wk Γ [Γ[i]]
+  := match Γ, i, hi with
+  | A::Γ, 0, _ => (drop Γ).lift A
+  | A::_, n + 1, hi => (varIx n (Nat.lt_of_succ_lt_succ hi)).step A
+
+def List.Wk.varIx' {α} {Γ : List α} {A} (i : ℕ) (hi : i < Γ.length) (hA : Γ[i] = A) : Wk Γ [A]
+  := hA ▸ varIx i hi
+
+theorem List.Wk.ix0_varIx {α} {Γ : List α} (i : ℕ) (hi : i < Γ.length)
+  : (varIx i hi).ix0 = i := by
+  induction Γ generalizing i with
+  | nil => cases hi
+  | cons A Γ I => cases i with
+  | zero => rfl
+  | succ i => simp only [ix0, getElem_cons_succ, add_left_inj, I]
+
+def List.Wk.varFin {α} {Γ : List α} (i : Fin Γ.length) : Wk Γ [Γ[i]]
+  := varIx i.val i.is_lt
+
+-- TODO: varFin is a bijection
+
+def List.Wk.varFin' {α} {Γ : List α} {A} (i : Fin Γ.length) (hA : Γ[i] = A) : Wk Γ [A]
+  := hA ▸ varFin i
 
 def List.Wk.pv {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' β Γ.length → Vector' β Δ.length
   | _, _, .nil, _ => Vector'.nil
@@ -106,12 +170,19 @@ inductive List.Wk.Wf {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' EQuant Γ
   | lift (A) {Γ Δ} (ρ : Wk Γ Δ) (q qs)
     : 1 ≤ q → Wf ρ qs → Wf (ρ.lift A) (qs.cons q)
 
-inductive List.Wk.EWf {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' EQuant Γ.length → Prop
-
 def List.Wk.minQ {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' EQuant Γ.length
   | _, _, .nil => .nil
   | _, _, .step _ ρ => (ρ.minQ).cons 0
   | _, _, .lift _ ρ => (ρ.minQ).cons 1
+
+def List.Wk.EWk {α} {Γ Δ : List α} (ρ : Wk Γ Δ) {ε} [PartialOrder ε]
+  (qΓ : Vector' ε Γ.length) (qΔ : Vector' ε Δ.length) := qΔ ≤ ρ.pv qΓ
+
+structure List.Wk.QWk {α} {Γ Δ : List α} (ρ : Wk Γ Δ)
+  (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length)
+  : Prop where
+  wf : ρ.Wf qΓ
+  pv_le : ρ.EWk qΓ qΔ
 
 -- TODO: Wk wf iff minQ leq qs...
 
@@ -121,6 +192,15 @@ def List.QWk (Γ Δ : List α) (qs : Vector' EQuant Γ.length) := {ρ : Wk Γ Δ
 
 -- TODO: List.Wk is a subsingleton if Γ has no duplicates of elements of Δ
 -- (and therefore, in particular, if it has no duplicates at all!)
+
+structure Vector'.Var (qs : Vector' EQuant n) (i : ℕ) : Prop where
+  is_lt : i < n
+  use : 1 ≤ qs.get ⟨i, is_lt⟩
+  select : ∀j : Fin n, i ≠ j → 0 ≤ qs.get j
+
+structure List.QVar (Γ : List α) (qs : Vector' EQuant Γ.length) (i) (A : α)
+  extends qs.Var i : Prop where
+  ty_eq : Γ[i] = A
 
 def List.Split {α} (Γ Δ Ξ : List α) := List.Wk Γ Δ × List.Wk Γ Ξ
 
