@@ -268,6 +268,16 @@ theorem get_bot_applied [Bot α] {n : Nat} (i : Fin n) : (⊥ : Vector' α n).ge
 instance instAdd [Add α] : Add (Vector' α n) where
   add := zipWith (· + ·)
 
+theorem add_def [Add α] {n : Nat} (v w : Vector' α n)
+  : v + w = zipWith (· + ·) v w := rfl
+
+@[simp]
+theorem add_nil [Add α] : (.nil : Vector' α 0) + .nil = .nil := rfl
+
+@[simp]
+theorem add_cons [Add α] {n : Nat} (a b : α) (v w : Vector' α n)
+  : (cons a v) + (cons b w) = cons (a + b) (v + w) := rfl
+
 instance instSub [Sub α] : Sub (Vector' α n) where
   sub := zipWith (· - ·)
 

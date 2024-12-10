@@ -434,4 +434,14 @@ inductive Wfq : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ →
 
 -- TODO: Wfq ==> Wf (and therefore WfqM, WfqD, etc...)
 
--- TODO: Wq/WqM using inferTy; WqM iff Wq and 
+-- TODO: Wq/WqM using inferTy; WqM iff Wq and
+
+section Effect
+
+variable {ε} [EffectSignature τ ε] [PartialOrder ε]
+
+inductive WeL : (Γ : List ε) → Term τ → ε → Prop
+  | var {Γ i e} (hi : i < Γ.length) : Γ[i] ≤ e → WeL Γ (.var i) e
+  | op {Γ f a e} : f.eff ≤ e → WeL Γ a e → WeL Γ (.op f a) e
+
+end Effect

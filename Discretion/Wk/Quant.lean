@@ -5,6 +5,7 @@ import Mathlib.Algebra.Group.WithOne.Defs
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Algebra.Order.Monoid.Unbundled.WithTop
 import Discretion.Utils
+import Discretion.Vector.Basic
 
 inductive DupCap : Type
   | copy
@@ -288,6 +289,12 @@ instance Quant.instAddCommSemigroup : AddCommSemigroup Quant where
 
 theorem Quant.add_mono {l r l' r' : Quant} (hl : l ≤ l') (hr : r ≤ r') : l + r ≤ l' + r' := by
   cases hl <;> cases hr <;> decide
+
+@[simp]
+theorem Quant.left_le_add {l r : Quant} : l ≤ l + r := by cases l <;> cases r <;> decide
+
+@[simp]
+theorem Quant.right_le_add {l r : Quant} : r ≤ l + r := by cases l <;> cases r <;> decide
 
 open Pointwise
 
@@ -593,14 +600,107 @@ theorem EQuant.coe_add {l r : Quant} : ((l + r : Quant) : EQuant) = (l : EQuant)
 theorem EQuant.add_mono {l r l' r' : EQuant} (hl : l ≤ l') (hr : r ≤ r') : l + r ≤ l' + r' := by
   cases hl <;> cases hr <;> decide
 
+def EQuant.toQ : EQuant → Quant
+  | 0 => ⊥
+  | (q : Quant) => q
+
+theorem EQuant.toQ_mono {l r : EQuant} (h : l ≤ r) : l.toQ ≤ r.toQ := by cases h <;> decide
+
+@[simp]
+theorem EQuant.toQ_add_le {l r : EQuant} : (l + r).toQ ≤ l.toQ + r.toQ := by
+  cases l <;> cases r <;> decide
+
+@[simp]
+theorem EQuant.left_toQ_le_add {l r : EQuant} : (l.toQ : EQuant) ≤ l.toQ + r := by
+  cases l <;> cases r <;> decide
+
+@[simp]
+theorem EQuant.right_toQ_le_add {l r : EQuant} : (r.toQ : EQuant) ≤ l + r.toQ := by
+  cases l <;> cases r <;> decide
+
+@[simp]
+theorem EQuant.left_toQ_le_toQ_add {l r : EQuant} : l.toQ ≤ (l + r).toQ := by
+  cases l <;> cases r <;> decide
+
+@[simp]
+theorem EQuant.right_toQ_le_toQ_add {l r : EQuant} : r.toQ ≤ (l + r).toQ := by
+  cases l <;> cases r <;> decide
+
+@[simp]
+theorem EQuant.left_toQ_le_toQ_add' {l r : EQuant} : (l.toQ : EQuant) ≤ (l + r).toQ := by
+  cases l <;> cases r <;> decide
+
+@[simp]
+theorem EQuant.right_toQ_le_toQ_of_add' {l r : EQuant} : (r.toQ : EQuant) ≤ (l + r).toQ := by
+  cases l <;> cases r <;> decide
+
 def EQuant.toMQ : EQuant → Quant
   | 0 => .del
   | (q : Quant) => q
 
-theorem EQuant.toMQ_mono {l r : EQuant} (h : l ≤ r) : l.toMQ ≤ r.toMQ := by cases h <;> simp [toMQ]
+theorem EQuant.toMQ_mono {l r : EQuant} (h : l ≤ r) : l.toMQ ≤ r.toMQ
+  := by cases h <;> decide
 
+theorem EQuant.toMQ_le_coe {l : EQuant} {r : Quant} (h : l ≤ r) : l.toMQ ≤ r
+  := by cases h <;> decide
+
+@[simp]
+theorem EQuant.toMQ_add_le {l r : EQuant} : (l + r).toMQ ≤ l.toMQ + r.toMQ := by
+  cases l <;> cases r <;> decide
+
+@[simp]
 theorem EQuant.toMQ_mul_toMQ_le {l r : EQuant} : l.toMQ * r.toMQ ≤ (l + r).toMQ := by
   cases l <;> cases r <;> decide
+
+@[simp]
+theorem EQuant.toMQ_left_le_add {l r : EQuant} : (l.toMQ : EQuant) ≤ l.toMQ + r := by
+  cases l <;> cases r <;> decide
+
+@[simp]
+theorem EQuant.toMQ_right_le_add {l r : EQuant} : (r.toMQ : EQuant) ≤ l + r.toMQ := by
+  cases l <;> cases r <;> decide
+
+def Vector'.toQE {n} (qs : Vector' EQuant n) : Vector' EQuant n := qs.map (λq => q.toQ)
+
+@[simp]
+theorem Vector'.toQE_nil : Vector'.toQE nil = nil := rfl
+
+@[simp]
+theorem Vector'.toQE_cons (q : EQuant) (qs : Vector' EQuant n)
+  : Vector'.toQE (qs.cons q) = qs.toQE.cons ↑q.toQ := rfl
+
+@[simp]
+theorem Vector'.toQE_left_le_add {l r : Vector' EQuant n} : l.toQE ≤ l.toQE + r
+  := by induction l <;> cases r <;> simp [*]
+
+@[simp]
+theorem Vector'.toQE_right_le_add {l r : Vector' EQuant n} : r.toQE ≤ l + r.toQE
+  := by induction l <;> cases r <;> simp [*]
+
+@[simp]
+theorem Vector'.toQE_left_le_toQE_add {l r : Vector' EQuant n} : l.toQE ≤ (l + r).toQE
+  := by induction l <;> cases r <;> simp [*]
+
+@[simp]
+theorem Vector'.toQE_right_le_toQE_add {l r : Vector' EQuant n} : r.toQE ≤ (l + r).toQE
+  := by induction l <;> cases r <;> simp [*]
+
+def Vector'.toMQE (qs : Vector' EQuant n) : Vector' EQuant n := qs.map (λq => q.toMQ)
+
+@[simp]
+theorem Vector'.toMQE_nil : Vector'.toMQE nil = nil := rfl
+
+@[simp]
+theorem Vector'.toMQE_cons (q : EQuant) (qs : Vector' EQuant n)
+  : Vector'.toMQE (qs.cons q) = qs.toMQE.cons ↑q.toMQ := rfl
+
+@[simp]
+theorem Vector'.toMQE_left_le_add {l r : Vector' EQuant n} : l.toMQE ≤ l.toMQE + r
+  := by induction l <;> cases r <;> simp [*]
+
+@[simp]
+theorem Vector'.toMQE_right_le_add {l r : Vector' EQuant n} : r.toMQE ≤ l + r.toMQE
+  := by induction l <;> cases r <;> simp [*]
 
 def EQuant.c : EQuant → Set ℕ
   | 0 => {0}
