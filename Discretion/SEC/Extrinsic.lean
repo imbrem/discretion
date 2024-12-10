@@ -293,6 +293,11 @@ theorem Subst.Wf.wkOut {Γ Δ Δ'} {ρ : ℕ → ℕ} (hρ : List.IsWk Δ Δ' ρ
 theorem Subst.Wf.wkOut_f {Γ Δ Δ'} (ρ : ℕ → ℕ) [hρ : List.IsWk Δ Δ' ρ] {σ : Subst τ}
   (h : Subst.Wf Γ σ Δ) : Subst.Wf Γ (σ.wkOut ρ) Δ' := h.wkOut hρ
 
+theorem Wf.subst {Γ σ Δ} (hσ : Subst.Wf Γ σ Δ) {t : Term τ} {A}
+  (h : Term.Wf Δ t A) : Term.Wf Γ (t.subst σ) A := by induction h generalizing σ Γ with
+  | var hi hA => cases hA; exact hσ _ hi
+  | _ => constructor <;> apply_assumption <;> simp [Subst.Wf.lift_iff, *]
+
 inductive LSubst.Wf : List (Ty τ) → LSubst τ → List (Ty τ) → Prop
   | nil {Γ} : LSubst.Wf Γ [] []
   | cons {Γ σ Δ A} (ha : Term.Wf Γ a A) (hσ : LSubst.Wf Γ σ Δ)
@@ -346,6 +351,9 @@ theorem LSubst.Wf.var {Γ σ Δ} (hσ : LSubst.Wf (τ := τ) Γ σ Δ) : Subst.W
   | nil => simp
   | cons ha hσ Iσ => simp [LSubst.var_cons, Subst.Wf.cons_iff, Subst.cons, *]
 
+theorem Wf.lsubst {Γ σ Δ} (hσ : LSubst.Wf Γ σ Δ) {t : Term τ} {A}
+  (h : Term.Wf Δ t A) : Term.Wf Γ (t.lsubst σ) A := by rw [<-subst_var]; exact Wf.subst hσ.var h
+
 theorem Subst.Wf.lsubst_of_var {Γ} {σ : LSubst τ} {Δ}
   (h : Subst.Wf (τ := τ) Γ σ.var Δ) : LSubst.Wf Γ (σ.take Δ.length) Δ := by
   induction σ generalizing Δ with
@@ -378,8 +386,5 @@ theorem Subst.Wf.length_le_of_var {Γ} {σ : LSubst τ} {Δ}
 theorem LSubst.Wf.iff_var {Γ σ Δ}
   : LSubst.Wf (τ := τ) Γ σ Δ ↔ σ.length = Δ.length ∧ Subst.Wf Γ σ.var Δ
   := ⟨λh => ⟨h.length, h.var⟩, λ⟨h, h'⟩ => by convert h'.lsubst_of_var; simp [h]⟩
-
-
--- TODO: LSubst.Wf iff Subst.Wf var
 
 -- TODO: Subst.Wf iff LSubst.Wf ofFn
