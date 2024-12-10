@@ -306,62 +306,75 @@ theorem List.IsFWk.lift {ρ : Fin Δ.length → Fin Γ.length} (hρ : List.IsFWk
       get_eq_getElem, getElem_cons_succ]
     apply hρ.getElem
 
-/-- The function `ρ` sends `Γ` to `Δ` -/
-def List.IsWk (Γ Δ : List α) (ρ : ℕ → ℕ) : Prop
-  := ∀n, (hΔ : n < Δ.length) → ∃hΓ : ρ n < Γ.length, Γ[ρ n] = Δ[n]
+open BoundedOn
 
-theorem List.IsWk.bounded {ρ : ℕ → ℕ} (h : List.IsWk Γ Δ ρ) (n : ℕ) (hΔ : n < Δ.length)
-  : ρ n < Γ.length := match h n hΔ with | ⟨hΓ, _⟩ => hΓ
+instance List.succ_bounded_on_length {A : α} {Γ : List α}
+  : BoundedOn Γ.length (A::Γ).length Nat.succ := ⟨by simp⟩
+
+instance List.succ_bounded_from_length {A : α} {Γ : List α}
+  : BoundedFrom Γ.length (A::Γ).length Nat.succ := ⟨by simp⟩
+
+instance List.liftWk_bounded_on_length {A : α} {Γ Δ : List α} {ρ}
+  [hρ : BoundedOn Γ.length Δ.length ρ] : BoundedOn (A::Γ).length (A::Δ).length (Nat.liftWk ρ)
+  := Nat.liftWk_bounded_on (hρ := hρ)
+
+instance List.liftWk_bounded_from_length {A : α} {Γ Δ : List α} {ρ}
+  [hρ : BoundedFrom Γ.length Δ.length ρ] : BoundedFrom (A::Γ).length (A::Δ).length (Nat.liftWk ρ)
+  := Nat.liftWk_bounded_from (hρ := hρ)
+
+/-- The function `ρ` sends `Γ` to `Δ` -/
+class List.IsWk (Γ Δ : List α) (ρ : ℕ → ℕ) extends BoundedOn Δ.length Γ.length ρ : Prop where
+  getElem_eq : ∀i, (h : i < Δ.length) → Γ[ρ i]'(bounded_on i h) = Δ[i]
 
 def List.IsWk.toFinWk {ρ : ℕ → ℕ} (h : List.IsWk Γ Δ ρ) : Fin (Δ.length) → Fin (Γ.length)
-  := Fin.wkOfBounded ρ h.bounded
+  := Fin.wkOfBounded ρ h.bounded_on
 
 theorem List.IsWk.toIsFWk (Γ Δ : List α) (ρ : ℕ → ℕ)
   (h : List.IsWk Γ Δ ρ) : List.IsFWk Γ Δ (List.IsWk.toFinWk h)
-  := funext λ⟨i, hi⟩ => have ⟨_, h⟩ := h i hi; h
+  := funext λ⟨i, hi⟩ => h.getElem_eq i hi
 
 -- ... TODO: IsWks
 
 @[simp]
-theorem List.IsWk.id (Γ : List α) : List.IsWk Γ Γ id
-  := λ_ hΓ => ⟨hΓ, rfl⟩
+instance List.IsWk.id (Γ : List α) : List.IsWk Γ Γ id where
+  getElem_eq := λ_ _ => rfl
 
 -- ... TODO: len_le
 
 @[simp]
-theorem List.IsWk.drop_all (Γ : List α) (ρ) : List.IsWk Γ [] ρ
-  := λi h => by cases h
+instance List.IsWk.drop_all (Γ : List α) (ρ) : List.IsWk Γ [] ρ where
+  bounded_on i h := by cases h
+  getElem_eq i h := by cases h
 
-theorem List.IsWk.comp {ρ : ℕ → ℕ} {σ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ) (hσ : List.IsWk Δ Ξ σ)
-  : List.IsWk Γ Ξ (ρ ∘ σ) := λn hΞ =>
-    have ⟨hΔ, hσ⟩ := hσ n hΞ;
-    have ⟨hΓ, hρ⟩ := hρ _ hΔ;
-    ⟨hΓ, hρ ▸ hσ⟩
+theorem List.IsWk.comp (Γ Δ Ξ : List α) {ρ σ} [hρ : List.IsWk Γ Δ ρ] [hσ : List.IsWk Δ Ξ σ]
+  : List.IsWk Γ Ξ (ρ ∘ σ) where
+  toBoundedOn := BoundedOn.comp Ξ.length Δ.length Γ.length
+  getElem_eq i h := hρ.getElem_eq (σ i) (hσ.bounded_on i h) ▸ hσ.getElem_eq i h
 
-theorem List.IsWk.lift {ρ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ)
-  : List.IsWk (A :: Γ) (A :: Δ) (Nat.liftWk ρ) := λn hΔ => match n with
-  | 0 => ⟨Nat.zero_lt_succ _, rfl⟩
-  | n+1 => have ⟨hΔ, hρ⟩ := hρ n (Nat.lt_of_succ_lt_succ hΔ); ⟨Nat.succ_lt_succ hΔ, hρ⟩
+instance List.IsWk.lift {ρ : ℕ → ℕ} [hρ : List.IsWk Γ Δ ρ]
+  : List.IsWk (A :: Γ) (A :: Δ) (Nat.liftWk ρ) where
+  toBoundedOn := Nat.liftWk_bounded_on
+  getElem_eq i h := match i with
+  | 0 => rfl
+  | i + 1 => hρ.getElem_eq i (Nat.lt_of_succ_lt_succ h)
 
-theorem List.IsWk.lift_tail {ρ : ℕ → ℕ} (h : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
-    : List.IsWk Γ Δ ρ
-  := λi hΔ => have ⟨hΔ, hρ⟩ := h i.succ (Nat.succ_lt_succ hΔ); ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
+theorem List.IsWk.lift_tail {ρ : ℕ → ℕ} (hρ : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
+  : List.IsWk Γ Δ ρ where
+  toBoundedOn := Nat.liftWk_bounded_on_tail (hρ := hρ.toBoundedOn)
+  getElem_eq i h := hρ.getElem_eq (i + 1) (Nat.succ_lt_succ h)
 
-theorem List.IsWk.lift_head {ρ : ℕ → ℕ} (h : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ)) : A = B
-  := (h 0 (Nat.zero_lt_succ _)).2
+theorem List.IsWk.lift_head {ρ : ℕ → ℕ} [hρ : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ)] : A = B
+  := hρ.getElem_eq 0 (Nat.zero_lt_succ Δ.length)
 
 theorem List.IsWk.lift_iff (A B) (Γ Δ : List α) (ρ : ℕ → ℕ)
   : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ) ↔ A = B ∧ List.IsWk Γ Δ ρ
-  := ⟨
-    λh => ⟨h.lift_head, List.IsWk.lift_tail h⟩,
-    λ⟨rfl, hρ⟩ => List.IsWk.lift hρ
-  ⟩
+  := ⟨λh => ⟨h.lift_head, h.lift_tail⟩, λ⟨rfl, hρ⟩ => hρ.lift⟩
 
 theorem List.IsWk.lift_id (hρ : List.IsWk Γ Δ _root_.id)
   : List.IsWk (A :: Γ) (A :: Δ) _root_.id := Nat.liftWk_id ▸ hρ.lift
 
 theorem List.IsWk.lift_id_tail (h : List.IsWk (left :: Γ) (right :: Δ) _root_.id)
-    : List.IsWk Γ Δ _root_.id
+  : List.IsWk Γ Δ _root_.id
   := (Nat.liftWk_id ▸ h).lift_tail
 
 theorem List.IsWk.lift_id_head (h : List.IsWk (left :: Γ) (right :: Δ) _root_.id)
@@ -372,40 +385,44 @@ theorem List.IsWk.lift_id_iff (h : List.IsWk (left :: Γ) (right :: Δ) _root_.i
   : left = right ∧ List.IsWk Γ Δ _root_.id
   := ⟨h.lift_id_head, h.lift_id_tail⟩
 
-theorem List.IsWk.lift₂ {ρ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ)
-    : List.IsWk (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftWk (Nat.liftWk ρ))
-  := hρ.lift.lift
+theorem List.IsWk.lift₂ (ρ : ℕ → ℕ) [hρ : List.IsWk Γ Δ ρ]
+  : List.IsWk (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftWk (Nat.liftWk ρ))
+  := inferInstance
 
-theorem List.IsWk.liftn₂ {ρ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ)
-    : List.IsWk (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftnWk 2 ρ)
+instance List.IsWk.liftn₂ (ρ : ℕ → ℕ) [hρ : List.IsWk Γ Δ ρ]
+  : List.IsWk (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftnWk 2 ρ)
   := by rw [Nat.liftnWk_two]; exact hρ.lift₂
 
-theorem List.IsWk.liftn_append {ρ : ℕ → ℕ} (Ξ : List α) (hρ : List.IsWk Γ Δ ρ)
-    : List.IsWk (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk Ξ.length ρ) := by
+instance List.IsWk.liftn_append (Ξ : List α) (ρ : ℕ → ℕ) (hρ : List.IsWk Γ Δ ρ)
+  : List.IsWk (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk Ξ.length ρ) := by
   induction Ξ with
   | nil => exact hρ
   | cons A Ξ I =>
     rw [List.length, Nat.liftnWk_succ']
     exact I.lift
 
-theorem List.IsWk.liftn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.length = n)
+theorem List.IsWk.liftn_append' (Ξ : List α) (ρ : ℕ → ℕ) (hΞ : Ξ.length = n)
   (hρ : List.IsWk Γ Δ ρ) : List.IsWk (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk n ρ) := hΞ ▸ hρ.liftn_append Ξ
 
-theorem List.IsWk.step {ρ : ℕ → ℕ} (A : α) (hρ : List.IsWk Γ Δ ρ)
-    : List.IsWk (A :: Γ) Δ (Nat.succ ∘ ρ)
-  := λn hΔ => have ⟨hΔ, hρ⟩ := hρ n hΔ; ⟨Nat.succ_lt_succ hΔ, hρ⟩
+theorem List.IsWk.step (A : α) (ρ : ℕ → ℕ) [hρ : List.IsWk Γ Δ ρ]
+  : List.IsWk (A :: Γ) Δ (Nat.stepWk ρ) where
+  bounded_on i h := Nat.succ_lt_succ (hρ.bounded_on i h)
+  getElem_eq i h := hρ.getElem_eq i h
 
 @[simp]
-theorem List.IsWk.succ (A : α) : List.IsWk (A :: Γ) Γ .succ := step (ρ := _root_.id) A (id _)
+instance List.IsWk.succ (A : α) : List.IsWk (A :: Γ) Γ .succ
+  := step (Γ := Γ) (Δ := Γ) (ρ := _root_.id) A
 
-theorem List.IsWk.step_tail {ρ : ℕ → ℕ} (h : List.IsWk (A :: Γ) Δ (Nat.succ ∘ ρ)) : List.IsWk Γ Δ ρ
-  := λi hΔ => have ⟨hΔ, hρ⟩ := h i hΔ; ⟨Nat.lt_of_succ_lt_succ hΔ, hρ⟩
+theorem List.IsWk.step_tail (A) (ρ : ℕ → ℕ) [hρ : List.IsWk (A :: Γ) Δ (Nat.stepWk ρ)]
+  : List.IsWk Γ Δ ρ where
+  bounded_on i h := Nat.lt_of_succ_lt_succ (hρ.bounded_on i h)
+  getElem_eq i h := hρ.getElem_eq i h
 
 theorem List.IsWk.step_iff (A) (Γ Δ : List α) (ρ : ℕ → ℕ)
-  : List.IsWk (A :: Γ) Δ (Nat.succ ∘ ρ) ↔ List.IsWk Γ Δ ρ
+  : List.IsWk (A :: Γ) Δ (Nat.stepWk ρ) ↔ List.IsWk Γ Δ ρ
   := ⟨
-    List.IsWk.step_tail,
-    List.IsWk.step A
+    λ_ => List.IsWk.step_tail A ρ,
+    λ_ => List.IsWk.step A ρ
   ⟩
 
 theorem List.IsWk.stepn_append {ρ : ℕ → ℕ} (Ξ : List α) (hρ : List.IsWk Γ Δ ρ)
@@ -614,7 +631,7 @@ theorem List.NWkn.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.leng
 
 theorem List.IsWk.toNWkn (Γ Δ : List α) (ρ : ℕ → ℕ)
   (h : List.IsWk Γ Δ ρ) : List.NWkn Γ Δ ρ
-  := λn hΔ => match h n hΔ with | ⟨hΓ, h⟩ => ⟨hΓ, le_of_eq h⟩
+  := λn hΔ => ⟨h.bounded_on n hΔ, le_of_eq (h.getElem_eq n hΔ)⟩
 
 /-- The list Γ has a member compatible with `A` at index `n` -/
 def List.FVar (Γ : List α) (n : Fin Γ.length) (A : α) : Prop := Γ.get n ≤ A

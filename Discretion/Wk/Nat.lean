@@ -5,6 +5,7 @@ import Mathlib.Order.Interval.Set.Basic
 import Mathlib.Order.Monotone.Basic
 
 import Discretion.Utils
+import Discretion.Wk.Bounded
 
 -- TODO: lore: a strictly monotone function ℕ → ℕ is increasing (i.e. ≥ id)
 -- (this is StrictMono.id_le)
@@ -273,6 +274,42 @@ theorem Nat.liftWk_eqOn_Ioo_iff {m M : ℕ}
 
 theorem Nat.stepWk_eqOn_iff {s : Set ℕ} : s.EqOn (stepWk ρ) (stepWk σ) ↔ s.EqOn ρ σ
   := Set.eqOn_comp_left_iff_of_injective (Nat.succ_injective)
+
+instance Nat.liftWk_bounded_on {s t : ℕ} {ρ : ℕ -> ℕ} [hρ : BoundedOn s t ρ]
+  : BoundedOn (s + 1) (t + 1) (liftWk ρ) where
+  bounded_on i hi := by cases i with
+    | zero => simp
+    | succ i => simp [hρ.bounded_on i (Nat.lt_of_succ_lt_succ hi)]
+
+theorem Nat.liftWk_bounded_on_tail {s t : ℕ} {ρ : ℕ -> ℕ}
+  [hρ : BoundedOn (s + 1) (t + 1) (Nat.liftWk ρ)] : BoundedOn s t ρ where
+  bounded_on i hi := by convert hρ.bounded_on (i + 1) (Nat.succ_lt_succ hi) using 0; simp
+
+instance Nat.liftWk_bounded_from {s t : ℕ} {ρ : ℕ -> ℕ} [hρ : BoundedFrom s t ρ]
+  : BoundedFrom (s + 1) (t + 1) (liftWk ρ) where
+  bounded_from i hi := by cases i with
+    | zero => simp
+    | succ i => simp [hρ.bounded_from i (Nat.lt_of_succ_lt_succ hi)]
+
+-- instance Nat.liftWk_bounded_iff {s t : ℕ} {ρ : ℕ -> ℕ} [hρ : BoundedIff s t ρ]
+--   : BoundedIff (s + 1) (t + 1) (liftWk ρ) where
+
+instance Nat.stepWk_bounded_on {s t : ℕ} {ρ : ℕ -> ℕ} [hρ : BoundedOn s t ρ]
+  : BoundedOn s (t + 1) (stepWk ρ) where
+  bounded_on i hi := by simp [hρ.bounded_on i hi]
+
+instance Nat.stepWk_bounded_from {s t : ℕ} {ρ : ℕ -> ℕ} [hρ : BoundedFrom s t ρ]
+  : BoundedFrom s (t + 1) (stepWk ρ) where
+  bounded_from i hi := by apply hρ.bounded_from i; convert hi using 0; simp
+
+-- instance Nat.stepWk_bounded_iff {s t : ℕ} {ρ : ℕ -> ℕ} [hρ : BoundedIff s t ρ]
+--   : BoundedIff s (t + 1) (stepWk ρ) where
+
+instance Nat.succ_bounded_on {s : ℕ} : BoundedOn s (s + 1) Nat.succ
+  := stepWk_bounded_on (ρ := id)
+
+instance Nat.succ_bounded_from {s : ℕ} : BoundedFrom s (s + 1) Nat.succ
+  := stepWk_bounded_from (ρ := id)
 
 /-- Lift a weakening under `n` binders -/
 def Nat.liftnWk (n : Nat) (ρ : Nat -> Nat) : Nat -> Nat

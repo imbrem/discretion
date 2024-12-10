@@ -125,6 +125,10 @@ theorem Fin.wkOfBounded_strictMono {n m} {ρ : Nat -> Nat} {hρ}
 def Fin.toNatWk {n m} (ρ : Fin n → Fin m) : Nat → Nat
   := λk => if h : k < n then ρ ⟨k, h⟩ else (k - n) + m
 
+instance Fin.toNatWk_bounded_iff {n m} (ρ : Fin n → Fin m) : BoundedIff n m (toNatWk ρ) where
+  bounded_on i h := by simp [toNatWk, h]
+  bounded_from i h := by unfold toNatWk at h; split at h <;> omega
+
 @[simp]
 theorem Fin.toNatWk_coe {n m} (ρ : Fin n → Fin m) (k : Fin n) : toNatWk ρ k = ρ k := by
   simp [toNatWk]

@@ -11,6 +11,7 @@ inductive Term (τ : Type _) [FreeSignature τ] : Type _
   | unit : Term τ
   | pair : Term τ → Term τ → Term τ
   | let₂ : Term τ → Term τ → Term τ
+  | invalid : Term τ
 
 variable {τ} [FreeSignature τ]
 
@@ -24,6 +25,7 @@ def wk (ρ : ℕ → ℕ) : Term τ → Term τ
   | .unit => .unit
   | .pair t u => .pair (t.wk ρ) (u.wk ρ)
   | .let₂ t u => .let₂ (t.wk ρ) (u.wk (Nat.liftWk (Nat.liftWk ρ)))
+  | .invalid => .invalid
 
 theorem wk_id (t : Term τ) : t.wk id = t := by induction t <;> simp [*]
 
@@ -45,17 +47,41 @@ def fvi : Term τ → ℕ
   | .var v => v + 1
   | .op _ t => t.fvi
   | .let₁ t u => t.fvi ⊔ (u.fvi - 1)
-  | .unit => 0
   | .pair t u => t.fvi ⊔ u.fvi
   | .let₂ t u => t.fvi ⊔ (u.fvi - 2)
+  | _ => 0
+
+theorem fvi_bounded_on {ρ : ℕ → ℕ} (hρ : BoundedOn a b ρ) (t : Term τ) (h : t.fvi ≤ a)
+  : (t.wk ρ).fvi ≤ b := by induction t generalizing ρ a b with
+  | var i => exact hρ.bounded_on i h
+  | _ => simp [fvi] at *
+    <;> (try constructorm* _ ∧ _)
+    <;> apply_assumption
+    <;> (repeat apply λhρ => Nat.liftWk_bounded_on (hρ := hρ))
+    <;> first | assumption | omega
+
+theorem fvi_bounded_on_f (ρ : ℕ → ℕ) [hρ : BoundedOn a b ρ] (t : Term τ) (h : t.fvi ≤ a)
+  : (t.wk ρ).fvi ≤ b := fvi_bounded_on hρ t h
+
+theorem fvi_bounded_from {ρ : ℕ → ℕ} (hρ : BoundedFrom a b ρ) (t : Term τ) (h : (t.wk ρ).fvi ≤ b)
+  : t.fvi ≤ a := by induction t generalizing ρ a b with
+  | var i => exact hρ.bounded_from i h
+  | _ => simp [fvi] at *
+    <;> (try constructorm* _ ∧ _)
+    <;> apply_assumption
+    <;> (repeat apply λhρ => Nat.liftWk_bounded_from (hρ := hρ))
+    <;> first | assumption | omega
+
+theorem fvi_bounded_from_f (ρ : ℕ → ℕ) [hρ : BoundedFrom a b ρ] (t : Term τ) (h : (t.wk ρ).fvi ≤ b)
+  : t.fvi ≤ a := fvi_bounded_from hρ t h
 
 def fvu (i : ℕ) : Term τ → Bool
   | .var v => v = i
   | .op _ t => t.fvu i
   | .let₁ t u => t.fvu i ⊔ if i >= 1 then u.fvu (i - 1) else false
-  | .unit => false
   | .pair t u => t.fvu i ⊔ u.fvu i
   | .let₂ t u => t.fvu i ⊔ if i >= 2 then u.fvu (i - 2) else false
+  | _ => false
 
 open Term
 
@@ -63,9 +89,19 @@ abbrev Subst (τ : Type _) [FreeSignature τ] := ℕ → Term τ
 
 namespace Subst
 
-def lift (σ : Subst τ) : Subst τ
-  | 0 => .var 0
-  | i + 1 => wk0 (σ i)
+def wkIn (ρ : ℕ → ℕ) (σ : Subst τ) : Subst τ := wk ρ ∘ σ
+
+def wkOut (ρ : ℕ → ℕ) (σ : Subst τ) : Subst τ := σ ∘ ρ
+
+def cons (t : Term τ) (σ : Subst τ) | 0 => t | i + 1 => σ i
+
+def tail (σ : Subst τ) : Subst τ := σ ∘ .succ
+
+@[simp]
+theorem tail_cons (t : Term τ) (σ : Subst τ) : tail (cons t σ) = σ
+  := funext (λi => by cases i <;> simp [tail, cons])
+
+def lift (σ : Subst τ) : Subst τ := (σ.wkIn .succ).cons (var 0)
 
 @[simp]
 theorem lift_zero {σ : Subst τ} : σ.lift 0 = .var 0 := rfl
@@ -76,7 +112,8 @@ theorem lift_succ {σ : Subst τ} (i : ℕ) : σ.lift (i + 1) = wk0 (σ i) := rf
 abbrev id : Subst τ := .var
 
 @[simp]
-theorem lift_id : id.lift = id (τ := τ) := funext (λn => by cases n <;> simp [lift, Term.wk])
+theorem lift_id : id.lift = id (τ := τ)
+  := funext (λn => by cases n <;> simp [lift, cons, wkIn, Term.wk])
 
 def fromWk (ρ : ℕ → ℕ) : Subst τ := .var ∘ ρ
 
@@ -90,6 +127,7 @@ def subst (σ : Subst τ) : Term τ → Term τ
   | .unit => .unit
   | .pair t u => .pair (t.subst σ) (u.subst σ)
   | .let₂ t u => .let₂ (t.subst σ) (u.subst (σ.lift).lift)
+  | .invalid => .invalid
 
 @[simp]
 theorem subst_id (t : Term τ) : t.subst Subst.id = t := by induction t <;> simp [*]
@@ -129,17 +167,28 @@ end Subst
 
 abbrev LSubst (τ : Type _) [FreeSignature τ] := List (Term τ)
 
-def LSubst.lift (σ : LSubst τ) : LSubst τ := (σ.map wk0).cons (var 0)
+def LSubst.wkIn (ρ : ℕ → ℕ) : LSubst τ → LSubst τ := List.map (Term.wk ρ)
 
 @[simp]
-theorem LSubst.lift_zero (σ : LSubst τ) : σ.lift[0]'(by simp [lift]) = .var 0 := rfl
+theorem LSubst.wkIn_nil (ρ : ℕ → ℕ) : wkIn (τ := τ) ρ [] = [] := rfl
+
+@[simp]
+theorem LSubst.wkIn_cons (ρ t) (σ : LSubst τ) : wkIn ρ (t :: σ) = t.wk ρ :: σ.wkIn ρ := rfl
+
+@[simp]
+theorem LSubst.length_wkIn (ρ : ℕ → ℕ) (σ : LSubst τ) : (σ.wkIn ρ).length = σ.length := by simp [wkIn]
+
+def LSubst.lift (σ : LSubst τ) : LSubst τ := (σ.wkIn .succ).cons (var 0)
+
+@[simp]
+theorem LSubst.length_lift (σ : LSubst τ) : (σ.lift).length = σ.length + 1 := by simp [lift]
+
+@[simp]
+theorem LSubst.lift_zero (σ : LSubst τ) : σ.lift[0]'(by simp) = .var 0 := rfl
 
 @[simp]
 theorem LSubst.lift_succ (σ : LSubst τ) {i : ℕ} (h : i < σ.length)
-  : σ.lift[i + 1]'(by simp [lift, h]) = wk0 (σ[i]) := by simp [lift]
-
-@[simp]
-theorem LSubst.length_lift (σ : LSubst τ) : (σ.lift).length = σ.length + 1 := by simp [LSubst.lift]
+  : σ.lift[i + 1]'(by simp [lift, wk, h]) = wk0 (σ[i]) := by simp [lift, wkIn]
 
 def LSubst.id (n : ℕ) : LSubst τ := List.ofFn (λi : Fin n => var i)
 
@@ -163,10 +212,13 @@ theorem LSubst.lift_id (n : ℕ) : lift (id (τ := τ) n) = id (n + 1) := by
     rw [lift_succ, getElem_id, getElem_id]; simp
     simp [hi]
 
-def LSubst.var (σ : LSubst τ) : Subst τ := λi => if _ : i < σ.length then σ[i] else .var i
+def LSubst.var (σ : LSubst τ) : Subst τ := λi => if _ : i < σ.length then σ[i] else .invalid
 
-theorem LSubst.var_id (n : ℕ) : (id n).var = Subst.id (τ := τ)
-  := funext (λi => by simp [LSubst.var])
+theorem LSubst.var_eq_on_id (n : ℕ) : (Set.Iio n).EqOn (id n).var (Subst.id (τ := τ))
+  := λi => by simp [var]
+
+theorem LSubst.var_cons (t : Term τ) (σ : LSubst τ) : var (t :: σ) = σ.var.cons t
+  := funext (λi => by cases i <;> simp [var, Subst.cons])
 
 theorem LSubst.var_lift (σ : LSubst τ) : σ.lift.var = σ.var.lift
   := funext (λi => by
@@ -174,7 +226,7 @@ theorem LSubst.var_lift (σ : LSubst τ) : σ.lift.var = σ.var.lift
     | zero => simp [LSubst.var]
     | succ =>
       simp only [var, lift, List.length_cons, List.length_map, Nat.add_lt_add_iff_right,
-        List.getElem_cons_succ, List.getElem_map, Subst.lift_succ]
+        List.getElem_cons_succ, List.getElem_map, Subst.lift_succ, wkIn]
       split <;> rfl
     )
 
@@ -187,6 +239,7 @@ def lsubst (σ : LSubst τ) : Term τ → Term τ
   | .unit => .unit
   | .pair t u => .pair (t.lsubst σ) (u.lsubst σ)
   | .let₂ t u => .let₂ (t.lsubst σ) (u.lsubst σ.lift.lift)
+  | .invalid => .invalid
 
 theorem subst_var (σ : LSubst τ) (t : Term τ) : t.subst σ.var = t.lsubst σ
   := by induction t generalizing σ <;> simp [<-LSubst.var_lift, lsubst, *]
