@@ -70,9 +70,11 @@ theorem Quant.dc_copy : copy.dc = {DupCap.copy}
 @[simp]
 theorem Quant.dc_del : del.dc = {DupCap.del} := by ext c; cases c <;> simp [copy_mem_dc, del_mem_dc]
 
+instance Quant.instOne : One Quant where one := ⟨false, false⟩
+
 instance Quant.instTop : Top Quant where top := ⟨true, true⟩
 
-instance Quant.instBot : Bot Quant where bot := ⟨false, false⟩
+instance Quant.instBot : Bot Quant where bot := 1
 
 @[simp]
 theorem Quant.dc_top : dc ⊤ = Set.univ
@@ -1012,17 +1014,44 @@ instance PQuant.instMax : Max PQuant := (inferInstance : Max (Quant × Quant))
 instance PQuant.instBooleanAlgebra : BooleanAlgebra PQuant
   := (inferInstance : BooleanAlgebra (Quant × Quant))
 
-def PQuant.split : PQuant := ⟨Quant.copy, ⊥⟩
+instance PQuant.instDecidableEq : DecidableEq PQuant
+  := (inferInstance : DecidableEq (Quant × Quant))
 
-def PQuant.fuse : PQuant := ⟨⊥, Quant.copy⟩
+instance PQuant.instDecidableRel : DecidableRel (· ≤ · : PQuant → PQuant → Prop)
+  := (inferInstance : DecidableRel (· ≤ · : Quant × Quant → Quant × Quant → Prop))
 
-def PQuant.rem : PQuant := ⟨Quant.del, ⊥⟩
+instance PQuant.instCoe : Coe Quant PQuant := ⟨λq => (q, q)⟩
 
-def PQuant.add : PQuant := ⟨⊥, Quant.del⟩
+instance PQuant.instOne : One PQuant := ⟨(1 : Quant)⟩
 
-def PQuant.copy : PQuant := ⟨Quant.copy, Quant.copy⟩
+def PQuant.split : PQuant := ⟨Quant.copy, 1⟩
 
-def PQuant.del : PQuant := ⟨Quant.del, Quant.del⟩
+def PQuant.fuse : PQuant := ⟨1, Quant.copy⟩
+
+def PQuant.rem : PQuant := ⟨Quant.del, 1⟩
+
+def PQuant.add : PQuant := ⟨1, Quant.del⟩
+
+def PQuant.copy : PQuant := Quant.copy
+
+def PQuant.del : PQuant := Quant.del
+
+@[simp]
+theorem PQuant.coe_top : ((⊤ : Quant) : PQuant) = ⊤ := rfl
+
+@[simp]
+theorem PQuant.coe_bot : ((⊥ : Quant) : PQuant) = ⊥ := rfl
+
+@[simp]
+theorem PQuant.coe_one : ((1 : Quant) : PQuant) = 1 := rfl
+
+@[simp]
+theorem PQuant.coe_del : (Quant.del : PQuant) = PQuant.del := rfl
+
+@[simp]
+theorem PQuant.coe_copy : (Quant.copy : PQuant) = PQuant.copy := rfl
+
+-- TODO: coercion is a lattice embedding
 
 abbrev PQuant.pos (q : PQuant) : Quant := q.1
 
@@ -1036,34 +1065,36 @@ def PQuant.dc (q : PQuant) : Set (Polarity × DupCap) := {d | d.2 ∈ (q.pq d.1)
 
 def PQuant.q (q : PQuant) : Quant := q.1 ⊓ q.2
 
+@[simp]
+theorem PQuant.q_coe (q : Quant) : PQuant.q q = q := by cases q <;> rfl
+
 def PQuant.c (q : PQuant) : Set ℕ := q.q.c
 
 @[simp]
-theorem PQuant.split_le_copy : PQuant.split ≤ PQuant.copy := by simp [split, copy, LE.le]
+theorem PQuant.c_coe (q : Quant) : PQuant.c q = q.c := by simp [c]
 
 @[simp]
-theorem PQuant.fuse_le_copy : PQuant.fuse ≤ PQuant.copy := by simp [fuse, copy, LE.le]
+theorem PQuant.split_le_copy : PQuant.split ≤ PQuant.copy := by decide
 
 @[simp]
-theorem PQuant.split_sup_fuse : PQuant.split ⊔ PQuant.fuse = PQuant.copy := by
-  simp [split, fuse, copy, max, SemilatticeSup.sup, Quant.copy, Bot.bot]
+theorem PQuant.fuse_le_copy : PQuant.fuse ≤ PQuant.copy := by decide
 
 @[simp]
-theorem PQuant.fuse_sup_split : PQuant.fuse ⊔ PQuant.split = PQuant.copy := by
-  simp [split, fuse, copy, max, SemilatticeSup.sup, Quant.copy, Bot.bot]
+theorem PQuant.split_sup_fuse : PQuant.split ⊔ PQuant.fuse = PQuant.copy := by decide
 
 @[simp]
-theorem PQuant.rem_le_del : PQuant.rem ≤ PQuant.del := by simp [rem, del, LE.le]
+theorem PQuant.fuse_sup_split : PQuant.fuse ⊔ PQuant.split = PQuant.copy := by decide
 
 @[simp]
-theorem PQuant.add_le_del : PQuant.add ≤ PQuant.del := by simp [add, del, LE.le]
+theorem PQuant.rem_le_del : PQuant.rem ≤ PQuant.del := by decide
 
 @[simp]
-theorem PQuant.rem_sup_add : PQuant.rem ⊔ PQuant.add = PQuant.del := by
-  simp [rem, add, del, max, SemilatticeSup.sup, Quant.del, Bot.bot]
+theorem PQuant.add_le_del : PQuant.add ≤ PQuant.del := by decide
 
 @[simp]
-theorem PQuant.add_sup_rem : PQuant.add ⊔ PQuant.rem = PQuant.del := by
-  simp [rem, add, del, max, SemilatticeSup.sup, Quant.del, Bot.bot]
+theorem PQuant.rem_sup_add : PQuant.rem ⊔ PQuant.add = PQuant.del := by decide
+
+@[simp]
+theorem PQuant.add_sup_rem : PQuant.add ⊔ PQuant.rem = PQuant.del := by decide
 
 instance PQuant.instFintype : Fintype PQuant := (inferInstance : Fintype (Quant × Quant))

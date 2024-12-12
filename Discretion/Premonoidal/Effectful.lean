@@ -14,9 +14,9 @@ open Monoidal
 
 open MorphismProperty
 
--- TODO: EffectSystem ==> EffectfulCategory; then EffectSystem is purely an algebra on E?
+-- TODO: Effectful ==> EffectfulCategory; then Effectful is purely an algebra on E?
 
-class EffectSystem
+class Effectful
   (C : Type v) [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
   (E : Type u) [PartialOrder E] [BoundedOrder E]
   : Type _ where
@@ -29,15 +29,15 @@ class EffectSystem
   central_bot : commutes ⊥ ⊤
   eff_commutes : ∀e₁ e₂, commutes e₁ e₂ → Commutes (eff e₁) (eff e₂)
 
-attribute [simp] EffectSystem.eff_top
+attribute [simp] Effectful.eff_top
 
-namespace EffectSystem
+namespace Effectful
 
 variable
   (C : Type v)
   [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
   {E : Type u} [PartialOrder E] [BoundedOrder E]
-  [EffectSystem C E]
+  [Effectful C E]
 
 -- TODO: make typeclasses?
 
@@ -48,15 +48,15 @@ abbrev Commutative (e : E) : Prop := Commutes C e e
 
 abbrev Central (e : E) : Prop := Commutes C e ⊤
 
-end EffectSystem
+end Effectful
 
-namespace EffectSystem
+namespace Effectful
 
 variable
   {C : Type v}
   [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
   {E : Type u} [PartialOrder E] [BoundedOrder E]
-  [S : EffectSystem C E]
+  [S : Effectful C E]
 
 theorem Commutes.symm {e₁ e₂ : E} [h : Commutes C e₁ e₂] : Commutes C e₂ e₁
   := ⟨commutes_symm _ _ h.prop⟩
@@ -93,6 +93,6 @@ instance Central.eff_central {e : E} [h : Central C e] : (S.eff e).Central
 
 -- TODO: Singleton E ==> IsMonoidal C (since Central (eff ⊤ = ⊤))
 
-end EffectSystem
+end Effectful
 
 namespace Monoidal
