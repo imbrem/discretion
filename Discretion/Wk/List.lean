@@ -1,6 +1,7 @@
 import Discretion.Wk.Nat
 import Discretion.Wk.Fin
 import Discretion.Wk.NatInductive
+import Discretion.Fin.Preimage
 import Mathlib.Data.Fintype.Card
 
 -- TODO: general relation edition...
@@ -515,6 +516,11 @@ theorem List.IsWk.stepn_append {ρ : ℕ → ℕ} (Ξ : List α) (hρ : List.IsW
 
 theorem List.IsWk.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.length = n)
   (hρ : List.IsWk Γ Δ ρ) : List.IsWk (Ξ ++ Γ) Δ (Nat.stepnWk n ρ) := hΞ ▸ hρ.stepn_append Ξ
+
+class List.IsWk.Wf
+  (Γ : List α) (qΓ : Vector' EQuant Γ.length) (Δ : List α) (qΔ : Vector' EQuant Δ.length)
+  (ρ : ℕ → ℕ) extends IsWk Γ Δ ρ where
+  quant_le_sum : BoundedOn.pvSum ρ qΔ ≤ qΓ
 
 variable [PartialOrder α] {Γ Δ Ξ : List α}
 

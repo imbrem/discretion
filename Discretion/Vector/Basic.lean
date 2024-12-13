@@ -247,6 +247,10 @@ theorem get_top_applied [Top α] {n : Nat} (i : Fin n) : (⊤ : Vector' α n).ge
 instance instZero [Zero α] : Zero (Vector' α n) where
   zero := ofFn 0
 
+theorem zero_zero [Zero α] : (0 : Vector' α 0) = .nil := rfl
+
+theorem zero_succ [Zero α] {n : Nat} : (0 : Vector' α (n + 1)) = cons 0 (0 : Vector' α n) := rfl
+
 instance instOne [One α] : One (Vector' α n) where
   one := ofFn 1
 
@@ -277,6 +281,17 @@ theorem add_nil [Add α] : (.nil : Vector' α 0) + .nil = .nil := rfl
 @[simp]
 theorem add_cons [Add α] {n : Nat} (a b : α) (v w : Vector' α n)
   : (cons a v) + (cons b w) = cons (a + b) (v + w) := rfl
+
+instance instAddMonoid [AddMonoid α] : AddMonoid (Vector' α n) where
+  add_zero v := by induction v <;> simp [zero_zero, zero_succ, *]
+  zero_add v := by induction v <;> simp [zero_zero, zero_succ, *]
+  add_assoc a b c := by induction a <;> cases b <;> cases c <;> simp [add_assoc, *]
+  nsmul := λn v => map (n • ·) v
+  nsmul_zero v := by induction v with | nil => rfl | cons => simp [zero_succ, *]; rw [zero_nsmul]
+  nsmul_succ n v := by induction v with | nil => rfl | cons => simp [zero_succ, *]; rw [succ_nsmul]
+
+instance instAddCommMonoid [AddCommMonoid α] : AddCommMonoid (Vector' α n) where
+  add_comm a b := by induction a <;> cases b <;> simp [add_comm, *]
 
 instance instSub [Sub α] : Sub (Vector' α n) where
   sub := zipWith (· - ·)

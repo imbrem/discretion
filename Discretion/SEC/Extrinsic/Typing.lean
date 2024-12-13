@@ -228,7 +228,7 @@ theorem Wf.wk1_iff {Γ} {t : Term τ} {A B C}
   : Wf (C::B::Γ) (wk1 t) A ↔ Wf (C::Γ) t A := wk_iff_f (Nat.liftWk .succ) t A
 
 inductive WfqD : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ → Ty τ → Type _
-  | var {Γ qs i A} (hi : i < Γ.length) : Γ.QVar qs i A → WfqD Γ qs (.var i) A
+  | var {Γ qs i A} : Γ.QVar qs i A → WfqD Γ qs (.var i) A
   | op {Γ qs f a A B} (hA : f.src = A) (hB : f.trg = B) : WfqD Γ qs a A → WfqD Γ qs (.op f a) B
   | let₁ {Γ} {ql qr qs : Vector' EQuant Γ.length} {a b A B}
     : ql + qr ≤ qs → WfqD Γ ql a A → WfqD (A::Γ) (qr.cons (quant A)) b B → WfqD Γ qs (.let₁ a b) B
@@ -240,6 +240,59 @@ inductive WfqD : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ �
     → WfqD Γ ql a (A ⊗ B)
     → WfqD (B::A::Γ) ((qr.cons ↑(quant A)).cons ↑(quant B)) c C
     → WfqD Γ qs (.let₂ a c) C
+
+-- TODO: weakening, substitution, etc...
+
+inductive Wfq : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ → Ty τ → Prop
+  | var {Γ qs i A} : Γ.QVar qs i A → Wfq Γ qs (.var i) A
+  | op {Γ qs f a A B} (hA : f.src = A) (hB : f.trg = B) : Wfq Γ qs a A → Wfq Γ qs (.op f a) B
+  | let₁ {Γ} {ql qr qs : Vector' EQuant Γ.length} {a b A B}
+    : ql + qr ≤ qs → Wfq Γ ql a A → Wfq (A::Γ) (qr.cons (quant A)) b B → Wfq Γ qs (.let₁ a b) B
+  | unit {Γ qs} : 0 ≤ qs → Wfq Γ qs .unit (𝟙_ _)
+  | pair {Γ} {ql qr qs : Vector' EQuant Γ.length} {a b A B}
+    : ql + qr ≤ qs → Wfq Γ ql a A → Wfq Γ qr b B → Wfq Γ qs (.pair a b) (A ⊗ B)
+  | let₂ {Γ} {ql qr qs : Vector' EQuant Γ.length} {a c A B C}
+    : ql + qr ≤ qs
+    → Wfq Γ ql a (A ⊗ B)
+    → Wfq (B::A::Γ) ((qr.cons ↑(quant A)).cons ↑(quant B)) c C
+    → Wfq Γ qs (.let₂ a c) C
+
+theorem Wfq.var_iff {Γ qs i A}
+  : Wfq (τ := τ) Γ qs (.var i) A ↔ Γ.QVar qs i A := ⟨λ|.var h => h, .var⟩
+
+theorem Wfq.op_iff {Γ qs f a B}
+  : Wfq (τ := τ) Γ qs (.op f a) B ↔ f.trg = B ∧ Wfq Γ qs a f.src := ⟨
+    λ|.op hA hB ha => by cases hA; exact ⟨hB, ha⟩,
+    λ⟨hB, ha⟩ => .op rfl hB ha
+  ⟩
+
+theorem Wfq.let₁_iff {Γ qs a b B}
+  : Wfq (τ := τ) Γ qs (.let₁ a b) B
+  ↔ ∃ql qr A, ql + qr ≤ qs ∧ Wfq Γ ql a A ∧ Wfq (A::Γ) (qr.cons (quant A)) b B := ⟨
+    λ|.let₁ h ha hb => ⟨_, _, _, h, ha, hb⟩,
+    λ⟨_, _, _, h, ha, hb⟩ => .let₁ h ha hb
+  ⟩
+
+theorem Wfq.unit_iff {Γ qs A}
+  : Wfq (τ := τ) Γ qs .unit A ↔ 0 ≤ qs ∧ A = (𝟙_ _)
+  := ⟨λ|.unit h => ⟨h, rfl⟩, λ⟨h, h'⟩ => h' ▸ .unit h⟩
+
+theorem Wfq.pair_iff {Γ qs a b C}
+  : Wfq (τ := τ) Γ qs (.pair a b) C
+  ↔ ∃ql qr A B, ql + qr ≤ qs ∧ Wfq Γ ql a A ∧ Wfq Γ qr b B ∧ C = A ⊗ B := ⟨
+    λ|.pair h ha hb => ⟨_, _, _, _, h, ha, hb, rfl⟩,
+    λ⟨_, _, _, _, h, ha, hb, hC⟩ => hC ▸ .pair h ha hb
+  ⟩
+
+theorem Wfq.let₂_iff {Γ qs a c C}
+  : Wfq (τ := τ) Γ qs (.let₂ a c) C
+  ↔ ∃ql qr A B, ql + qr ≤ qs ∧ Wfq Γ ql a (A ⊗ B)
+    ∧ Wfq (B::A::Γ) ((qr.cons ↑(quant A)).cons ↑(quant B)) c C := ⟨
+    λ|.let₂ h ha hb => ⟨_, _, _, _, h, ha, hb⟩,
+    λ⟨_, _, _, _, h, ha, hb⟩ => .let₂ h ha hb
+  ⟩
+
+-- Nonempty WfqD ↔ Wfq
 
 inductive WqD : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ → Sort _
   | var {Γ qs i} (hi : i < Γ.length) : qs.Var i → WqD Γ qs (.var i)
@@ -279,18 +332,6 @@ inductive WfqM : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ �
     → qA = ↑(quant A) → qB = ↑(quant B)
     → WfqM (B::A::Γ) ((qs.cons qA).cons qB) c C
     → WfqM Γ (qs + qs') (.let₂ a c) C
-
-inductive Wfq : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ → Ty τ → Prop
-  | var {Γ qs i A} (hi : i < Γ.length) : Γ.QVar qs i A → Wfq Γ qs (.var i) A
-  | op {Γ qs f a A B} (hA : f.src = A) (hB : f.trg = B) : Wfq Γ qs a A → Wfq Γ qs (.op f a) B
-  | let₁ {Γ} {qs qs' : Vector' EQuant Γ.length} {a b A B}
-    : Wfq Γ qs a A → Wfq (A::Γ) (qs'.cons (quant A)) b B → Wfq Γ (qs + qs') (.let₁ a b) B
-  | unit {Γ qs} : 0 ≤ qs → Wfq Γ qs .unit (𝟙_ _)
-  | pair {Γ} {qs qs' : Vector' EQuant Γ.length} {a b A B}
-    : Wfq Γ qs a A → Wfq Γ qs' b B → Wfq Γ (qs + qs') (.pair a b) (A ⊗ B)
-  | let₂ {Γ} {qs qs' : Vector' EQuant Γ.length} {a c A B C} : Wfq Γ qs a (A ⊗ B)
-    → Wfq (B::A::Γ) ((qs.cons ↑(quant A)).cons ↑(quant B)) c C
-    → Wfq Γ (qs + qs') (.let₂ a c) C
 
 -- TODO: WfqM has a unique quantity q
 
