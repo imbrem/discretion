@@ -61,17 +61,17 @@ theorem Subst.Wf.lift_iff {Γ σ Δ}
   : Subst.Wf (A::Γ) (σ.lift) (B::Δ) ↔ A = B ∧ Subst.Wf (τ := τ) Γ σ Δ
   := ⟨λh => ⟨h.lift_head, h.lift_tail⟩, λ⟨he, h⟩ => h.lift' he⟩
 
-theorem Subst.Wf.wkIn {Γ' Γ Δ} {ρ : ℕ → ℕ} (hρ : List.IsWk Γ' Γ ρ) {σ : Subst τ}
+theorem Subst.Wf.wkIn {Γ' Γ Δ} {ρ : ℕ → ℕ} (hρ : List.IsRen Γ' Γ ρ) {σ : Subst τ}
   (h : Subst.Wf Γ σ Δ) : Subst.Wf Γ' (σ.wkIn ρ) Δ := λi hi => (h i hi).wk hρ
 
-theorem Subst.Wf.wkIn_f {Γ' Γ Δ} (ρ : ℕ → ℕ) [hρ : List.IsWk Γ' Γ ρ] {σ : Subst τ}
+theorem Subst.Wf.wkIn_f {Γ' Γ Δ} (ρ : ℕ → ℕ) [hρ : List.IsRen Γ' Γ ρ] {σ : Subst τ}
   (h : Subst.Wf Γ σ Δ) : Subst.Wf Γ' (σ.wkIn ρ) Δ := h.wkIn hρ
 
-theorem Subst.Wf.wkOut {Γ Δ Δ'} {ρ : ℕ → ℕ} (hρ : List.IsWk Δ Δ' ρ) {σ : Subst τ}
+theorem Subst.Wf.wkOut {Γ Δ Δ'} {ρ : ℕ → ℕ} (hρ : List.IsRen Δ Δ' ρ) {σ : Subst τ}
   (h : Subst.Wf Γ σ Δ) : Subst.Wf Γ (σ.wkOut ρ) Δ'
   := λi hi => hρ.getElem_eq i hi ▸ h (ρ i) (hρ.bounded_on i hi)
 
-theorem Subst.Wf.wkOut_f {Γ Δ Δ'} (ρ : ℕ → ℕ) [hρ : List.IsWk Δ Δ' ρ] {σ : Subst τ}
+theorem Subst.Wf.wkOut_f {Γ Δ Δ'} (ρ : ℕ → ℕ) [hρ : List.IsRen Δ Δ' ρ] {σ : Subst τ}
   (h : Subst.Wf Γ σ Δ) : Subst.Wf Γ (σ.wkOut ρ) Δ' := h.wkOut hρ
 
 theorem Wf.subst {Γ σ Δ} (hσ : Subst.Wf Γ σ Δ) {t : Term τ} {A}
@@ -94,13 +94,13 @@ theorem LSubst.Wf.cons_iff {Γ σ Δ A}
   : LSubst.Wf Γ (a::σ) (A::Δ) ↔ Term.Wf (τ := τ) Γ a A ∧ LSubst.Wf Γ σ Δ
   := ⟨λh => ⟨h.head, h.tail⟩, λ⟨h, h'⟩ => h'.cons h⟩
 
-theorem LSubst.Wf.wkIn {Γ' Γ Δ} {ρ : ℕ → ℕ} (hρ : List.IsWk Γ' Γ ρ) {σ : LSubst τ}
+theorem LSubst.Wf.wkIn {Γ' Γ Δ} {ρ : ℕ → ℕ} (hρ : List.IsRen Γ' Γ ρ) {σ : LSubst τ}
   (hσ : LSubst.Wf Γ σ Δ) : LSubst.Wf Γ' (σ.wkIn ρ) Δ := by
   induction hσ with
   | nil => exact LSubst.Wf.nil
   | cons ha hσ Iσ => exact LSubst.Wf.cons (ha.wk hρ) (Iσ hρ)
 
-theorem LSubst.Wf.wkIn_f {Γ' Γ Δ} (ρ : ℕ → ℕ) [hρ : List.IsWk Γ' Γ ρ] {σ : LSubst τ}
+theorem LSubst.Wf.wkIn_f {Γ' Γ Δ} (ρ : ℕ → ℕ) [hρ : List.IsRen Γ' Γ ρ] {σ : LSubst τ}
   (hσ : LSubst.Wf Γ σ Δ) : LSubst.Wf Γ' (σ.wkIn ρ) Δ := hσ.wkIn hρ
 
 theorem LSubst.Wf.unwk0 {A Γ} {σ : LSubst τ} {Δ} (h : LSubst.Wf (τ := τ) (A::Γ) (σ.wkIn .succ) Δ)

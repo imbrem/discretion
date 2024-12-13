@@ -1,6 +1,5 @@
 import Discretion.Wk.Nat
 
-
 /-!
 # Finite Weakenings
 
@@ -36,6 +35,18 @@ theorem Fin.liftWk_zero {n m} (ρ : Fin n -> Fin m) : liftWk ρ 0 = 0 := rfl
 
 @[simp]
 theorem Fin.liftWk_succ {n m} (ρ : Fin n -> Fin m) (k : Fin n) : liftWk ρ k.succ = (ρ k).succ := rfl
+
+theorem Fin.liftWk_eq_zero_iff
+  {n m} {ρ : Fin n -> Fin m} {k : Fin (n + 1)} : liftWk ρ k = 0 ↔ k = 0 := by
+  cases k using Fin.cases <;> simp [Fin.succ_ne_zero]
+
+theorem Fin.liftWk_eq_succ_ne_zero
+  {n m} {ρ : Fin n -> Fin m} {k : Fin (n + 1)} {j : Fin m} : liftWk ρ k = j.succ → k ≠ 0 := by
+  cases k using Fin.cases <;> simp [Fin.succ_ne_zero, Ne.symm (Fin.succ_ne_zero _)]
+
+theorem Fin.liftWk_succ_eq_succ_iff
+  {n m} {ρ : Fin n -> Fin m} {k : Fin n} {j : Fin m} : liftWk ρ k.succ = j.succ ↔ ρ k = j := by
+  simp
 
 /-- Extend a finite weakening by one -/
 def Fin.extendWk {n m} (ρ : Fin n -> Fin m) : Fin (n + 1) -> Fin (m + 1)
@@ -244,6 +255,8 @@ theorem Fin.FEWkn.trg_eq {n m : Nat} {Γ : Fin n → α} {Δ Δ' : Fin m → α}
   (h : Fin.FEWkn Γ Δ ρ) (h' : Fin.FEWkn Γ Δ' ρ) : Δ = Δ'
   := by cases h; cases h'; rfl
 
+section PartialOrder
+
 variable [PartialOrder α]
 
 /-- The function `ρ` weakens `Γ` to `Δ` -/
@@ -264,3 +277,148 @@ theorem Fin.FWkn.comp {n m o : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {Ξ 
 theorem Fin.FEWkn.toFWkn {n m : Nat} {Γ : Fin n → α} {Δ : Fin m → α} {ρ : Fin m → Fin n}
   (h : Fin.FEWkn Γ Δ ρ) : Fin.FWkn Γ Δ ρ
   := le_of_eq h
+
+end PartialOrder
+
+@[simp]
+theorem Finset.preimageF_stepWk_zero (ρ : Fin s → Fin t) :
+  preimageF (Fin.stepWk ρ) {0} = ∅ := by ext k; simp [mem_preimageF_iff, Fin.succ_ne_zero]
+
+@[simp]
+theorem Finset.preimageF_stepWk_succ (ρ : Fin s → Fin t) (k : Fin t) :
+  preimageF (Fin.stepWk ρ) {k.succ} = preimageF ρ {k} := by ext k; simp [mem_preimageF_iff]
+
+@[simp]
+theorem Finset.preimageF_liftWk_zero (ρ : Fin s → Fin t) :
+  preimageF (Fin.liftWk ρ) {0} = {0} := by ext k; simp [mem_preimageF_iff, Fin.liftWk_eq_zero_iff]
+
+@[simp]
+theorem Finset.preimageF_liftWk_succ (ρ : Fin s → Fin t) (k : Fin t) :
+  preimageF (Fin.liftWk ρ) {k.succ} = (preimageF ρ {k}).map (Fin.succEmb s)
+  := by
+  ext k
+  cases k using Fin.cases <;>
+  simp [mem_preimageF_iff, Ne.symm (Fin.succ_ne_zero _), Fin.succ_ne_zero]
+
+section PreSum
+
+variable [AddCommMonoid α]
+
+@[simp]
+theorem Fintype.preSum_stepWk_zero
+  (ρ : Fin s → Fin t) (v : Fin s → α) : preSum (Fin.stepWk ρ) v 0 = 0 := by simp [preSum]
+
+@[simp]
+theorem Fintype.preSum_stepWk_succ
+  (ρ : Fin s → Fin t) (v : Fin s → α) (k : Fin t) :
+  preSum (Fin.stepWk ρ) v k.succ = preSum ρ v k := by simp [preSum]
+
+theorem Fintype.preSum_stepWk
+  (ρ : Fin s → Fin t) (v : Fin s → α) :
+  preSum (Fin.stepWk ρ) v = Fin.cases 0 (preSum ρ v) := by ext k; cases k using Fin.cases <;> simp
+
+@[simp]
+theorem Fintype.preSum_liftWk_zero
+  (ρ : Fin s → Fin t) (v : Fin (s + 1) → α) : preSum (Fin.liftWk ρ) v 0 = v 0 := by simp [preSum]
+
+@[simp]
+theorem Fintype.preSum_liftWk_succ
+  (ρ : Fin s → Fin t) (v : Fin (s + 1) → α) (k : Fin t) :
+  preSum (Fin.liftWk ρ) v k.succ = preSum ρ (v ∘ Fin.succ) k := by simp [preSum]
+
+theorem Fintype.preSum_liftWk
+  (ρ : Fin s → Fin t) (v : Fin (s + 1) → α) :
+  preSum (Fin.liftWk ρ) v = Fin.cases (v 0) (preSum ρ (v ∘ Fin.succ)) := by
+  ext k; cases k using Fin.cases <;> simp
+
+end PreSum
+
+namespace BoundedOn
+
+open Fintype
+
+theorem toFin_stepWk {s t : ℕ} (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ]
+  : toFin (Nat.stepWk ρ) = Fin.stepWk (hρ.toFin ρ) := rfl
+
+theorem toFin_liftWk {s t : ℕ} (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ]
+  : toFin (Nat.liftWk ρ) = Fin.liftWk (hρ.toFin ρ) := by ext i; cases i using Fin.cases <;> rfl
+
+section AddCommMonoid
+
+variable [AddCommMonoid α]
+
+theorem finSum_step (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (v : Fin s → α)
+  : finSum (Nat.stepWk ρ) v = Fin.cases 0 (hρ.finSum ρ v)
+  := by simp [finSum, toFin_stepWk, preSum_stepWk]
+
+theorem finVSum_step (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (v : Vector' α s)
+  : finVSum (Nat.stepWk ρ) v = Fin.cases 0 (hρ.finVSum ρ v)
+  := by simp [finVSum, finSum_step]
+
+@[simp]
+theorem pvSum_step (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (v : Vector' α s)
+  : pvSum (Nat.stepWk ρ) v = (hρ.pvSum ρ v).cons 0 := by
+    simp only [pvSum, Vector'.ofFn, finVSum_step, Fin.cases_zero, Vector'.cons.injEq, true_and]
+    rfl
+
+theorem finSum_lift (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (v : Fin (s + 1) → α)
+  : finSum (Nat.liftWk ρ) v = Fin.cases (v 0) (hρ.finSum ρ (v ∘ Fin.succ))
+  := by simp [finSum, toFin_liftWk, preSum_liftWk]
+
+theorem finVSum_lift_cons (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (a) (v : Vector' α s)
+  : finVSum (Nat.liftWk ρ) (v.cons a) = Fin.cases a (hρ.finVSum ρ v)
+  := by ext i; cases i using Fin.cases <;> simp [finVSum, finSum_lift]
+
+theorem finVSum_lift (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (v : Vector' α (s + 1))
+  : finVSum (Nat.liftWk ρ) v = Fin.cases v.head (hρ.finVSum ρ v.tail)
+  := by cases v; simp [finVSum_lift_cons]
+
+@[simp]
+theorem pvSum_lift_cons (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (a) (v : Vector' α s)
+  : pvSum (Nat.liftWk ρ) (v.cons a) = (hρ.pvSum ρ v).cons a := by
+  simp only [pvSum, Vector'.ofFn, finVSum_lift_cons, Fin.cases_zero, Vector'.cons.injEq, true_and]
+  rfl
+
+theorem pvSum_lift (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (v : Vector' α (s + 1))
+  : pvSum (Nat.liftWk ρ) v = (hρ.pvSum ρ v.tail).cons v.head
+  := by cases v; simp [pvSum_lift_cons]
+
+theorem finSum_add (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (l r : Fin s -> α)
+  : finSum (t := t) ρ (l + r) = finSum ρ l + finSum ρ r
+  := by simp [finSum, preSum_add]
+
+theorem finVSum_add (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (l r : Vector' α s)
+  : finVSum (t := t) ρ (l + r) = finVSum ρ l + finVSum ρ r
+  := by simp [finVSum, finSum_add, Vector'.get_add]
+
+theorem pvSum_add (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ]
+  (l r : Vector' α s) : pvSum (t := t) ρ (l + r) = pvSum ρ l + pvSum ρ r
+  := by simp [pvSum, finVSum_add, Vector'.ofFn_add]
+
+end AddCommMonoid
+
+section OrderedAddCommMonoid
+
+variable [OrderedAddCommMonoid α]
+
+theorem finSum_mono (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] {lo hi : Fin s -> α}
+  (h : lo ≤ hi) : finSum (t := t) ρ lo ≤ finSum ρ hi := preSum_mono _ h
+
+theorem finVSum_mono (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] {lo hi : Vector' α s}
+  (h : lo ≤ hi) : finVSum (t := t) ρ lo ≤ finVSum ρ hi
+  := finSum_mono _ _ _ (Vector'.get_le_of_le h)
+
+theorem pvSum_mono (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ]
+  {lo hi : Vector' α s} (h : lo ≤ hi) : pvSum (t := t) ρ lo ≤ pvSum ρ hi
+  := by
+  simp only [pvSum, ←Vector'.get_le_iff, Vector'.get_ofFn]
+  exact finVSum_mono _ _ _ h
+
+theorem le_pvSum_of_le_sum (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ]
+  (q : Vector' α t) (l r s : Vector' α s) (hlr : l + r ≤ s) (hq : pvSum ρ s ≤ q)
+  : pvSum ρ l + pvSum ρ r ≤ q
+  := le_trans (by rw [<-pvSum_add]; apply pvSum_mono; exact hlr) hq
+
+end OrderedAddCommMonoid
+
+end BoundedOn

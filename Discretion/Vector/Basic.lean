@@ -79,6 +79,13 @@ theorem get_cons_succ {n : Nat} (a : α) (v : Vector' α n) (i : Fin n)
 theorem get_cons_comp_succ {n : Nat} (a : α) (v : Vector' α n)
   : (cons a v).get ∘ Fin.succ = v.get := funext (get_succ (cons a v))
 
+theorem get_tail_apply {n : Nat} (v : Vector' α (n + 1)) (i : Fin n)
+  : v.tail.get i = v.get i.succ := by cases v; rfl
+
+@[simp]
+theorem get_tail {n : Nat} (v : Vector' α (n + 1))
+  : v.tail.get = v.get ∘ Fin.succ := by ext k; rw [get_tail_apply]; rfl
+
 theorem get_injective {n : Nat} : Function.Injective (get (α := α) (n := n))
   := λa b h => by
   induction a <;> cases b
@@ -251,6 +258,10 @@ theorem zero_zero [Zero α] : (0 : Vector' α 0) = .nil := rfl
 
 theorem zero_succ [Zero α] {n : Nat} : (0 : Vector' α (n + 1)) = cons 0 (0 : Vector' α n) := rfl
 
+@[simp]
+theorem get_zero_apply [Zero α] {n : Nat} (i : Fin n) : (0 : Vector' α n).get i = 0
+  := by simp [OfNat.ofNat, Zero.zero]
+
 instance instOne [One α] : One (Vector' α n) where
   one := ofFn 1
 
@@ -281,6 +292,18 @@ theorem add_nil [Add α] : (.nil : Vector' α 0) + .nil = .nil := rfl
 @[simp]
 theorem add_cons [Add α] {n : Nat} (a b : α) (v w : Vector' α n)
   : (cons a v) + (cons b w) = cons (a + b) (v + w) := rfl
+
+theorem get_add_apply [Add α] {n : Nat} (v w : Vector' α n) (i : Fin n)
+  : (v + w).get i = v.get i + w.get i := by
+  induction v <;> cases w
+  case nil => exact i.elim0
+  case cons => cases i using Fin.cases <;> simp [*]
+
+theorem get_add [Add α] {n : Nat} (v w : Vector' α n) : (v + w).get = v.get + w.get
+  := funext (get_add_apply v w)
+
+theorem ofFn_add [Add α] {n : Nat} (f g : Fin n → α)
+  : ofFn (f + g) = ofFn f + ofFn g := by apply get_injective; simp [get_add]
 
 instance instAddMonoid [AddMonoid α] : AddMonoid (Vector' α n) where
   add_zero v := by induction v <;> simp [zero_zero, zero_succ, *]

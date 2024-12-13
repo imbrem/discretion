@@ -164,16 +164,16 @@ def Wf.cases' {motive : ∀ {Γ t A}, Wf (τ := τ) Γ t A → Sort u}
   | .pair _ _, .tensor _ _, h => pair h.pair_left h.pair_right
   | .let₂ _ _, _, h => let₂ h.let₂_bind h.let₂_expr
 
-theorem Wf.wk {Γ Δ} {ρ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ) {t : Term τ} {A}
+theorem Wf.wk {Γ Δ} {ρ : ℕ → ℕ} (hρ : List.IsRen Γ Δ ρ) {t : Term τ} {A}
   (h : Wf Δ t A) : Wf Γ (t.wk ρ) A := by
   induction h generalizing Γ ρ with
   | var hi => have h := hρ.getElem_eq _ hi; constructor; rw [h]; assumption
   | _ => constructor <;> apply_assumption
 
-theorem Wf.wk_f {Γ Δ} (ρ : ℕ → ℕ) [hρ : List.IsWk Γ Δ ρ] {t : Term τ} {A}
+theorem Wf.wk_f {Γ Δ} (ρ : ℕ → ℕ) [hρ : List.IsRen Γ Δ ρ] {t : Term τ} {A}
   (h : Wf Δ t A) : Wf Γ (t.wk ρ) A := h.wk hρ
 
-theorem Wf.unwk {Γ Δ} {ρ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ) {t : Term τ} {A}
+theorem Wf.unwk {Γ Δ} {ρ : ℕ → ℕ} (hρ : List.IsRen Γ Δ ρ) {t : Term τ} {A}
   (h : Wf Γ (t.wk ρ) A) (ht : t.fvi ≤ Δ.length) : Wf Δ t A := by
   induction t generalizing Γ Δ ρ A <;> cases h
   case var hΓ ha => apply var; rw [<-hρ.getElem_eq _ ht, ha]
@@ -182,31 +182,31 @@ theorem Wf.unwk {Γ Δ} {ρ : ℕ → ℕ} (hρ : List.IsWk Γ Δ ρ) {t : Term 
     constructor
     all_goals {
       apply_assumption
-      <;> (repeat apply λhρ => List.IsWk.lift (hρ := hρ))
+      <;> (repeat apply λhρ => List.IsRen.lift (hρ := hρ))
       <;> first | assumption | ((try simp only [List.length_cons]); omega)
     }
   }
 
-theorem Wf.unwk_f {Γ Δ} (ρ : ℕ → ℕ) [hρ : List.IsWk Γ Δ ρ] {t : Term τ} {A}
+theorem Wf.unwk_f {Γ Δ} (ρ : ℕ → ℕ) [hρ : List.IsRen Γ Δ ρ] {t : Term τ} {A}
   (h : Wf Γ (t.wk ρ) A) (ht : t.fvi ≤ Δ.length) : Wf Δ t A := h.unwk hρ ht
 
 theorem Wf.fvi {Γ} {t : Term τ} {A} (h : Wf Γ t A) : t.fvi ≤ Γ.length := by
   induction h <;> simp [Term.fvi] at * <;> omega
 
 theorem Wf.unwk_b {Γ Δ} {ρ : ℕ → ℕ}
-  (hρ : List.IsWk Γ Δ ρ) (hρ' : BoundedFrom Δ.length Γ.length ρ)
+  (hρ : List.IsRen Γ Δ ρ) (hρ' : BoundedFrom Δ.length Γ.length ρ)
   {t : Term τ} {A} (h : Wf Γ (t.wk ρ) A) : Wf Δ t A := unwk_f ρ h (t.fvi_bounded_from_f ρ h.fvi)
 
 theorem Wf.unwk_bf {Γ Δ} (ρ : ℕ → ℕ)
-  [hρ : List.IsWk Γ Δ ρ] [hρ' : BoundedFrom Δ.length Γ.length ρ]
+  [hρ : List.IsRen Γ Δ ρ] [hρ' : BoundedFrom Δ.length Γ.length ρ]
   {t : Term τ} {A} (h : Wf Γ (t.wk ρ) A) : Wf Δ t A := h.unwk_b hρ hρ'
 
 theorem Wf.wk_iff {Γ Δ} {ρ : ℕ → ℕ}
-  (hρ : List.IsWk Γ Δ ρ) (hρ' : BoundedFrom Δ.length Γ.length ρ)
+  (hρ : List.IsRen Γ Δ ρ) (hρ' : BoundedFrom Δ.length Γ.length ρ)
   (t : Term τ) (A) : Wf Γ (t.wk ρ) A ↔ Wf Δ t A := ⟨λh => h.unwk_b hρ hρ', λh => h.wk hρ⟩
 
 theorem Wf.wk_iff_f {Γ Δ} (ρ : ℕ → ℕ)
-  [hρ : List.IsWk Γ Δ ρ] [hρ' : BoundedFrom Δ.length Γ.length ρ]
+  [hρ : List.IsRen Γ Δ ρ] [hρ' : BoundedFrom Δ.length Γ.length ρ]
   (t : Term τ) (A) : Wf Γ (t.wk ρ) A ↔ Wf Δ t A := wk_iff hρ hρ' t A
 
 theorem Wf.wk0 {Γ} {t : Term τ} {A B}
@@ -241,7 +241,28 @@ inductive WfqD : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ �
     → WfqD (B::A::Γ) ((qr.cons ↑(quant A)).cons ↑(quant B)) c C
     → WfqD Γ qs (.let₂ a c) C
 
--- TODO: weakening, substitution, etc...
+open BoundedOn
+
+def WfqD.wk {Γ Δ qΓ qΔ} {ρ : ℕ → ℕ} (hρ : List.IsQRen qΓ qΔ ρ) {t : Term τ} {A}
+  (h : WfqD Δ qΔ t A) : WfqD Γ qΓ (t.wk ρ) A := match h with
+  | .var h => .var (h.wk hρ)
+  | .op hA hB h => .op hA hB (h.wk hρ)
+  | .let₁ hq ha hb =>
+    .let₁
+      (le_pvSum_of_le_sum _ _ ρ _ _ _ _ hq hρ.quant_le_sum)
+      (ha.wk (List.IsQRen.of_pvSum _ _ _))
+      (hb.wk ((List.IsQRen.of_pvSum _ _ _).lift _ _))
+  | .unit h => .unit (hρ.le_zero _ _ _ h)
+  | .pair hq ha hb =>
+    .pair
+      (le_pvSum_of_le_sum _ _ ρ _ _ _ _ hq hρ.quant_le_sum)
+      (ha.wk (List.IsQRen.of_pvSum _ _ _))
+      (hb.wk (List.IsQRen.of_pvSum _ _ _))
+  | let₂ hq ha hb =>
+    .let₂
+      (le_pvSum_of_le_sum _ _ ρ _ _ _ _ hq hρ.quant_le_sum)
+      (ha.wk (List.IsQRen.of_pvSum _ _ _))
+      (hb.wk (((List.IsQRen.of_pvSum _ _ _).lift _ _).lift _ _))
 
 inductive Wfq : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ → Ty τ → Prop
   | var {Γ qs i A} : Γ.QVar qs i A → Wfq Γ qs (.var i) A
@@ -258,29 +279,29 @@ inductive Wfq : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ →
     → Wfq Γ qs (.let₂ a c) C
 
 theorem Wfq.var_iff {Γ qs i A}
-  : Wfq (τ := τ) Γ qs (.var i) A ↔ Γ.QVar qs i A := ⟨λ|.var h => h, .var⟩
+  : Wfq (τ := τ) Γ qs (.var i) A ↔ Γ.QVar qs i A := ⟨λ | .var h => h, .var⟩
 
 theorem Wfq.op_iff {Γ qs f a B}
   : Wfq (τ := τ) Γ qs (.op f a) B ↔ f.trg = B ∧ Wfq Γ qs a f.src := ⟨
-    λ|.op hA hB ha => by cases hA; exact ⟨hB, ha⟩,
-    λ⟨hB, ha⟩ => .op rfl hB ha
+    λ| .op hA hB ha => by cases hA; exact ⟨hB, ha⟩,
+    λ ⟨hB, ha⟩ => .op rfl hB ha
   ⟩
 
 theorem Wfq.let₁_iff {Γ qs a b B}
   : Wfq (τ := τ) Γ qs (.let₁ a b) B
   ↔ ∃ql qr A, ql + qr ≤ qs ∧ Wfq Γ ql a A ∧ Wfq (A::Γ) (qr.cons (quant A)) b B := ⟨
-    λ|.let₁ h ha hb => ⟨_, _, _, h, ha, hb⟩,
+    λ| .let₁ h ha hb => ⟨_, _, _, h, ha, hb⟩,
     λ⟨_, _, _, h, ha, hb⟩ => .let₁ h ha hb
   ⟩
 
 theorem Wfq.unit_iff {Γ qs A}
   : Wfq (τ := τ) Γ qs .unit A ↔ 0 ≤ qs ∧ A = (𝟙_ _)
-  := ⟨λ|.unit h => ⟨h, rfl⟩, λ⟨h, h'⟩ => h' ▸ .unit h⟩
+  := ⟨λ| .unit h => ⟨h, rfl⟩, λ⟨h, h'⟩ => h' ▸ .unit h⟩
 
 theorem Wfq.pair_iff {Γ qs a b C}
   : Wfq (τ := τ) Γ qs (.pair a b) C
   ↔ ∃ql qr A B, ql + qr ≤ qs ∧ Wfq Γ ql a A ∧ Wfq Γ qr b B ∧ C = A ⊗ B := ⟨
-    λ|.pair h ha hb => ⟨_, _, _, _, h, ha, hb, rfl⟩,
+    λ| .pair h ha hb => ⟨_, _, _, _, h, ha, hb, rfl⟩,
     λ⟨_, _, _, _, h, ha, hb, hC⟩ => hC ▸ .pair h ha hb
   ⟩
 
@@ -288,7 +309,7 @@ theorem Wfq.let₂_iff {Γ qs a c C}
   : Wfq (τ := τ) Γ qs (.let₂ a c) C
   ↔ ∃ql qr A B, ql + qr ≤ qs ∧ Wfq Γ ql a (A ⊗ B)
     ∧ Wfq (B::A::Γ) ((qr.cons ↑(quant A)).cons ↑(quant B)) c C := ⟨
-    λ|.let₂ h ha hb => ⟨_, _, _, _, h, ha, hb⟩,
+    λ| .let₂ h ha hb => ⟨_, _, _, _, h, ha, hb⟩,
     λ⟨_, _, _, _, h, ha, hb⟩ => .let₂ h ha hb
   ⟩
 
@@ -311,6 +332,7 @@ inductive WqD : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ →
           ((qr.cons ↑(quant (inferRight Γ a))).cons ↑(quant (inferLeft Γ a)))
           c
     → WqD Γ qs (.let₂ a c)
+
 
 -- TODO: WfqD → Wf
 

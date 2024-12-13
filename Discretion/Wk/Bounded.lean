@@ -110,22 +110,22 @@ theorem toFin_comp (s t u : ℕ) (ρ σ : ℕ → ℕ) [hσ : BoundedOn s t σ] 
   : (BoundedOn.comp s t u).toFin (ρ ∘ σ) = toFin ρ ∘ hσ.toFin σ := rfl
 
 def finPi {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] : Fin t → Finset (Fin s)
-  := Finset.preimageF1 (toFin ρ)
+  := (Finset.preimageF (toFin ρ) {·})
 
 @[simp]
 theorem finPi_id {s : ℕ} : finPi (s := s) (t := s) id = ({·}) := by
-  ext i j; simp [finPi, Finset.mem_preimageF1_iff]
+  ext i j; simp [finPi, Finset.mem_preimageF_iff]
 
 theorem finPi_comp_apply (s t u : ℕ) (ρ σ : ℕ → ℕ) [hσ : BoundedOn s t σ] [hρ : BoundedOn t u ρ]
   (i) : (BoundedOn.comp s t u).finPi (ρ ∘ σ) i = Finset.sup (hρ.finPi _ i) hσ.finPi := by
-  ext j; simp [finPi, Finset.mem_preimageF1_iff, toFin_comp s t u]
+  ext j; simp [finPi, Finset.mem_preimageF_iff, toFin_comp s t u]
 
 theorem eq_of_finPi {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] (i : Fin s) (j k : Fin t)
-  : i ∈ finPi ρ j → i ∈ finPi ρ k → j = k := Finset.eq_of_preimageF1 (toFin ρ) i j k
+  : i ∈ finPi ρ j → i ∈ finPi ρ k → j = k := Finset.eq_of_preimageF (toFin ρ) i j k
 
 theorem finPi_disjoint {s t : ℕ} (ρ : ℕ → ℕ) [hρ : BoundedOn s t ρ] (i j : Fin t) (hij : i ≠ j)
-  : Disjoint (hρ.finPi ρ i) (hρ.finPi ρ j) := Finset.preimageF1_disjoint (toFin ρ) i j hij
-
+  : Disjoint (hρ.finPi ρ i) (hρ.finPi ρ j)
+  := Finset.preimageF_disjoint (toFin ρ) {i} {j} (by simp [Ne.symm hij])
 
 def mulPi {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] (i : Fin t) : Multiset (Fin s)
   := (finPi ρ i).val
@@ -155,12 +155,26 @@ theorem pv_comp {s t u : ℕ} (ρ σ : ℕ → ℕ) [hσ : BoundedOn s t σ] [h�
   (v : Vector' α u) : (BoundedOn.comp s t u).pv (ρ ∘ σ) v = hσ.pv σ (pv ρ v) := by
   simp [pv, toFin_comp (s := s) (t := t) (u := u), Function.comp_assoc]
 
-def pvSum {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] [AddCommMonoid α] (v : Vector' α s) : Vector' α t
-  := Vector'.ofFn (λi => ∑ j ∈ finPi ρ i, v.get j )
+def finSum {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] [AddCommMonoid α] (v : Fin s → α) : Fin t → α
+  := Fintype.preSum (toFin ρ) v
 
 @[simp]
-theorem pvSum_id {s : ℕ} [AddCommMonoid α] (v : Vector' α s) : pvSum id v = v := by
-  simp [pvSum, finPi_id, Finset.sum_singleton]
+theorem finSum_id {s : ℕ} [AddCommMonoid α] (v : Fin s → α) : finSum id v = v
+  := by ext i; simp [finSum, Fintype.preSum]
+
+def finVSum {s t : ℕ} (ρ : ℕ → ℕ)
+  [BoundedOn s t ρ] [AddCommMonoid α] (v : Vector' α s) : Fin t → α
+  := finSum ρ v.get
+
+@[simp]
+theorem finVSum_id {s : ℕ} [AddCommMonoid α] (v : Vector' α s) : finVSum id v = v.get
+  := by simp [finVSum]
+
+def pvSum {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] [AddCommMonoid α] (v : Vector' α s) : Vector' α t
+  := Vector'.ofFn (finVSum ρ v)
+
+@[simp]
+theorem pvSum_id {s : ℕ} [AddCommMonoid α] (v : Vector' α s) : pvSum id v = v := by simp [pvSum]
 
 -- @[simp]
 -- theorem pvSum_comp (s t u : ℕ) (ρ σ : ℕ → ℕ) [hσ : BoundedOn s t σ] [hρ : BoundedOn t u ρ]

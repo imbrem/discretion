@@ -194,15 +194,6 @@ def List.QWk (Γ Δ : List α) (qs : Vector' EQuant Γ.length) := {ρ : Wk Γ Δ
 -- TODO: List.Wk is a subsingleton if Γ has no duplicates of elements of Δ
 -- (and therefore, in particular, if it has no duplicates at all!)
 
-structure Vector'.Var (qs : Vector' EQuant n) (i : ℕ) : Prop where
-  is_lt : i < n
-  use : 1 ≤ qs.get ⟨i, is_lt⟩
-  select : ∀j : Fin n, i ≠ j → 0 ≤ qs.get j
-
-structure List.QVar (Γ : List α) (qs : Vector' EQuant Γ.length) (i) (A : α)
-  extends qs.Var i : Prop where
-  ty_eq : Γ[i] = A
-
 def List.Split {α} (Γ Δ Ξ : List α) := List.Wk Γ Δ × List.Wk Γ Ξ
 
 abbrev List.Split.lwk {α} {Γ Δ Ξ : List α} (ρ : List.Split Γ Δ Ξ) : List.Wk Γ Δ := ρ.1
@@ -404,123 +395,219 @@ instance List.liftWk_bounded_from_length {A : α} {Γ Δ : List α} {ρ}
   := Nat.liftWk_bounded_from (hρ := hρ)
 
 /-- The function `ρ` sends `Γ` to `Δ` -/
-class List.IsWk (Γ Δ : List α) (ρ : ℕ → ℕ) extends BoundedOn Δ.length Γ.length ρ : Prop where
+class List.IsRen (Γ Δ : List α) (ρ : ℕ → ℕ) extends BoundedOn Δ.length Γ.length ρ : Prop where
   getElem_eq : ∀i, (h : i < Δ.length) → Γ[ρ i]'(bounded_on i h) = Δ[i]
 
-def List.IsWk.toFinWk {ρ : ℕ → ℕ} (h : List.IsWk Γ Δ ρ) : Fin (Δ.length) → Fin (Γ.length)
+def List.IsRen.toFinWk {ρ : ℕ → ℕ} (h : List.IsRen Γ Δ ρ) : Fin (Δ.length) → Fin (Γ.length)
   := Fin.wkOfBounded ρ h.bounded_on
 
-theorem List.IsWk.toIsFWk (Γ Δ : List α) (ρ : ℕ → ℕ)
-  (h : List.IsWk Γ Δ ρ) : List.IsFWk Γ Δ (List.IsWk.toFinWk h)
+theorem List.IsRen.toIsFWk (Γ Δ : List α) (ρ : ℕ → ℕ)
+  (h : List.IsRen Γ Δ ρ) : List.IsFWk Γ Δ (List.IsRen.toFinWk h)
   := funext λ⟨i, hi⟩ => h.getElem_eq i hi
 
--- ... TODO: IsWks
+-- ... TODO: IsRens
 
 @[simp]
-instance List.IsWk.id (Γ : List α) : List.IsWk Γ Γ id where
+instance List.IsRen.id (Γ : List α) : List.IsRen Γ Γ id where
   getElem_eq := λ_ _ => rfl
 
 -- ... TODO: len_le
 
 @[simp]
-instance List.IsWk.drop_all (Γ : List α) (ρ) : List.IsWk Γ [] ρ where
+instance List.IsRen.drop_all (Γ : List α) (ρ) : List.IsRen Γ [] ρ where
   bounded_on i h := by cases h
   getElem_eq i h := by cases h
 
-theorem List.IsWk.comp (Γ Δ Ξ : List α) {ρ σ} [hρ : List.IsWk Γ Δ ρ] [hσ : List.IsWk Δ Ξ σ]
-  : List.IsWk Γ Ξ (ρ ∘ σ) where
+theorem List.IsRen.comp (Γ Δ Ξ : List α) {ρ σ} [hρ : List.IsRen Γ Δ ρ] [hσ : List.IsRen Δ Ξ σ]
+  : List.IsRen Γ Ξ (ρ ∘ σ) where
   toBoundedOn := BoundedOn.comp Ξ.length Δ.length Γ.length
   getElem_eq i h := hρ.getElem_eq (σ i) (hσ.bounded_on i h) ▸ hσ.getElem_eq i h
 
-instance List.IsWk.lift {ρ : ℕ → ℕ} [hρ : List.IsWk Γ Δ ρ]
-  : List.IsWk (A :: Γ) (A :: Δ) (Nat.liftWk ρ) where
+instance List.IsRen.lift {ρ : ℕ → ℕ} [hρ : List.IsRen Γ Δ ρ]
+  : List.IsRen (A :: Γ) (A :: Δ) (Nat.liftWk ρ) where
   toBoundedOn := Nat.liftWk_bounded_on
   getElem_eq i h := match i with
   | 0 => rfl
   | i + 1 => hρ.getElem_eq i (Nat.lt_of_succ_lt_succ h)
 
-theorem List.IsWk.lift_tail {ρ : ℕ → ℕ} (hρ : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
-  : List.IsWk Γ Δ ρ where
+theorem List.IsRen.lift_tail {ρ : ℕ → ℕ} (hρ : List.IsRen (A :: Γ) (B :: Δ) (Nat.liftWk ρ))
+  : List.IsRen Γ Δ ρ where
   toBoundedOn := Nat.liftWk_bounded_on_tail (hρ := hρ.toBoundedOn)
   getElem_eq i h := hρ.getElem_eq (i + 1) (Nat.succ_lt_succ h)
 
-theorem List.IsWk.lift_head {ρ : ℕ → ℕ} [hρ : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ)] : A = B
+theorem List.IsRen.lift_head {ρ : ℕ → ℕ} [hρ : List.IsRen (A :: Γ) (B :: Δ) (Nat.liftWk ρ)] : A = B
   := hρ.getElem_eq 0 (Nat.zero_lt_succ Δ.length)
 
-theorem List.IsWk.lift_iff (A B) (Γ Δ : List α) (ρ : ℕ → ℕ)
-  : List.IsWk (A :: Γ) (B :: Δ) (Nat.liftWk ρ) ↔ A = B ∧ List.IsWk Γ Δ ρ
+theorem List.IsRen.lift_iff (A B) (Γ Δ : List α) (ρ : ℕ → ℕ)
+  : List.IsRen (A :: Γ) (B :: Δ) (Nat.liftWk ρ) ↔ A = B ∧ List.IsRen Γ Δ ρ
   := ⟨λh => ⟨h.lift_head, h.lift_tail⟩, λ⟨rfl, hρ⟩ => hρ.lift⟩
 
-theorem List.IsWk.lift_id (hρ : List.IsWk Γ Δ _root_.id)
-  : List.IsWk (A :: Γ) (A :: Δ) _root_.id := Nat.liftWk_id ▸ hρ.lift
+theorem List.IsRen.lift_id (hρ : List.IsRen Γ Δ _root_.id)
+  : List.IsRen (A :: Γ) (A :: Δ) _root_.id := Nat.liftWk_id ▸ hρ.lift
 
-theorem List.IsWk.lift_id_tail (h : List.IsWk (left :: Γ) (right :: Δ) _root_.id)
-  : List.IsWk Γ Δ _root_.id
+theorem List.IsRen.lift_id_tail (h : List.IsRen (left :: Γ) (right :: Δ) _root_.id)
+  : List.IsRen Γ Δ _root_.id
   := (Nat.liftWk_id ▸ h).lift_tail
 
-theorem List.IsWk.lift_id_head (h : List.IsWk (left :: Γ) (right :: Δ) _root_.id)
+theorem List.IsRen.lift_id_head (h : List.IsRen (left :: Γ) (right :: Δ) _root_.id)
   : left = right
   := (Nat.liftWk_id ▸ h).lift_head
 
-theorem List.IsWk.lift_id_iff (h : List.IsWk (left :: Γ) (right :: Δ) _root_.id)
-  : left = right ∧ List.IsWk Γ Δ _root_.id
+theorem List.IsRen.lift_id_iff (h : List.IsRen (left :: Γ) (right :: Δ) _root_.id)
+  : left = right ∧ List.IsRen Γ Δ _root_.id
   := ⟨h.lift_id_head, h.lift_id_tail⟩
 
-theorem List.IsWk.lift₂ (ρ : ℕ → ℕ) [hρ : List.IsWk Γ Δ ρ]
-  : List.IsWk (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftWk (Nat.liftWk ρ))
+theorem List.IsRen.lift₂ (ρ : ℕ → ℕ) [hρ : List.IsRen Γ Δ ρ]
+  : List.IsRen (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftWk (Nat.liftWk ρ))
   := inferInstance
 
-instance List.IsWk.liftn₂ (ρ : ℕ → ℕ) [hρ : List.IsWk Γ Δ ρ]
-  : List.IsWk (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftnWk 2 ρ)
+instance List.IsRen.liftn₂ (ρ : ℕ → ℕ) [hρ : List.IsRen Γ Δ ρ]
+  : List.IsRen (A₁ :: A₂ :: Γ) (A₁ :: A₂ :: Δ) (Nat.liftnWk 2 ρ)
   := by rw [Nat.liftnWk_two]; exact hρ.lift₂
 
-instance List.IsWk.liftn_append (Ξ : List α) (ρ : ℕ → ℕ) (hρ : List.IsWk Γ Δ ρ)
-  : List.IsWk (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk Ξ.length ρ) := by
+instance List.IsRen.liftn_append (Ξ : List α) (ρ : ℕ → ℕ) (hρ : List.IsRen Γ Δ ρ)
+  : List.IsRen (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk Ξ.length ρ) := by
   induction Ξ with
   | nil => exact hρ
   | cons A Ξ I =>
     rw [List.length, Nat.liftnWk_succ']
     exact I.lift
 
-theorem List.IsWk.liftn_append' (Ξ : List α) (ρ : ℕ → ℕ) (hΞ : Ξ.length = n)
-  (hρ : List.IsWk Γ Δ ρ) : List.IsWk (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk n ρ) := hΞ ▸ hρ.liftn_append Ξ
+theorem List.IsRen.liftn_append' (Ξ : List α) (ρ : ℕ → ℕ) (hΞ : Ξ.length = n)
+  (hρ : List.IsRen Γ Δ ρ) : List.IsRen (Ξ ++ Γ) (Ξ ++ Δ) (Nat.liftnWk n ρ) := hΞ ▸ hρ.liftn_append Ξ
 
-theorem List.IsWk.step (A : α) (ρ : ℕ → ℕ) [hρ : List.IsWk Γ Δ ρ]
-  : List.IsWk (A :: Γ) Δ (Nat.stepWk ρ) where
+instance List.IsRen.step (A : α) (ρ : ℕ → ℕ) [hρ : List.IsRen Γ Δ ρ]
+  : List.IsRen (A :: Γ) Δ (Nat.stepWk ρ) where
   bounded_on i h := Nat.succ_lt_succ (hρ.bounded_on i h)
   getElem_eq i h := hρ.getElem_eq i h
 
 @[simp]
-instance List.IsWk.succ (A : α) : List.IsWk (A :: Γ) Γ .succ
+instance List.IsRen.succ (A : α) : List.IsRen (A :: Γ) Γ .succ
   := step (Γ := Γ) (Δ := Γ) (ρ := _root_.id) A
 
-theorem List.IsWk.step_tail (A) (ρ : ℕ → ℕ) [hρ : List.IsWk (A :: Γ) Δ (Nat.stepWk ρ)]
-  : List.IsWk Γ Δ ρ where
+theorem List.IsRen.step_tail (A) (ρ : ℕ → ℕ) [hρ : List.IsRen (A :: Γ) Δ (Nat.stepWk ρ)]
+  : List.IsRen Γ Δ ρ where
   bounded_on i h := Nat.lt_of_succ_lt_succ (hρ.bounded_on i h)
   getElem_eq i h := hρ.getElem_eq i h
 
-theorem List.IsWk.step_iff (A) (Γ Δ : List α) (ρ : ℕ → ℕ)
-  : List.IsWk (A :: Γ) Δ (Nat.stepWk ρ) ↔ List.IsWk Γ Δ ρ
+theorem List.IsRen.step_iff (A) (Γ Δ : List α) (ρ : ℕ → ℕ)
+  : List.IsRen (A :: Γ) Δ (Nat.stepWk ρ) ↔ List.IsRen Γ Δ ρ
   := ⟨
-    λ_ => List.IsWk.step_tail A ρ,
-    λ_ => List.IsWk.step A ρ
+    λ_ => List.IsRen.step_tail A ρ,
+    λ_ => List.IsRen.step A ρ
   ⟩
 
-theorem List.IsWk.stepn_append {ρ : ℕ → ℕ} (Ξ : List α) (hρ : List.IsWk Γ Δ ρ)
-    : List.IsWk (Ξ ++ Γ) Δ (Nat.stepnWk Ξ.length ρ)
+theorem List.IsRen.stepn_append {ρ : ℕ → ℕ} (Ξ : List α) (hρ : List.IsRen Γ Δ ρ)
+    : List.IsRen (Ξ ++ Γ) Δ (Nat.stepnWk Ξ.length ρ)
   := by induction Ξ with
     | nil => exact hρ
     | cons A Ξ I =>
       rw [List.length, Nat.stepnWk_succ']
       exact I.step _
 
-theorem List.IsWk.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.length = n)
-  (hρ : List.IsWk Γ Δ ρ) : List.IsWk (Ξ ++ Γ) Δ (Nat.stepnWk n ρ) := hΞ ▸ hρ.stepn_append Ξ
+theorem List.IsRen.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.length = n)
+  (hρ : List.IsRen Γ Δ ρ) : List.IsRen (Ξ ++ Γ) Δ (Nat.stepnWk n ρ) := hΞ ▸ hρ.stepn_append Ξ
 
-class List.IsWk.Wf
-  (Γ : List α) (qΓ : Vector' EQuant Γ.length) (Δ : List α) (qΔ : Vector' EQuant Δ.length)
-  (ρ : ℕ → ℕ) extends IsWk Γ Δ ρ where
+class List.IsQRen {Γ Δ : List α}
+  (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length) (ρ : ℕ → ℕ)
+  extends IsRen Γ Δ ρ where
   quant_le_sum : BoundedOn.pvSum ρ qΔ ≤ qΓ
+
+theorem List.IsQRen.id_of_le {Γ : List α} {qΓ qΓ' : Vector' EQuant Γ.length} (hq : qΓ' ≤ qΓ)
+  : List.IsQRen qΓ qΓ' _root_.id where
+  quant_le_sum := by simp [hq]
+
+instance List.IsQRen.id {Γ : List α} (qΓ : Vector' EQuant Γ.length)
+  : List.IsQRen qΓ qΓ _root_.id := id_of_le (le_refl _)
+
+theorem List.IsQRen.step_of_le {Γ Δ : List α}
+  (A : α) (q : EQuant) (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length) (ρ)
+  (hq : 0 ≤ q) [hρ : IsQRen qΓ qΔ ρ] : IsQRen (Γ := A::Γ) (qΓ.cons q) qΔ (Nat.stepWk ρ) where
+  quant_le_sum := by simp [hq, hρ.quant_le_sum]
+
+instance List.IsQRen.step {Γ Δ : List α}
+  (A : α) (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length) (ρ)
+  [hρ : IsQRen qΓ qΔ ρ] : IsQRen (Γ := A::Γ) (qΓ.cons 0) qΔ (Nat.stepWk ρ)
+  := step_of_le A 0 qΓ qΔ ρ (le_refl _)
+
+theorem List.IsQRen.lift_of_le {Γ Δ : List α}
+  (A : α) (q q' : EQuant) (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length) (ρ)
+  (hq : q ≤ q') [hρ : IsQRen qΓ qΔ ρ]
+  : IsQRen (Γ := A::Γ) (Δ := A::Δ) (qΓ.cons q') (qΔ.cons q) (Nat.liftWk ρ) where
+  quant_le_sum := by simp [hq, hρ.quant_le_sum]
+
+instance List.IsQRen.lift {Γ Δ : List α}
+  (A : α) (q : EQuant) (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length) (ρ)
+  [hρ : IsQRen qΓ qΔ ρ] : IsQRen (Γ := A::Γ) (Δ := A::Δ) (qΓ.cons q) (qΔ.cons q) (Nat.liftWk ρ)
+  := lift_of_le A q q qΓ qΔ ρ (le_refl _)
+
+theorem List.IsQRen.le_zero {Γ Δ : List α}
+  (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length) (ρ)
+  [hρ : IsQRen qΓ qΔ ρ] (h : 0 ≤ qΔ) : 0 ≤ qΓ := by
+  apply le_trans _ hρ.quant_le_sum
+  apply Vector'.le_of_get_le
+  intro i
+  simp [pvSum, finVSum, finSum, Fintype.preSum]
+  generalize Finset.preimageF (hρ.toFin ρ) {i} = s
+  induction s using Finset.induction with
+  | empty => simp
+  | insert =>
+    simp only [not_false_eq_true, Finset.sum_insert, *]
+    apply EQuant.zero_le_add
+    convert (Vector'.get_le_of_le h) _
+    simp
+    assumption
+
+open BoundedOn
+
+instance List.IsQRen.of_pvSum (Γ Δ : List α) (qΔ : Vector' EQuant Δ.length) {ρ}
+  [hρ : IsRen Γ Δ ρ] : IsQRen (Γ := Γ) (pvSum ρ qΔ) qΔ ρ where
+  quant_le_sum := le_refl _
+
+structure Vector'.Var (qs : Vector' EQuant n) (i : ℕ) : Prop where
+  is_lt : i < n
+  use : 1 ≤ qs.get ⟨i, is_lt⟩
+  select : ∀j : Fin n, i ≠ j → 0 ≤ qs.get j
+
+theorem Vector'.Var.of_oneHot_le {qs : Vector' EQuant n} {i : ℕ}
+  (hi : i < n) (hv : Vector'.oneHot ⟨i, hi⟩ 1 ≤ qs) : Vector'.Var qs i where
+  is_lt := hi
+  use := by convert Vector'.get_le_of_le hv ⟨i, hi⟩; simp [oneHot]
+  select j hj := by
+    convert Vector'.get_le_of_le hv j; cases j; simp at hj; simp [oneHot, Ne.symm hj]
+
+theorem Vector'.Var.oneHot_le {qs : Vector' EQuant n} {i : ℕ}
+   (hv : Vector'.Var qs i) : Vector'.oneHot ⟨i, hv.is_lt⟩ 1 ≤ qs := by
+  apply Vector'.le_of_get_le
+  intro ⟨j, hj⟩
+  simp only [oneHot, get_ofFn, Fin.mk.injEq, ge_iff_le]
+  split
+  case isTrue h => cases h; exact hv.use
+  case isFalse h => exact hv.select _ (by simp [Ne.symm h])
+
+theorem Vector'.Var.oneHot_le_iff {qs : Vector' EQuant n} {i : ℕ} (hi : i < n)
+  : Vector'.Var qs i ↔ Vector'.oneHot ⟨i, hi⟩ 1 ≤ qs
+  := ⟨Vector'.Var.oneHot_le, Vector'.Var.of_oneHot_le hi⟩
+
+structure List.QVar (Γ : List α) (qs : Vector' EQuant Γ.length) (i) (A : α)
+  extends qs.Var i : Prop where
+  ty_eq : Γ[i] = A
+
+theorem List.QVar.wk {Γ Δ : List α} {qΓ : Vector' EQuant Γ.length} {qΔ : Vector' EQuant Δ.length}
+  {ρ : ℕ → ℕ} (hρ : List.IsQRen qΓ qΔ ρ)
+  {i} {A} (v : QVar Δ qΔ i A) : QVar Γ qΓ (ρ i) A where
+  toVar := Vector'.Var.of_oneHot_le (hρ.bounded_on i v.is_lt) (by
+    convert (hρ.pvSum_mono _ _ _ v.oneHot_le).trans hρ.quant_le_sum
+    simp only [Vector'.oneHot, pvSum, finVSum, finSum, Vector'.get_ofFn]
+    congr
+    funext j
+    simp only [Fintype.preSum, Finset.sum_ite_eq', Finset.mem_preimageF_iff, toFin,
+      Finset.mem_singleton]
+    congr 1
+    ext
+    tauto
+  )
+  ty_eq := by rw [hρ.getElem_eq, v.ty_eq]
 
 variable [PartialOrder α] {Γ Δ Ξ : List α}
 
@@ -715,8 +802,8 @@ theorem List.NWkn.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.leng
 -- TODO: if the order is discrete and there are no duplicates in the source, then the are none
 --       in the target
 
-theorem List.IsWk.toNWkn (Γ Δ : List α) (ρ : ℕ → ℕ)
-  (h : List.IsWk Γ Δ ρ) : List.NWkn Γ Δ ρ
+theorem List.IsRen.toNWkn (Γ Δ : List α) (ρ : ℕ → ℕ)
+  (h : List.IsRen Γ Δ ρ) : List.NWkn Γ Δ ρ
   := λn hΔ => ⟨h.bounded_on n hΔ, le_of_eq (h.getElem_eq n hΔ)⟩
 
 /-- The list Γ has a member compatible with `A` at index `n` -/

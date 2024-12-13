@@ -4,6 +4,8 @@ import Mathlib.Data.Fintype.Prod
 import Mathlib.Algebra.Group.WithOne.Defs
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Algebra.Order.Monoid.Unbundled.WithTop
+import Mathlib.Algebra.GroupWithZero.Pointwise.Set.Basic
+import Mathlib.Algebra.Order.Ring.Defs
 import Discretion.Utils
 import Discretion.Vector.Basic
 
@@ -123,12 +125,12 @@ def Quant.casesOn {motive : Quant → Sort _}
   (top : motive ⊤)
   (copy : motive Quant.copy)
   (del : motive Quant.del)
-  (bot : motive ⊥)
+  (one : motive 1)
   : ∀(q : Quant), motive q
   | ⊤ => top
   | Quant.copy => copy
   | Quant.del => del
-  | ⊥ => bot
+  | 1 => one
 
 theorem Quant.is_del_iff {q : Quant} : q.is_del ↔ .del ≤ q := by cases q <;> decide
 
@@ -190,7 +192,7 @@ def Quant.casesOn_le_db {motive : ∀{q q' : Quant}, q ≤ q' → Sort _}
   | ⊥, ⊥ => diag ⊥
 
 instance Quant.instFintype : Fintype Quant where
-  elems := {⊥, copy, del, ⊤}
+  elems := {1, copy, del, ⊤}
   complete x := by cases x <;> simp
 
 def DupCap.c : DupCap → Set ℕ | .copy => Set.Ici 1 | .del => {0, 1}
@@ -240,6 +242,9 @@ theorem Quant.c_del : c del = {0, 1} := by ext n; simp [Quant.c]; omega
 @[simp]
 theorem Quant.c_bot : c ⊥ = {1} := by ext n; simp [Quant.c]
 
+@[simp]
+theorem Quant.c_one : c 1 = {1} := by simp [Quant.c]
+
 theorem Quant.is_del_mono {l r : Quant} : l ≤ r → l.is_del → r.is_del := by
   cases l <;> cases r <;> simp [copy, Top.top, Bot.bot, del, LE.le]
 
@@ -267,7 +272,7 @@ theorem Quant.c_sup {l r : Quant} : c (l ⊔ r) = c l ∪ c r
 theorem Quant.c_def' {q : Quant} : q.c = DupCap.del.bc q.is_del ∪ DupCap.copy.bc q.is_copy := by
   ext n; cases q <;> simp; omega
 
-theorem Quant.c_def_bigUnion {q : Quant} : q.c = {1} ∪ ⋃d ∈ q.dc, d.c := by cases q <;> simp
+-- theorem Quant.c_def_bigUnion {q : Quant} : q.c = {1} ∪ ⋃d ∈ q.dc, d.c := by cases q <;> simp
 
 @[simp]
 theorem Quant.zero_mem_c_iff {q : Quant} : 0 ∈ q.c ↔ .del ≤ q
@@ -303,30 +308,16 @@ open Pointwise
 theorem Quant.c_add {l r : Quant} : (c l) + (c r) ⊆ c (l + r) := λn ⟨x, hx, y, hy, hxy⟩ => by
   cases l <;> cases r <;> simp [HAdd.hAdd, Add.add] <;> simp [Set.mem_add] at * <;> omega
 
-section Mul
-
-instance Quant.instCommSemigroup : CommSemigroup Quant where
+instance Quant.instCommMonoid : CommMonoid Quant where
   mul
-  | .del, q => q
-  | q, .del => q
-  | ⊤, _ => ⊤
-  | _, ⊤ => ⊤
-  | _, _ => .copy
-  mul_assoc a b c := by cases a <;> cases b <;> cases c <;> rfl
-  mul_comm a b := by cases a <;> cases b <;> rfl
-
--- This is scoped because I don't like the "1" instance it requires
-scoped instance Quant.sep_comm_monoid : CommMonoid Quant where
-  one := .del
+  | 1, q | q, 1 => q
+  | .del, .del => .del
+  | .copy, .copy => .copy
+  | _, _ => ⊤
   one_mul a := by cases a <;> rfl
   mul_one a := by cases a <;> rfl
-  mul_comm := CommSemigroup.mul_comm
-
-@[simp]
-theorem Quant.mul_del {q : Quant} : .del * q = q := by cases q <;> rfl
-
-@[simp]
-theorem Quant.del_mul {q : Quant} : q * .del = q := by cases q <;> rfl
+  mul_assoc a b c := by cases a <;> cases b <;> cases c <;> rfl
+  mul_comm a b := by cases a <;> cases b <;> rfl
 
 @[simp]
 theorem Quant.mul_top {q : Quant} : q * ⊤ = ⊤ := by cases q <;> rfl
@@ -335,21 +326,119 @@ theorem Quant.mul_top {q : Quant} : q * ⊤ = ⊤ := by cases q <;> rfl
 theorem Quant.top_mul {q : Quant} : ⊤ * q = ⊤ := by cases q <;> rfl
 
 @[simp]
-theorem Quant.copy_mul_copy : Quant.copy * .copy = .copy := rfl
+theorem Quant.copy_mul_copy : Quant.copy * Quant.copy = Quant.copy := rfl
 
 @[simp]
-theorem Quant.copy_mul_bot : Quant.copy * ⊥ = .copy := rfl
+theorem Quant.del_mul_del : Quant.del * Quant.del = Quant.del := rfl
 
 @[simp]
-theorem Quant.bot_mul_copy : ⊥ * Quant.copy = .copy := rfl
+theorem Quant.copy_mul_del : Quant.copy * Quant.del = ⊤ := rfl
 
 @[simp]
-theorem Quant.bot_mul_bot : ⊥ * ⊥ = Quant.copy := rfl
+theorem Quant.del_mul_copy : Quant.del * Quant.copy = ⊤ := rfl
+
+theorem Quant.c_subset_mul {l r : Quant} : (c l) * (c r) ⊆ c (l * r) := by
+  cases l <;> cases r <;> simp
+  case copy.copy =>
+    intro n ⟨x, hx, y, hy, hxy⟩
+    cases hxy; simp only [Set.mem_Ici, ge_iff_le] at *; apply one_le_mul <;> assumption
+  case del.del =>
+    intro n ⟨x, hx, y, hy, hxy⟩
+    cases hxy; cases hx <;> cases hy <;> simp_all
 
 @[simp]
-theorem Quant.le_mul_self {q : Quant} : q ≤ q * q := by cases q <;> simp
+theorem Set.Ici_one_mul_Ici_one [MulOneClass α] [Preorder α] [MulLeftMono α]
+  : Set.Ici (α := α) 1 * Set.Ici 1 = Set.Ici 1 := by
+  ext n; simp only [mem_mul, mem_Ici]
+  constructor
+  intro ⟨x, hx, y, hy, hxy⟩
+  cases hxy; apply one_le_mul <;> assumption
+  intro hn
+  exact ⟨1, le_refl _, n, hn, by simp⟩
 
-end Mul
+@[simp]
+theorem Set.zero_one_mul_zero_one [MulZeroOneClass α]
+  : ({0, 1} : Set α) * {0, 1} = {0, 1}
+  := by ext k; simp [mem_mul]; tauto
+
+@[simp]
+theorem Set.one_mem_mul_univ {α : Type _} [MulOneClass α]
+  (s : Set α) (hs : 1 ∈ s) : s * Set.univ = Set.univ := by
+  ext k
+  simp only [mem_mul, mem_univ, true_and, iff_true]
+  exists 1
+  simp [*]
+
+@[simp]
+theorem Set.one_mem_univ_mul {α : Type _} [MulOneClass α]
+  (s : Set α) (hs : 1 ∈ s) : Set.univ * s = Set.univ := by
+  ext k
+  simp only [mem_mul, mem_univ, true_and, iff_true]
+  exists k
+  exists 1
+  simp [*]
+
+@[simp]
+theorem Set.zero_one_mul_Ici_one : ({0, 1} : Set ℕ) * Set.Ici 1 = Set.univ := by
+  ext k
+  cases k <;> simp [mem_mul]; exists 1
+
+@[simp]
+theorem Set.Ici_one_mul_zero_one : Set.Ici 1 * {0, 1} = Set.univ := by
+  ext k
+  cases k <;> simp [mem_mul]; exists 1
+
+theorem Quant.c_mul {l r : Quant} : c (l * r) = (c l) * (c r) := by
+  have hl := l.one_mem_c; have hr := r.one_mem_c; cases l <;> cases r <;> simp
+
+-- NOTE: this operation should have another name
+-- section Mul
+
+-- instance Quant.instCommSemigroup : CommSemigroup Quant where
+--   mul
+--   | .del, q => q
+--   | q, .del => q
+--   | ⊤, _ => ⊤
+--   | _, ⊤ => ⊤
+--   | _, _ => .copy
+--   mul_assoc a b c := by cases a <;> cases b <;> cases c <;> rfl
+--   mul_comm a b := by cases a <;> cases b <;> rfl
+
+-- -- This is scoped because I don't like the "1" instance it requires
+-- scoped instance Quant.sep_comm_monoid : CommMonoid Quant where
+--   one := .del
+--   one_mul a := by cases a <;> rfl
+--   mul_one a := by cases a <;> rfl
+--   mul_comm := CommSemigroup.mul_comm
+
+-- @[simp]
+-- theorem Quant.mul_del {q : Quant} : .del * q = q := by cases q <;> rfl
+
+-- @[simp]
+-- theorem Quant.del_mul {q : Quant} : q * .del = q := by cases q <;> rfl
+
+-- @[simp]
+-- theorem Quant.mul_top {q : Quant} : q * ⊤ = ⊤ := by cases q <;> rfl
+
+-- @[simp]
+-- theorem Quant.top_mul {q : Quant} : ⊤ * q = ⊤ := by cases q <;> rfl
+
+-- @[simp]
+-- theorem Quant.copy_mul_copy : Quant.copy * .copy = .copy := rfl
+
+-- @[simp]
+-- theorem Quant.copy_mul_bot : Quant.copy * ⊥ = .copy := rfl
+
+-- @[simp]
+-- theorem Quant.bot_mul_copy : ⊥ * Quant.copy = .copy := rfl
+
+-- @[simp]
+-- theorem Quant.bot_mul_bot : ⊥ * ⊥ = Quant.copy := rfl
+
+-- @[simp]
+-- theorem Quant.le_mul_self {q : Quant} : q ≤ q * q := by cases q <;> simp
+
+-- end Mul
 
 def EQuant : Type := Option Quant
 
@@ -636,31 +725,77 @@ theorem EQuant.left_toQ_le_toQ_add' {l r : EQuant} : (l.toQ : EQuant) ≤ (l + r
 theorem EQuant.right_toQ_le_toQ_of_add' {l r : EQuant} : (r.toQ : EQuant) ≤ (l + r).toQ := by
   cases l <;> cases r <;> decide
 
-def EQuant.toMQ : EQuant → Quant
-  | 0 => .del
-  | (q : Quant) => q
+instance EQuant.instCommSemiring : CommSemiring EQuant where
+  mul
+  | 0, _ | _, 0 => 0
+  | (q : Quant) , (q' : Quant) => q * q'
+  mul_assoc a b c := by cases a <;> cases b <;> cases c <;> rfl
+  one := 1
+  one_mul a := by cases a <;> rfl
+  mul_one a := by cases a <;> rfl
+  mul_comm a b := by cases a <;> cases b <;> rfl
+  zero_mul a := by cases a <;> rfl
+  mul_zero a := by cases a <;> rfl
+  left_distrib a b c := by cases a <;> cases b <;> cases c <;> rfl
+  right_distrib a b c := by cases a <;> cases b <;> cases c <;> rfl
 
-theorem EQuant.toMQ_mono {l r : EQuant} (h : l ≤ r) : l.toMQ ≤ r.toMQ
-  := by cases h <;> decide
+instance EQuant.instOrderedAddCommMonoid : OrderedAddCommMonoid EQuant where
+  add_le_add_left a b h c := by cases h <;> cases c <;> decide
 
-theorem EQuant.toMQ_le_coe {l : EQuant} {r : Quant} (h : l ≤ r) : l.toMQ ≤ r
-  := by cases h <;> decide
+theorem EQuant.zero_le_add {l r : EQuant} (hl : 0 ≤ l) (hr : 0 ≤ r) : 0 ≤ l + r := by
+  cases hl <;> cases hr <;> decide
 
-@[simp]
-theorem EQuant.toMQ_add_le {l r : EQuant} : (l + r).toMQ ≤ l.toMQ + r.toMQ := by
-  cases l <;> cases r <;> decide
+theorem EQuant.one_le_add_left {l r : EQuant} (h : 1 ≤ l) : 1 ≤ l + r := by
+  cases h <;> cases r <;> decide
 
-@[simp]
-theorem EQuant.toMQ_mul_toMQ_le {l r : EQuant} : l.toMQ * r.toMQ ≤ (l + r).toMQ := by
-  cases l <;> cases r <;> decide
+theorem EQuant.one_le_add_right {l r : EQuant} (h : 1 ≤ r) : 1 ≤ l + r := by
+  cases l <;> cases h <;> decide
 
-@[simp]
-theorem EQuant.toMQ_left_le_add {l r : EQuant} : (l.toMQ : EQuant) ≤ l.toMQ + r := by
-  cases l <;> cases r <;> decide
+theorem EQuant.zero_le_add_or {l r : EQuant} (h : 0 ≤ l + r) : 0 ≤ l ∨ 0 ≤ r := by
+  cases l <;> cases r <;> cases h <;> decide
 
-@[simp]
-theorem EQuant.toMQ_right_le_add {l r : EQuant} : (r.toMQ : EQuant) ≤ l + r.toMQ := by
-  cases l <;> cases r <;> decide
+theorem EQuant.one_le_add_or {l r : EQuant} (h : 1 ≤ l + r) : 1 ≤ l ∨ 1 ≤ r := by
+  cases l <;> cases r <;> cases h <;> decide
+
+theorem EQuant.one_le_add_iff {l r : EQuant} : 1 ≤ l + r ↔ 1 ≤ l ∨ 1 ≤ r := ⟨
+  one_le_add_or,
+  λ| .inl h => one_le_add_left h | .inr h => one_le_add_right h
+  ⟩
+
+theorem EQuant.add_le_zero {l r : EQuant} (h : l + r ≤ 0) : l = 0 ∧ r = 0 := by
+  cases l <;> cases r <;> cases h; decide
+
+theorem EQuant.add_le_zero_iff {l r : EQuant} : l + r ≤ 0 ↔ l = 0 ∧ r = 0
+  := ⟨add_le_zero, λh => by cases h.1; cases h.2; rfl⟩
+
+theorem EQuant.coe_mul {l r : Quant} : ((l * r : Quant) : EQuant) = (l : EQuant) * (r : EQuant)
+  := rfl
+
+-- def EQuant.toMQ : EQuant → Quant
+--   | 0 => .del
+--   | (q : Quant) => q
+
+-- theorem EQuant.toMQ_mono {l r : EQuant} (h : l ≤ r) : l.toMQ ≤ r.toMQ
+--   := by cases h <;> decide
+
+-- theorem EQuant.toMQ_le_coe {l : EQuant} {r : Quant} (h : l ≤ r) : l.toMQ ≤ r
+--   := by cases h <;> decide
+
+-- @[simp]
+-- theorem EQuant.toMQ_add_le {l r : EQuant} : (l + r).toMQ ≤ l.toMQ + r.toMQ := by
+--   cases l <;> cases r <;> decide
+
+-- @[simp]
+-- theorem EQuant.toMQ_mul_toMQ_le {l r : EQuant} : l.toMQ * r.toMQ ≤ (l + r).toMQ := by
+--   cases l <;> cases r <;> decide
+
+-- @[simp]
+-- theorem EQuant.toMQ_left_le_add {l r : EQuant} : (l.toMQ : EQuant) ≤ l.toMQ + r := by
+--   cases l <;> cases r <;> decide
+
+-- @[simp]
+-- theorem EQuant.toMQ_right_le_add {l r : EQuant} : (r.toMQ : EQuant) ≤ l + r.toMQ := by
+--   cases l <;> cases r <;> decide
 
 def Vector'.toQE {n} (qs : Vector' EQuant n) : Vector' EQuant n := qs.map (λq => q.toQ)
 
@@ -687,22 +822,22 @@ theorem Vector'.toQE_left_le_toQE_add {l r : Vector' EQuant n} : l.toQE ≤ (l +
 theorem Vector'.toQE_right_le_toQE_add {l r : Vector' EQuant n} : r.toQE ≤ (l + r).toQE
   := by induction l <;> cases r <;> simp [*]
 
-def Vector'.toMQE (qs : Vector' EQuant n) : Vector' EQuant n := qs.map (λq => q.toMQ)
+-- def Vector'.toMQE (qs : Vector' EQuant n) : Vector' EQuant n := qs.map (λq => q.toMQ)
 
-@[simp]
-theorem Vector'.toMQE_nil : Vector'.toMQE nil = nil := rfl
+-- @[simp]
+-- theorem Vector'.toMQE_nil : Vector'.toMQE nil = nil := rfl
 
-@[simp]
-theorem Vector'.toMQE_cons (q : EQuant) (qs : Vector' EQuant n)
-  : Vector'.toMQE (qs.cons q) = qs.toMQE.cons ↑q.toMQ := rfl
+-- @[simp]
+-- theorem Vector'.toMQE_cons (q : EQuant) (qs : Vector' EQuant n)
+--   : Vector'.toMQE (qs.cons q) = qs.toMQE.cons ↑q.toMQ := rfl
 
-@[simp]
-theorem Vector'.toMQE_left_le_add {l r : Vector' EQuant n} : l.toMQE ≤ l.toMQE + r
-  := by induction l <;> cases r <;> simp [*]
+-- @[simp]
+-- theorem Vector'.toMQE_left_le_add {l r : Vector' EQuant n} : l.toMQE ≤ l.toMQE + r
+--   := by induction l <;> cases r <;> simp [*]
 
-@[simp]
-theorem Vector'.toMQE_right_le_add {l r : Vector' EQuant n} : r.toMQE ≤ l + r.toMQE
-  := by induction l <;> cases r <;> simp [*]
+-- @[simp]
+-- theorem Vector'.toMQE_right_le_add {l r : Vector' EQuant n} : r.toMQE ≤ l + r.toMQE
+--   := by induction l <;> cases r <;> simp [*]
 
 def EQuant.c : EQuant → Set ℕ
   | 0 => {0}
@@ -742,6 +877,13 @@ theorem EQuant.c_add {l r : EQuant} : (c l) + (c r) ⊆ c (l + r) := λn ⟨x, h
   induction l <;> induction r <;> simp at *
   case rest.rest => rw [<-coe_add]; apply Quant.c_add; assumption
   all_goals simp [*]
+
+theorem EQuant.c_mul {l r : EQuant} : (l * r).c = (l.c) * (r.c) := by
+  cases l using casesOn' with
+  | zero => cases r <;> simp
+  | coe l => cases r using casesOn' with
+    | zero => cases l <;> simp
+    | coe r => simp [<-coe_mul, Quant.c_mul]
 
 def Quant? := WithBot EQuant
 
