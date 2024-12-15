@@ -569,6 +569,23 @@ structure Vector'.Var (qs : Vector' EQuant n) (i : ℕ) : Prop where
   use : 1 ≤ qs.get ⟨i, is_lt⟩
   select : ∀j : Fin n, i ≠ j → 0 ≤ qs.get j
 
+theorem Vector'.Var.zero_head {q : EQuant} {qs : Vector' EQuant n}
+  (h : Var (qs.cons q) 0) : 1 ≤ q := h.use
+
+theorem Vector'.Var.zero_tail {q : EQuant} {qs : Vector' EQuant n}
+  (h : Var (qs.cons q) 0) : 0 ≤ qs
+  := le_of_get_le (λi => by convert h.select (i + 1) (by simp) using 1 <;> simp)
+
+theorem Vector'.Var.succ_head {q : EQuant} {qs : Vector' EQuant n}
+  (h : Var (qs.cons q) (i + 1)) : 0 ≤ q
+  := h.select 0 (by simp)
+
+theorem Vector'.Var.succ_tail {q : EQuant} {qs : Vector' EQuant n}
+  (h : Var (qs.cons q) (i + 1)) : Var qs i where
+  is_lt := Nat.lt_of_succ_lt_succ h.is_lt
+  use := h.use
+  select := λj hj => by convert h.select (j + 1) (by simp [*]) using 1; simp
+
 theorem Vector'.Var.of_oneHot_le {qs : Vector' EQuant n} {i : ℕ}
   (hi : i < n) (hv : Vector'.oneHot ⟨i, hi⟩ 1 ≤ qs) : Vector'.Var qs i where
   is_lt := hi
@@ -592,6 +609,23 @@ theorem Vector'.Var.oneHot_le_iff {qs : Vector' EQuant n} {i : ℕ} (hi : i < n)
 structure List.QVar (Γ : List α) (qs : Vector' EQuant Γ.length) (i) (A : α)
   extends qs.Var i : Prop where
   ty_eq : Γ[i] = A
+
+theorem List.QVar.zero_head_ty {A} {Γ : List α} {q : EQuant} {qs : Vector' EQuant Γ.length}
+  (h : QVar (A::Γ) (qs.cons q) 0 B) : A = B := h.ty_eq
+
+theorem List.QVar.zero_head_quant {A} {Γ : List α} {q : EQuant} {qs : Vector' EQuant Γ.length}
+  (h : QVar (A::Γ) (qs.cons q) 0 B) : 1 ≤ q := h.use
+
+theorem List.QVar.zero_tail {A} {Γ : List α} {q : EQuant} {qs : Vector' EQuant Γ.length}
+  (h : QVar (A::Γ) (qs.cons q) 0 B) : 0 ≤ qs := h.toVar.zero_tail
+
+theorem List.QVar.succ_head {A} {Γ : List α} {q : EQuant} {qs : Vector' EQuant Γ.length}
+  (h : QVar (A::Γ) (qs.cons q) (i + 1) B) : 0 ≤ q := h.toVar.succ_head
+
+theorem List.QVar.succ_tail {A} {Γ : List α} {q : EQuant} {qs : Vector' EQuant Γ.length}
+  (h : QVar (A::Γ) (qs.cons q) (i + 1) B) : QVar Γ qs i B where
+  toVar := h.toVar.succ_tail
+  ty_eq := h.ty_eq
 
 theorem List.QVar.wk {Γ Δ : List α} {qΓ : Vector' EQuant Γ.length} {qΔ : Vector' EQuant Δ.length}
   {ρ : ℕ → ℕ} (hρ : List.IsQRen qΓ qΔ ρ)

@@ -1,5 +1,6 @@
 import Mathlib.Logic.Function.Defs
 import Mathlib.Data.Vector.Basic
+import Mathlib.Algebra.Order.Monoid.Defs
 
 inductive Vector' (α : Type _) : Nat → Type _
   | nil : Vector' α 0
@@ -262,6 +263,12 @@ theorem zero_succ [Zero α] {n : Nat} : (0 : Vector' α (n + 1)) = cons 0 (0 : V
 theorem get_zero_apply [Zero α] {n : Nat} (i : Fin n) : (0 : Vector' α n).get i = 0
   := by simp [OfNat.ofNat, Zero.zero]
 
+@[simp]
+theorem head_zero [Zero α] {n : Nat} : (0 : Vector' α (n + 1)).head = 0 := rfl
+
+@[simp]
+theorem tail_zero [Zero α] {n : Nat} : (0 : Vector' α (n + 1)).tail = 0 := rfl
+
 instance instOne [One α] : One (Vector' α n) where
   one := ofFn 1
 
@@ -471,5 +478,9 @@ instance instBooleanAlgebra [BooleanAlgebra α] : BooleanAlgebra (Vector' α n) 
   bot_le := by simp
   sdiff_eq a b := get_injective (by simp [BooleanAlgebra.sdiff_eq])
   himp_eq a b := get_injective (by simp [BooleanAlgebra.himp_eq])
+
+instance instOrderedAddCommMonoid [OrderedAddCommMonoid α]
+  : OrderedAddCommMonoid (Vector' α n) where
+  add_le_add_left a b h c := by induction h <;> cases c <;> simp [add_le_add_left, *]
 
 end Vector'

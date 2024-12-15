@@ -264,6 +264,10 @@ def WfqD.wk {Γ Δ qΓ qΔ} {ρ : ℕ → ℕ} (hρ : List.IsQRen qΓ qΔ ρ) {t
       (ha.wk (List.IsQRen.of_pvSum _ _ _))
       (hb.wk (((List.IsQRen.of_pvSum _ _ _).lift _ _).lift _ _))
 
+-- TODO: inductive version with better defeq?
+def WfqD.mono {Γ qΓ qΓ'} (hqΓ : qΓ ≤ qΓ') (h : WfqD (τ := τ) Γ qΓ a A) : WfqD Γ qΓ' a A
+  := by convert h.wk (List.IsQRen.id_of_le hqΓ); simp [Term.wk_id]
+
 inductive Wfq : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → Term τ → Ty τ → Prop
   | var {Γ qs i A} : Γ.QVar qs i A → Wfq Γ qs (.var i) A
   | op {Γ qs f a A B} (hA : f.src = A) (hB : f.trg = B) : Wfq Γ qs a A → Wfq Γ qs (.op f a) B

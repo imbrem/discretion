@@ -220,10 +220,26 @@ theorem LSubst.lift_id (n : ℕ) : lift (id (τ := τ) n) = id (n + 1) := by
     rw [lift_succ, getElem_id, getElem_id]; simp
     simp [hi]
 
-def LSubst.var (σ : LSubst τ) : Subst τ := λi => if _ : i < σ.length then σ[i] else .invalid
+def LSubst.var : LSubst τ → Subst τ
+  | [], _ => .invalid
+  | a::_, 0 => a
+  | _::σ, i + 1 => var σ i
+
+theorem LSubst.var_lt_length {σ : LSubst τ} {i} (h : i < σ.length) : σ.var i = σ[i] := by
+  induction σ generalizing i with
+  | nil => simp at h
+  | cons a σ hσ => cases i with | zero => rfl | succ => rw [var, hσ]; rfl
+
+theorem LSubst.var_ge_length  {σ : LSubst τ} {i} (h : i ≥ σ.length) : σ.var i = .invalid := by
+  induction σ generalizing i with
+  | nil => rfl
+  | cons a σ hσ => cases i with | zero => simp at h | succ => rw [var, hσ]; convert h using 0; simp
+
+theorem LSubst.var_def' {σ : LSubst τ} {i} : σ.var i = if _ : i < σ.length then σ[i] else .invalid
+  := by split; rw [var_lt_length]; rw [var_ge_length]; omega
 
 theorem LSubst.var_eq_on_id (n : ℕ) : (Set.Iio n).EqOn (id n).var (Subst.id (τ := τ))
-  := λi => by simp [var]
+  := λi => by simp [var_def']
 
 theorem LSubst.var_cons (t : Term τ) (σ : LSubst τ) : var (t :: σ) = σ.var.cons t
   := funext (λi => by cases i <;> simp [var, Subst.cons])
@@ -231,9 +247,9 @@ theorem LSubst.var_cons (t : Term τ) (σ : LSubst τ) : var (t :: σ) = σ.var.
 theorem LSubst.var_lift (σ : LSubst τ) : σ.lift.var = σ.var.lift
   := funext (λi => by
     cases i with
-    | zero => simp [LSubst.var]
+    | zero => simp [LSubst.var_def']
     | succ =>
-      simp only [var, lift, List.length_cons, List.length_map, Nat.add_lt_add_iff_right,
+      simp only [var_def', lift, List.length_cons, List.length_map, Nat.add_lt_add_iff_right,
         List.getElem_cons_succ, List.getElem_map, Subst.lift_succ, wkIn]
       split <;> rfl
     )

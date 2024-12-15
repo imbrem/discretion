@@ -607,6 +607,8 @@ instance EQuant.instPartialOrder : PartialOrder EQuant where
   le_trans a b c h h' := by cases h <;> cases h' <;> simp [le_refl]
   le_antisymm a b h h' := by cases h <;> cases h' <;> rfl
 
+theorem EQuant.one_le_iff_ne_zero (q : EQuant) : 1 ≤ q ↔ q ≠ 0 := by cases q <;> decide
+
 instance EQuant.instMax : Max EQuant where
   max
   | (a : Quant), (b : Quant) => (a ⊔ b : Quant)
@@ -884,6 +886,98 @@ theorem EQuant.c_mul {l r : EQuant} : (l * r).c = (l.c) * (r.c) := by
   | coe l => cases r using casesOn' with
     | zero => cases l <;> simp
     | coe r => simp [<-coe_mul, Quant.c_mul]
+
+def Quant0 := EQuant
+
+instance Quant0.instZero : Zero Quant0 := EQuant.instZero
+
+instance Quant0.instOne : One Quant0 := EQuant.instOne
+
+instance Quant0.instCoeTCQuant : CoeTC Quant Quant0 := EQuant.instCoeTC
+
+instance Quant0.instDecidableEq : DecidableEq Quant0 := EQuant.instDecidableEq
+
+instance Quant0.instLE : LE Quant0 where
+  le
+  | 0, _ => True
+  | (_ : Quant), 0 => False
+  | (a : Quant), (b : Quant) => a ≤ b
+
+instance Quant0.instDecidableLE : DecidableRel (· ≤ · : Quant0 → Quant0 → Prop)
+  | 0, a => Decidable.isTrue (by simp [LE.le])
+  | (a : Quant), 0 => Decidable.isFalse (by simp [LE.le])
+  | (a : Quant), (b : Quant) => (inferInstance : Decidable (a ≤ b))
+
+instance Quant0.instOrderTop : OrderTop Quant0 where
+  top := (⊤ : EQuant)
+  le_top a := by cases a <;> simp [LE.le, Top.top]
+
+instance Quant0.instOrderBot : OrderBot Quant0 where
+  bot := (0 : EQuant)
+  bot_le a := by cases a <;> simp [LE.le]
+
+@[match_pattern]
+def Quant0.copy : Quant0 := EQuant.copy
+
+@[match_pattern]
+def Quant0.del : Quant0 := EQuant.del
+
+@[elab_as_elim, cases_eliminator]
+def Quant0.casesOn {motive : Quant0 → Sort _}
+  (zero : motive 0)
+  (one : motive 1)
+  (copy : motive .copy)
+  (del : motive .del)
+  (top : motive ⊤)
+  : ∀(q : Quant0), motive q
+  := EQuant.casesOn zero one copy del top
+
+@[elab_as_elim, cases_eliminator]
+def Quant0.le.casesOn {motive : ∀{q q' : Quant0}, q ≤ q' → Sort _}
+  (top_le_top : @motive ⊤ ⊤ (by decide))
+  (copy_le_top : @motive .copy ⊤ (by decide))
+  (del_le_top : @motive .del ⊤ (by decide))
+  (one_le_top : @motive 1 ⊤ (by decide))
+  (zero_le_top : @motive 0 ⊤ (by decide))
+  (copy_le_copy : @motive .copy .copy (by decide))
+  (one_le_copy : @motive 1 .copy (by decide))
+  (zero_le_copy : @motive 0 .copy (by decide))
+  (del_le_del : @motive .del .del (by decide))
+  (one_le_del : @motive 1 .del (by decide))
+  (zero_le_del : @motive 0 .del (by decide))
+  (one_le_one : @motive 1 1 (by decide))
+  (zero_le_one : @motive 0 1 (by decide))
+  (zero_le_zero : @motive 0 0 (by decide))
+  : ∀{q q' : Quant0} (h : q ≤ q'), @motive q q' h
+  | ⊤, ⊤, _ => top_le_top
+  | .copy, ⊤, _ => copy_le_top
+  | .del, ⊤, _ => del_le_top
+  | 1, ⊤, _ => one_le_top
+  | 0, ⊤, _ => zero_le_top
+  | .copy, .copy, _ => copy_le_copy
+  | 1, .copy, _ => one_le_copy
+  | 0, .copy, _ => zero_le_copy
+  | .del, .del, _ => del_le_del
+  | 1, .del, _ => one_le_del
+  | 0, .del, _ => zero_le_del
+  | 1, 1, _ => one_le_one
+  | 0, 1, _ => zero_le_one
+  | 0, 0, _ => zero_le_zero
+
+instance Quant0.instPartialOrder : PartialOrder Quant0 where
+  le_refl a := by cases a <;> decide
+  le_trans a b c hab hbc := by cases hab <;> cases hbc <;> decide
+  le_antisymm a b hab hbc := by cases hab <;> cases hbc <;> rfl
+
+instance Quant0.instFintype : Fintype Quant0 := EQuant.instFintype
+
+instance Quant0.instCommSemiring : CommSemiring Quant0 := EQuant.instCommSemiring
+
+instance Quant0.instOrderedCommSemiring : OrderedCommSemiring Quant0 where
+  add_le_add_left a b h c := by cases h <;> cases c <;> decide
+  zero_le_one := by decide
+  mul_le_mul_of_nonneg_left a b c h h' := by cases h <;> cases c <;> decide
+  mul_comm := mul_comm
 
 def Quant? := WithBot EQuant
 
