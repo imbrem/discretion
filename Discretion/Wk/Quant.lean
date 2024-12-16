@@ -527,13 +527,16 @@ instance EQuant.instOrderTop : OrderTop EQuant where
   le_top a := by cases a <;> simp [LE.le, Top.top]
 
 @[simp]
-theorem EQuant.zero_le_del : (0 : EQuant) ≤ .del := by simp [LE.le]
+theorem EQuant.zero_le_del : (0 : EQuant) ≤ .del := by decide
 
 @[simp]
-theorem EQuant.one_le_del : (1 : EQuant) ≤ .del := by simp [LE.le]
+theorem EQuant.one_le_del : (1 : EQuant) ≤ .del := by decide
 
 @[simp]
-theorem EQuant.one_le_copy : (1 : EQuant) ≤ .copy := by simp [LE.le]
+theorem EQuant.one_le_copy : (1 : EQuant) ≤ .copy := by decide
+
+@[simp]
+theorem EQuant.one_le_coe {q : Quant} : (1 : EQuant) ≤ q := by simp [LE.le]
 
 def EQuant.le.casesLE {motive : ∀{q q' : EQuant}, q ≤ q' → Sort _}
   (top : ∀q, motive (q := q) (q' := ⊤) (by simp))
@@ -608,6 +611,10 @@ instance EQuant.instPartialOrder : PartialOrder EQuant where
   le_antisymm a b h h' := by cases h <;> cases h' <;> rfl
 
 theorem EQuant.one_le_iff_ne_zero (q : EQuant) : 1 ≤ q ↔ q ≠ 0 := by cases q <;> decide
+
+@[simp]
+theorem EQuant.one_le_of_coe_le {q : Quant} {q' : EQuant} (h : q ≤ q') : 1 ≤ q'
+  := le_trans one_le_coe h
 
 instance EQuant.instMax : Max EQuant where
   max
@@ -693,6 +700,12 @@ theorem EQuant.coe_add {l r : Quant} : ((l + r : Quant) : EQuant) = (l : EQuant)
 theorem EQuant.add_mono {l r l' r' : EQuant} (hl : l ≤ l') (hr : r ≤ r') : l + r ≤ l' + r' := by
   cases hl <;> cases hr <;> decide
 
+theorem EQuant.coe_left_le_add {l : Quant} {r : EQuant} : l ≤ l + r
+  := by cases l <;> cases r <;> decide
+
+theorem EQuant.coe_right_le_add {l : EQuant} {r : Quant} : r ≤ l + r
+  := by cases l <;> cases r <;> decide
+
 def EQuant.toQ : EQuant → Quant
   | 0 => ⊥
   | (q : Quant) => q
@@ -769,6 +782,18 @@ theorem EQuant.add_le_zero {l r : EQuant} (h : l + r ≤ 0) : l = 0 ∧ r = 0 :=
 
 theorem EQuant.add_le_zero_iff {l r : EQuant} : l + r ≤ 0 ↔ l = 0 ∧ r = 0
   := ⟨add_le_zero, λh => by cases h.1; cases h.2; rfl⟩
+
+@[simp]
+theorem EQuant.copy_le_of_add_coe_le {l r : Quant} {q : EQuant} (h : l + r ≤ q)
+  : .copy ≤ q := by cases l <;> cases r <;> cases h <;> decide
+
+@[simp]
+theorem EQuant.add_idem_of_copy_le {q : EQuant} (h : .copy ≤ q) : q + q = q := by
+  cases h <;> decide
+
+@[simp]
+theorem EQuant.add_idem_of_add_coe_le {l r : Quant} {q : EQuant} (h : l + r ≤ q)
+  : q + q = q := add_idem_of_copy_le (copy_le_of_add_coe_le h)
 
 theorem EQuant.coe_mul {l r : Quant} : ((l * r : Quant) : EQuant) = (l : EQuant) * (r : EQuant)
   := rfl

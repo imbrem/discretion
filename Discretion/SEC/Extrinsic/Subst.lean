@@ -223,21 +223,59 @@ structure LSubst.WfqD.Split (Γ : List (Ty τ)) (qΓ) (σ) (Δ) (qΔl qΔr) wher
 -- def LSubst.WfqD.split {Γ qΓ σ Δ qΔl qΔr qΔ} (hqs : qΔl + qΔr ≤ qΔ) (hσ : WfqD (τ := τ) Γ qΓ σ Δ qΔ)
 --   : Split Γ qΓ σ Δ qΔl qΔr := match Δ, qΔl, qΔr, qΔ, hσ with
 --   | [], .nil, .nil, .nil, .nil hΓ => ⟨0, 0, .nil (le_refl _), .nil (le_refl _), by convert hΓ; simp⟩
---   | _::_, .cons 0 qΔl, .cons 0 qΔr, .cons qhΔ qΔ, .cons (qΓ := qΓt) (qa := qa) hq hqa ha hσ =>
+--   | _::_, .cons ql qΔl, .cons qr qΔr, .cons qhΔ qΔ, .cons (qΓ := qΓt) (qa := qa) hq hqa ha hσ =>
 --     let st := hσ.split hqs.tail;
---     ⟨st.qΓl, st.qΓr,
---       .cons (qa := 0) (by simp) (by simp) (λh => by simp at h) st.hσl,
---       .cons (qa := 0) (by simp) (by simp) (λh => by simp at h) st.hσr,
---       by
---         have ha : 0 ≤ qa :=
---           Vector'.le_of_get_le (λi => le_trans (by convert hqs.head; simp) (hqa i))
---         apply le_trans st.hlr
---         convert le_trans (add_le_add_right ha qΓt) hq
---         simp
---     ⟩
---   | _::_, .cons (ql : Quant) _, .cons 0 _, .cons _ _, .cons hq hqa ha hσ => sorry
---   | _::_, .cons 0 _, .cons (qr : Quant) _, .cons _ _, .cons hq hqa ha hσ => sorry
---   | _::_, .cons (ql : Quant) _, .cons (qr : Quant) _, .cons _ _, .cons hq hqa ha hσ => sorry
+--     match ql, qr with
+--     | 0, 0 => ⟨st.qΓl, st.qΓr,
+--         .cons (qa := 0) (by simp) (by simp) (λh => by simp at h) st.hσl,
+--         .cons (qa := 0) (by simp) (by simp) (λh => by simp at h) st.hσr,
+--         by
+--           have ha : 0 ≤ qa :=
+--             Vector'.le_of_get_le (λi => le_trans (by convert hqs.head; simp) (hqa i))
+--           apply le_trans st.hlr
+--           convert le_trans (add_le_add_right ha qΓt) hq
+--           simp
+--       ⟩
+--     | (ql : Quant), 0 => ⟨qa + st.qΓl, st.qΓr,
+--         .cons (qa := qa) (by simp)
+--           (λi => le_trans hqs.head (hqa i))
+--           (λh => ha (le_trans (by simp) hqs.head)) st.hσl,
+--         .cons (qa := 0) (by simp) (by simp) (λh => by simp at h) st.hσr,
+--         by
+--           rw [add_assoc]
+--           apply le_trans _ hq
+--           apply add_le_add_left
+--           exact st.hlr
+--       ⟩
+--     | 0, (qr : Quant) => ⟨st.qΓl, qa + st.qΓr,
+--         .cons (qa := 0) (by simp) (by simp) (λh => by simp at h) st.hσl,
+--         .cons (qa := qa) (by simp)
+--           (λi => le_trans hqs.head (hqa i))
+--           (λh => ha (le_trans (by simp) hqs.head))
+--           st.hσr,
+--         by
+--           rw [add_comm, add_assoc, add_comm (a := st.qΓr)]
+--           apply le_trans _ hq
+--           apply add_le_add_left
+--           exact st.hlr
+--       ⟩
+--     | (ql : Quant), (qr : Quant) =>
+--       have hqlr : ql + qr ≤ qhΔ := hqs.head;
+--       have hqa2 : qa + qa = qa := Vector'.get_injective (by
+--         ext i; rw [Vector'.get_add_apply]; apply EQuant.add_idem_of_add_coe_le;
+--         exact le_trans hqlr (hqa i)
+--       );
+--       have hqhΔ : qhΔ + qhΔ = qhΔ := EQuant.add_idem_of_add_coe_le hqlr;
+--       ⟨qa + st.qΓl, qa + st.qΓr,
+--         .cons (qa := qa) (by simp) sorry sorry st.hσl,
+--         .cons (qa := qa) (by simp) sorry sorry st.hσr,
+--         by
+--           rw [add_assoc, add_comm (a := st.qΓl), <-add_assoc, <-add_assoc, hqa2, add_assoc]
+--           apply le_trans _ hq
+--           apply add_le_add_left
+--           rw [add_comm]
+--           exact st.hlr
+--       ⟩
 
 -- -- theorem LSubst.WfqD.split_le {Γ ql qr qΓ σ Δ qΔ} (hq : ql + qr ≤ qΓ) (hσ : WfqD (τ := τ) Γ qΓ σ Δ qΔ)
 -- --   : (hσ.split hq).1 + (hσ.split hq).2.1 ≤ qΔ
