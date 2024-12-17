@@ -383,36 +383,11 @@ theorem pvSum_lift (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (v : V
   : pvSum (Nat.liftWk ρ) v = (hρ.pvSum ρ v.tail).cons v.head
   := by cases v; simp [pvSum_lift_cons]
 
-theorem finSum_add (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (l r : Fin s -> α)
-  : finSum (t := t) ρ (l + r) = finSum ρ l + finSum ρ r
-  := by simp [finSum, preSum_add]
-
-theorem finVSum_add (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (l r : Vector' α s)
-  : finVSum (t := t) ρ (l + r) = finVSum ρ l + finVSum ρ r
-  := by simp [finVSum, finSum_add, Vector'.get_add]
-
-theorem pvSum_add (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ]
-  (l r : Vector' α s) : pvSum (t := t) ρ (l + r) = pvSum ρ l + pvSum ρ r
-  := by simp [pvSum, finVSum_add, Vector'.ofFn_add]
-
 end AddCommMonoid
 
 section OrderedAddCommMonoid
 
 variable [OrderedAddCommMonoid α]
-
-theorem finSum_mono (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] {lo hi : Fin s -> α}
-  (h : lo ≤ hi) : finSum (t := t) ρ lo ≤ finSum ρ hi := preSum_mono _ h
-
-theorem finVSum_mono (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] {lo hi : Vector' α s}
-  (h : lo ≤ hi) : finVSum (t := t) ρ lo ≤ finVSum ρ hi
-  := finSum_mono _ _ _ (Vector'.get_le_of_le h)
-
-theorem pvSum_mono (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ]
-  {lo hi : Vector' α s} (h : lo ≤ hi) : pvSum (t := t) ρ lo ≤ pvSum ρ hi
-  := by
-  simp only [pvSum, ←Vector'.get_le_iff, Vector'.get_ofFn]
-  exact finVSum_mono _ _ _ h
 
 theorem le_pvSum_of_le_sum (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ]
   (q : Vector' α t) (l r s : Vector' α s) (hlr : l + r ≤ s) (hq : pvSum ρ s ≤ q)

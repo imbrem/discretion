@@ -100,7 +100,7 @@ instance BoundedStrictMono.of_zero : BoundedStrictMono (0 : ℕ) ρ := of_bot
 
 namespace BoundedOn
 
-def toFin {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] : Fin s → Fin t
+def toFin {s t : ℕ} (ρ : ℕ → ℕ) [hρ : BoundedOn s t ρ] : Fin s → Fin t
   := λs => ⟨ρ s, bounded_on _ s.is_lt⟩
 
 @[simp]
@@ -108,6 +108,14 @@ theorem toFin_id {s : ℕ} : toFin (s := s) (t := s) id = id := by funext; simp 
 
 theorem toFin_comp (s t u : ℕ) (ρ σ : ℕ → ℕ) [hσ : BoundedOn s t σ] [hρ : BoundedOn t u ρ]
   : (BoundedOn.comp s t u).toFin (ρ ∘ σ) = toFin ρ ∘ hσ.toFin σ := rfl
+
+instance comp_succ {s t : ℕ} {ρ : ℕ → ℕ} [hρ : BoundedOn (s + 1) t ρ]
+  : BoundedOn s t (ρ ∘ .succ) where
+  bounded_on i h := hρ.bounded_on (i + 1) (Nat.succ_lt_succ h)
+
+theorem toFin_comp_succ {s t : ℕ} (ρ : ℕ → ℕ) [hρ : BoundedOn (s + 1) t ρ]
+  : toFin (ρ ∘ .succ) = hρ.toFin ρ ∘ Fin.succ
+  := by funext i; simp [toFin]
 
 def finPi {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] : Fin t → Finset (Fin s)
   := (Finset.preimageF (toFin ρ) {·})
@@ -155,26 +163,31 @@ theorem pv_comp {s t u : ℕ} (ρ σ : ℕ → ℕ) [hσ : BoundedOn s t σ] [h�
   (v : Vector' α u) : (BoundedOn.comp s t u).pv (ρ ∘ σ) v = hσ.pv σ (pv ρ v) := by
   simp [pv, toFin_comp (s := s) (t := t) (u := u), Function.comp_assoc]
 
-def finSum {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] [AddCommMonoid α] (v : Fin s → α) : Fin t → α
+section AddCommMonoid
+
+variable [AddCommMonoid α]
+
+def finSum {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] (v : Fin s → α) : Fin t → α
   := Fintype.preSum (toFin ρ) v
 
 @[simp]
-theorem finSum_id {s : ℕ} [AddCommMonoid α] (v : Fin s → α) : finSum id v = v
+theorem finSum_id {s : ℕ} (v : Fin s → α) : finSum id v = v
   := by ext i; simp [finSum, Fintype.preSum]
 
-def finVSum {s t : ℕ} (ρ : ℕ → ℕ)
-  [BoundedOn s t ρ] [AddCommMonoid α] (v : Vector' α s) : Fin t → α
+def finVSum {s t : ℕ} (ρ : ℕ → ℕ) [hρ : BoundedOn s t ρ] (v : Vector' α s) : Fin t → α
   := finSum ρ v.get
 
 @[simp]
-theorem finVSum_id {s : ℕ} [AddCommMonoid α] (v : Vector' α s) : finVSum id v = v.get
+theorem finVSum_id {s : ℕ} (v : Vector' α s) : finVSum id v = v.get
   := by simp [finVSum]
 
-def pvSum {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] [AddCommMonoid α] (v : Vector' α s) : Vector' α t
+def pvSum {s t : ℕ} (ρ : ℕ → ℕ) [hρ : BoundedOn s t ρ] (v : Vector' α s) : Vector' α t
   := Vector'.ofFn (finVSum ρ v)
 
+-- TODO: pvSum comp ==> covariant functor
+
 @[simp]
-theorem pvSum_id {s : ℕ} [AddCommMonoid α] (v : Vector' α s) : pvSum id v = v := by simp [pvSum]
+theorem pvSum_id {s : ℕ} (v : Vector' α s) : pvSum id v = v := by simp [pvSum]
 
 -- @[simp]
 -- theorem pvSum_comp (s t u : ℕ) (ρ σ : ℕ → ℕ) [hσ : BoundedOn s t σ] [hρ : BoundedOn t u ρ]
@@ -183,6 +196,73 @@ theorem pvSum_id {s : ℕ} [AddCommMonoid α] (v : Vector' α s) : pvSum id v = 
 --   simp [pvSum, finPi_comp (s := s) (t := t) (u := u), Function.comp_assoc]
 --   sorry
 
--- TODO: pvSum comp ==> covariant functor
+@[simp]
+theorem finSum_zero_apply {s t : ℕ} [BoundedOn s t ρ] {i : Fin t}
+  : finSum ρ (0 : Fin s → α) i = 0 := by simp [finSum, Fintype.preSum]
+
+@[simp]
+theorem finSum_zero {s t : ℕ} [hρ : BoundedOn s t ρ]
+  : finSum ρ (0 : Fin s → α) = (0 : Fin t → α) := funext (λ_ => finSum_zero_apply)
+
+@[simp]
+theorem finVSum_zero {s t : ℕ} [hρ : BoundedOn s t ρ]
+  : finVSum ρ (0 : Vector' α s) = (0 : Fin t → α)
+  := by unfold finVSum; convert finSum_zero (hρ := hρ); funext i; simp
+
+@[simp]
+theorem pvSum_zero {s t : ℕ} [BoundedOn s t ρ]
+  : pvSum ρ (0 : Vector' α s) = (0 : Vector' α t)
+  := by simp only [pvSum, finVSum_zero]; rfl
+
+theorem finSum_add {s t : ℕ} [hρ : BoundedOn s t ρ] (v w : Fin s → α)
+  : hρ.finSum ρ (v + w) = hρ.finSum ρ v + hρ.finSum ρ w
+  := by simp [finSum, Fintype.preSum_add]
+
+theorem finVSum_add {s t : ℕ} [hρ : BoundedOn s t ρ] (v w : Vector' α s)
+  : hρ.finVSum ρ (v + w) = hρ.finVSum ρ v + hρ.finVSum ρ w
+  := by simp [finVSum, finSum_add, Vector'.get_add]
+
+theorem pvSum_add {s t : ℕ} [hρ : BoundedOn s t ρ] (v w : Vector' α s)
+  : hρ.pvSum ρ (v + w) = hρ.pvSum ρ v + hρ.pvSum ρ w
+  := by rw [<-Vector'.get_inj]; simp [pvSum, Vector'.get_add, finVSum_add]
+
+def preFV {s t : ℕ} (ρ : ℕ → ℕ) [BoundedOn s t ρ] (a : α) (i : Fin s) (j : Fin t) : α
+  := if ρ i = j then a else 0
+
+theorem finVSum_cons {s t : ℕ} [hρ : BoundedOn (s + 1) t ρ] {a : α} {v : Vector' α s}
+  : finVSum ρ (v.cons a) = hρ.preFV ρ a 0 + finVSum (ρ ∘ .succ) v
+  := by
+  funext i
+  simp only [finVSum, finSum, Pi.add_apply, preFV, Fin.val_zero]
+  rw [Fintype.preSum_step_ite, toFin_comp_succ]
+  cases i
+  simp [toFin]
+
+def preV {s t : ℕ} (ρ : ℕ → ℕ) [hρ : BoundedOn s t ρ] (a : α) (i : Fin s) : Vector' α t
+  := Vector'.ofFn (preFV ρ a i)
+
+theorem pvSum_cons {s t : ℕ} [hρ : BoundedOn (s + 1) t ρ] {a : α} {v : Vector' α s}
+  : pvSum ρ (v.cons a) = hρ.preV ρ a 0 + pvSum (ρ ∘ .succ) v
+  := by rw [pvSum, finVSum_cons, <-Vector'.get_inj]; simp [Vector'.get_add, preV, pvSum]
+
+end AddCommMonoid
+
+section OrderedAddCommMonoid
+
+variable [OrderedAddCommMonoid α]
+
+theorem finSum_mono {s t : ℕ} [hρ : BoundedOn s t ρ] {v w : Fin s → α} (h : v ≤ w)
+  : hρ.finSum ρ v ≤ hρ.finSum ρ w
+  := Fintype.preSum_mono (toFin ρ) h
+
+theorem finVSum_mono {s t : ℕ} [hρ : BoundedOn s t ρ] {v w : Vector' α s} (h : v ≤ w)
+  : hρ.finVSum ρ v ≤ hρ.finVSum ρ w
+  := finSum_mono (hρ := hρ) (Vector'.get_le_of_le h)
+
+theorem pvSum_mono {s t : ℕ} [hρ : BoundedOn s t ρ] {v w : Vector' α s} (h : v ≤ w)
+  : hρ.pvSum ρ v ≤ hρ.pvSum ρ w
+  := by simp [pvSum, <-Vector'.get_le_iff, finVSum_mono h]
+
+end OrderedAddCommMonoid
 
 end BoundedOn

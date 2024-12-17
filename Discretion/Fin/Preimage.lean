@@ -85,6 +85,21 @@ theorem Finset.preimageF1_empty_of (f : α → β) (b : β)
 theorem Finset.not_mem_range_of_preimageF1_empty (f : α → β) (b : β)
   : preimageF f {b} = ∅ → b ∉ rangeF f := preimageF1_empty_iff.mp
 
+theorem Finset.toPreimageF_step_ite (f : Fin (s + 1) → β) (bs : Finset β)
+  : preimageF f bs
+  = Finset.filter (f · ∈ bs) {0} ∪ (preimageF (f ∘ Fin.succ) bs).image Fin.succ
+  := by ext k; cases k using Fin.cases <;> simp [mem_preimageF_iff, Fin.succ_ne_zero]
+
+theorem Finset.toPreimageF_step_mem (f : Fin (s + 1) → β) (bs : Finset β) (h : f 0 ∈ bs)
+  : preimageF f bs = insert 0 ((preimageF (f ∘ Fin.succ) bs).image Fin.succ) := by
+  simp only [toPreimageF_step_ite, filter_singleton, h, ↓reduceIte]
+  ext k; simp
+
+theorem Finset.toPreimageF_step_not_mem (f : Fin (s + 1) → β) (bs : Finset β) (h : f 0 ∉ bs)
+  : preimageF f bs = ((preimageF (f ∘ Fin.succ) bs).image Fin.succ) := by
+  simp only [toPreimageF_step_ite, filter_singleton, h, ↓reduceIte]
+  ext k; simp
+
 section AddCommMonoid
 
 variable [AddCommMonoid γ]
@@ -99,6 +114,24 @@ theorem Fintype.preSum_not_mem_image (f : α → β) (b : β) (g : α → γ) (h
 
 theorem Fintype.preSum_add (f : α → β) (g h : α → γ)
   : preSum f (g + h) = preSum f g + preSum f h := by ext b; simp [preSum, Finset.sum_add_distrib]
+
+theorem Fintype.preSum_step_ite (f : Fin (s + 1) → β) (g : Fin (s + 1) → γ) (b : β)
+  : preSum f g b = (if f 0 = b then g 0 else 0) + preSum (f ∘ Fin.succ) (g ∘ Fin.succ) b := by
+  simp only [preSum, toPreimageF_step_ite, mem_singleton, Function.comp_apply]
+  rw [Finset.sum_union]
+  simp only [Fin.succ_inj, imp_self, implies_true, sum_image, Finset.filter_singleton]
+  congr
+  split <;> simp
+  rw [Finset.filter_singleton]
+  split <;> simp [Finset.mem_preimageF_iff, Fin.succ_ne_zero]
+
+theorem Fintype.preSum_step_eq (f : Fin (s + 1) → β) (g : Fin (s + 1) → γ) (b : β) (h : f 0 = b)
+  : preSum f g b = g 0 + preSum (f ∘ Fin.succ) (g ∘ Fin.succ) b := by
+  simp only [preSum_step_ite, h, if_true, Fin.succ_inj]
+
+theorem Fintype.preSum_step_ne (f : Fin (s + 1) → β) (g : Fin (s + 1) → γ) (b : β) (h : f 0 ≠ b)
+  : preSum f g b = preSum (f ∘ Fin.succ) (g ∘ Fin.succ) b := by
+  simp only [preSum_step_ite, h, if_false, zero_add]
 
 end AddCommMonoid
 

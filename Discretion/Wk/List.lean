@@ -508,6 +508,18 @@ theorem List.IsRen.stepn_append {ρ : ℕ → ℕ} (Ξ : List α) (hρ : List.Is
 theorem List.IsRen.stepn_append' {ρ : ℕ → ℕ} (Ξ : List α) (hΞ : Ξ.length = n)
   (hρ : List.IsRen Γ Δ ρ) : List.IsRen (Ξ ++ Γ) Δ (Nat.stepnWk n ρ) := hΞ ▸ hρ.stepn_append Ξ
 
+theorem List.IsRen.head (hρ : IsRen (α := α) Γ (A::Δ) ρ) : Γ[ρ 0]'(hρ.bounded_on 0 (by simp)) = A
+  := hρ.getElem_eq 0 (by simp)
+
+theorem List.IsRen.tail (hρ : IsRen (α := α) Γ (A::Δ) ρ) : IsRen Γ Δ (ρ ∘ .succ) where
+  bounded_on i h := by apply hρ.bounded_on; simp [h]
+  getElem_eq i h := hρ.getElem_eq (i + 1) (Nat.succ_lt_succ h)
+
+-- theorem List.IsRen.cons {Γ Δ} (A i) {hi : i < Γ.length} (hρ : IsRen Γ Δ ρ) (hΓ : Γ[i] = A)
+--   : IsRen (α := α) Γ Δ (λ| 0 => i | i + 1 => ρ i) where
+--   bounded_on j h := by cases j <;> simp [hρ.bounded_on, *]
+--   getElem_eq j h := by sorry
+
 class List.IsQRen {Γ Δ : List α}
   (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length) (ρ : ℕ → ℕ)
   extends IsRen Γ Δ ρ where
@@ -558,11 +570,45 @@ theorem List.IsQRen.le_zero {Γ Δ : List α}
     simp
     assumption
 
+instance List.IsQRen.zero_zero (Γ Δ : List α) (ρ) [hρ : IsRen Γ Δ ρ] : IsQRen (Γ := Γ) (Δ := Δ) 0 0 ρ
+  where quant_le_sum := by simp
+
+instance List.IsQRen.zero_nil (Γ : List α) (ρ) : IsQRen (Γ := Γ) (Δ := []) 0 .nil ρ
+  := zero_zero Γ [] ρ
+
+-- TODO: false; need pvsum lore here...
+theorem List.IsQRen.tail_pvSum {Γ Δ : List α}
+  {qΓ : Vector' EQuant Γ.length} {qΔ : Vector' EQuant Δ.length} (ρ)
+  (hρ : IsQRen (Δ := A :: Δ) qΓ (qΔ.cons q) ρ)
+  : IsQRen (Γ := Γ) ((hρ.comp_succ).pvSum (ρ ∘ .succ) qΔ) qΔ (ρ ∘ .succ) where
+  toIsRen := hρ.toIsRen.tail
+  quant_le_sum := by rfl
+
 open BoundedOn
 
 instance List.IsQRen.of_pvSum (Γ Δ : List α) (qΔ : Vector' EQuant Δ.length) {ρ}
   [hρ : IsRen Γ Δ ρ] : IsQRen (Γ := Γ) (pvSum ρ qΔ) qΔ ρ where
   quant_le_sum := le_refl _
+
+theorem List.IsQRen.split_pvSum {Γ qΓ ρ Δ qΔl qΔr qΔ}
+  (hqs : qΔl + qΔr ≤ qΔ) (hρ : IsQRen (α := α) (Γ := Γ) (Δ := Δ) qΓ qΔ ρ)
+  : pvSum ρ qΔl + pvSum ρ qΔr ≤ qΓ
+  := hρ.le_pvSum_of_le_sum (q := qΓ) (hlr := hqs) (hq := hρ.quant_le_sum)
+
+structure List.IsQRen.Split (Γ : List α) (qΓ) (ρ) (Δ) (qΔl qΔr) where
+  (qΓl qΓr : Vector' EQuant Γ.length)
+  (hρl : IsQRen (Δ := Δ) qΓl qΔl ρ)
+  (hρr : IsQRen (Δ := Δ) qΓr qΔr ρ)
+  (hlr : qΓl + qΓr ≤ qΓ)
+
+def List.IsQRen.split {Γ qΓ ρ Δ qΔl qΔr qΔ}
+  (hqs : qΔl + qΔr ≤ qΔ) (hρ : IsQRen (α := α) (Γ := Γ) (Δ := Δ) qΓ qΔ ρ)
+  : Split Γ qΓ ρ Δ qΔl qΔr where
+  qΓl := pvSum ρ qΔl
+  qΓr := pvSum ρ qΔr
+  hρl := of_pvSum _ _ qΔl
+  hρr := of_pvSum _ _ qΔr
+  hlr := split_pvSum hqs hρ
 
 structure Vector'.Var (qs : Vector' EQuant n) (i : ℕ) : Prop where
   is_lt : i < n
@@ -631,7 +677,7 @@ theorem List.QVar.wk {Γ Δ : List α} {qΓ : Vector' EQuant Γ.length} {qΔ : V
   {ρ : ℕ → ℕ} (hρ : List.IsQRen qΓ qΔ ρ)
   {i} {A} (v : QVar Δ qΔ i A) : QVar Γ qΓ (ρ i) A where
   toVar := Vector'.Var.of_oneHot_le (hρ.bounded_on i v.is_lt) (by
-    convert (hρ.pvSum_mono _ _ _ v.oneHot_le).trans hρ.quant_le_sum
+    convert (hρ.pvSum_mono v.oneHot_le).trans hρ.quant_le_sum
     simp only [Vector'.oneHot, pvSum, finVSum, finSum, Vector'.get_ofFn]
     congr
     funext j
