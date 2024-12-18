@@ -174,7 +174,7 @@ inductive LSubst.WfqD
   | nil {Γ qs} : 0 ≤ qs → LSubst.WfqD Γ qs [] [] .nil
   | cons {Γ qa qΓ qaΓ σ Δ qΔ qaΔ A}
     (hq : qa + qΓ ≤ qaΓ)
-    (hqa : ∀i, qaΔ ≤ qa.get i)
+    (hqa : ∀i, 1 ≤ qa.get i → qaΔ ≤ qa.get i)
     (ha : 1 ≤ qaΔ → Term.WfqD Γ qa a A)
     (hσ : LSubst.WfqD Γ qΓ σ Δ qΔ)
     : LSubst.WfqD Γ qaΓ (a::σ) (A::Δ) (qΔ.cons qaΔ)
@@ -185,7 +185,7 @@ def LSubst.WfqD.mono
   | [], .nil, .nil, _, .nil h => .nil (le_trans h hqΓ)
   | _::_, _, .cons _ _, h, .cons hq hqa ha hσ =>
     .cons (le_trans hq hqΓ)
-          (λi => le_trans h.head (hqa i))
+          (λi hi => le_trans h.head (hqa i hi))
           (λh' => ha (le_trans h' h.head))
           (hσ.mono (le_refl _) h.tail)
 
@@ -193,12 +193,21 @@ theorem LSubst.WfqD.zero_le
   {Γ qΓ σ Δ qΔ} (hσ : LSubst.WfqD (τ := τ) Γ qΓ σ Δ qΔ) (hΔ : 0 ≤ qΔ) : 0 ≤ qΓ
   := by induction hσ with
   | nil => assumption
-  | cons hq hqa _ _ I =>
+  | cons hq hqa ha hσ I =>
+    rename_i qa qΓ qaΓ σ Δ qΔ qaΔ A
     apply le_trans _ hq
     convert le_trans (add_le_add_left (I hΔ.tail) (0 : Vector' EQuant _)) _
     simp
     apply add_le_add_right
-    exact Vector'.le_of_get_le (λi => by convert (le_trans hΔ.head (hqa i)); simp)
+    apply Vector'.le_of_get_le
+    intro i
+    if hqa' : qa.get i = 0 then
+      rw [hqa']; simp
+    else
+      apply le_trans
+      convert hΔ.head; simp
+      apply hqa i
+      simp [*]
 
 def LSubst.WfqD.var
   {Γ qΓ σ Δ qΔ} (hσ : WfqD (τ := τ) Γ qΓ σ Δ qΔ)
@@ -209,20 +218,61 @@ def LSubst.WfqD.var
     (by convert le_trans (add_le_add_left (hσ.zero_le hA.zero_tail) _) hq; simp)
   | i + 1, .cons (qa := qa) (qΓ := qΓ') hq hqa _ hσ => (hσ.var (i := i) hA.succ_tail).mono
     (by
-      have hz : 0 ≤ qa := Vector'.le_of_get_le (λi =>
-        le_trans (by convert hA.select (0 : Fin (_ + 1)) (by simp); simp) (hqa i))
+      have hz : 0 ≤ qa := Vector'.le_of_get_le (by
+        intro i;
+        if hqa' : qa.get i = 0 then
+          rw [hqa']; simp
+        else
+          apply le_trans
+          convert hA.select (0 : Fin (_ + 1)) (by simp); simp
+          apply hqa i
+          simp [*]
+      )
       convert le_trans (add_le_add_right hz qΓ') hq; simp
     )
 
--- def LSubst.WfqD.wkIn
---   {Γ qΓ σ Δ qΔ} (hσ : WfqD (τ := τ) Γ qΓ σ Δ qΔ) {Γ' qΓ'} (hρ : List.IsQRen qΓ' qΓ ρ)
---   : WfqD Γ' qΓ' (σ.wkIn ρ) Δ qΔ := match Δ, qΔ, hσ with
---   | [], .nil, .nil h => .nil (hρ.le_zero _ _ _ h)
---   | _::_, .cons q _, .cons (qa := qa) (qΓ := qΓ) hq hqa ha hσ =>
---     .cons (hρ.split_pvSum hq)
---       (λi => sorry)
---       (λh => (ha h).wk inferInstance)
---       (hσ.wkIn inferInstance)
+def LSubst.WfqD.wkIn
+  {Γ qΓ σ Δ qΔ} (hσ : WfqD (τ := τ) Γ qΓ σ Δ qΔ) {Γ' qΓ'} (hρ : List.IsQRen qΓ' qΓ ρ)
+  : WfqD Γ' qΓ' (σ.wkIn ρ) Δ qΔ := match Δ, qΔ, hσ with
+  | [], .nil, .nil h => .nil (hρ.le_zero _ _ _ h)
+  | _::_, .cons _ _, .cons (qa := qa) (qΓ := qΓ) hq hqa ha hσ =>
+    .cons (hρ.split_pvSum hq)
+      (λi hi => by
+        generalize hse : Finset.preimageF (hρ.toFin ρ) {i} = s at *
+        simp only [BoundedOn.pvSum, BoundedOn.finVSum, BoundedOn.finSum, Vector'.get_ofFn,
+          Fintype.preSum] at *
+        rw [hse] at hi
+        rw [hse]
+        have hs : s ⊆ Finset.preimageF (hρ.toFin ρ) {i} := by simp [hse]
+        clear hse
+        induction s using Finset.induction with
+        | empty => simp at hi
+        | insert ha I =>
+          rename_i j s
+          simp [Finset.insert_subset_iff] at hs
+          simp [Finset.sum_insert ha] at *
+          if hj : qa.get j = 0 then
+            simp only [hj, zero_add] at *
+            apply I hi hs.2
+          else
+            apply le_trans (hqa j (by simp [hj]))
+            apply EQuant.left_le_add_of_ne_zero hj
+      )
+      (λh => (ha h).wk inferInstance)
+      (hσ.wkIn inferInstance)
+
+def LSubst.WfqD.wk0In
+  {Γ qΓ σ Δ qΔ} (hσ : WfqD (τ := τ) Γ qΓ σ Δ qΔ)
+  : WfqD (A::Γ) (qΓ.cons 0) (σ.wkIn .succ) Δ qΔ := hσ.wkIn inferInstance
+
+def LSubst.WfqD.lift
+  {Γ qΓ σ Δ qΔ} (hσ : WfqD (τ := τ) Γ qΓ σ Δ qΔ)
+  : WfqD (A::Γ) (qΓ.cons q) σ.lift (A::Δ) (qΔ.cons q)
+  := .cons
+    (Γ := A::Γ) (qa := .cons q 0) (qΓ := qΓ.cons 0)
+    (by simp) (λi => by cases i using Fin.cases <;> simp)
+    (λh => .var ⟨⟨by simp, by simp [h], λj => by cases j using Fin.cases <;> simp⟩, rfl⟩)
+    hσ.wk0In
 
 structure LSubst.WfqD.Split (Γ : List (Ty τ)) (qΓ) (σ) (Δ) (qΔl qΔr) where
   (qΓl qΓr : Vector' EQuant Γ.length)
@@ -241,14 +291,21 @@ def LSubst.WfqD.split {Γ qΓ σ Δ qΔl qΔr qΔ} (hqs : qΔl + qΔr ≤ qΔ) (
         .cons (qa := 0) (by simp) (by simp) (λh => by simp at h) st.hσr,
         by
           have ha : 0 ≤ qa :=
-            Vector'.le_of_get_le (λi => le_trans (by convert hqs.head; simp) (hqa i))
+            Vector'.le_of_get_le (λi => by
+              if hi : qa.get i = 0 then
+                simp [hi, Vector'.get_add_apply]
+              else
+                apply le_trans
+                convert hqs.head; simp
+                exact (hqa i (by simp [hi]))
+              )
           apply le_trans st.hlr
           convert le_trans (add_le_add_right ha qΓt) hq
           simp
       ⟩
     | (ql : Quant), 0 => ⟨qa + st.qΓl, st.qΓr,
         .cons (qa := qa) (by simp)
-          (λi => le_trans hqs.head (hqa i))
+          (λi hi => le_trans hqs.head (hqa i hi))
           (λh => ha (le_trans (by simp) hqs.head)) st.hσl,
         .cons (qa := 0) (by simp) (by simp) (λh => by simp at h) st.hσr,
         by
@@ -260,7 +317,7 @@ def LSubst.WfqD.split {Γ qΓ σ Δ qΔl qΔr qΔ} (hqs : qΔl + qΔr ≤ qΔ) (
     | 0, (qr : Quant) => ⟨st.qΓl, qa + st.qΓr,
         .cons (qa := 0) (by simp) (by simp) (λh => by simp at h) st.hσl,
         .cons (qa := qa) (by simp)
-          (λi => le_trans hqs.head (hqa i))
+          (λi hi => le_trans hqs.head (hqa i hi))
           (λh => ha (le_trans (by simp) hqs.head))
           st.hσr,
         by
@@ -274,17 +331,21 @@ def LSubst.WfqD.split {Γ qΓ σ Δ qΔl qΔr qΔ} (hqs : qΔl + qΔr ≤ qΔ) (
       have hql : ql ≤ qhΔ := le_trans EQuant.coe_left_le_add hqlr;
       have hqr : qr ≤ qhΔ := le_trans EQuant.coe_right_le_add hqlr;
       have hqa2 : qa + qa = qa := Vector'.get_injective (by
-        ext i; rw [Vector'.get_add_apply]; apply EQuant.add_idem_of_add_coe_le;
-        exact le_trans hqlr (hqa i)
+        ext i;
+        if hi : qa.get i = 0 then
+          simp [hi, Vector'.get_add_apply]
+        else
+          rw [Vector'.get_add_apply]; apply EQuant.add_idem_of_add_coe_le;
+          exact le_trans hqlr (hqa i (by simp [hi]))
       );
       have hqhΔ : qhΔ + qhΔ = qhΔ := EQuant.add_idem_of_add_coe_le hqlr;
       ⟨qa + st.qΓl, qa + st.qΓr,
         .cons (qa := qa) (by simp)
-          (λi => le_trans hql (hqa i))
+          (λi hi => le_trans hql (hqa i hi))
           (λh => ha (le_trans h hql))
           st.hσl,
         .cons (qa := qa) (by simp)
-          (λi => le_trans hqr (hqa i))
+          (λi hi => le_trans hqr (hqa i hi))
           (λh => ha (le_trans h hqr))
           st.hσr,
         by
@@ -295,17 +356,17 @@ def LSubst.WfqD.split {Γ qΓ σ Δ qΔl qΔr qΔ} (hqs : qΔl + qΔr ≤ qΔ) (
           exact st.hlr
       ⟩
 
--- def WfqD.lsubst {Γ qΓ σ Δ qΔ} (hσ : LSubst.WfqD (τ := τ) Γ qΓ σ Δ qΔ) {a A}
---   : WfqD Δ qΔ a A → WfqD Γ qΓ (a.lsubst σ) A
---   | .var h => (hσ.var h)
---   | .op hA hB ha => .op hA hB (ha.lsubst hσ)
---   | .let₁ hq ha hb =>
---     let st := hσ.split hq;
---     .let₁ st.hlr (ha.lsubst st.hσl) (hb.lsubst sorry)
---   | .unit h => .unit (hσ.zero_le h)
---   | .pair hq ha hb =>
---     let st := hσ.split hq;
---     .pair st.hlr (ha.lsubst st.hσl) (hb.lsubst st.hσr)
---   | .let₂ hq ha hb =>
---     let st := hσ.split hq;
---     .let₂ st.hlr (ha.lsubst st.hσl) (hb.lsubst sorry)
+def WfqD.lsubst {Γ qΓ σ Δ qΔ} (hσ : LSubst.WfqD (τ := τ) Γ qΓ σ Δ qΔ) {a A}
+  : WfqD Δ qΔ a A → WfqD Γ qΓ (a.lsubst σ) A
+  | .var h => (hσ.var h)
+  | .op hA hB ha => .op hA hB (ha.lsubst hσ)
+  | .let₁ hq ha hb =>
+    let st := hσ.split hq;
+    .let₁ st.hlr (ha.lsubst st.hσl) (hb.lsubst st.hσr.lift)
+  | .unit h => .unit (hσ.zero_le h)
+  | .pair hq ha hb =>
+    let st := hσ.split hq;
+    .pair st.hlr (ha.lsubst st.hσl) (hb.lsubst st.hσr)
+  | .let₂ hq ha hb =>
+    let st := hσ.split hq;
+    .let₂ st.hlr (ha.lsubst st.hσl) (hb.lsubst st.hσr.lift.lift)

@@ -542,6 +542,10 @@ instance List.IsQRen.step {Γ Δ : List α}
   [hρ : IsQRen qΓ qΔ ρ] : IsQRen (Γ := A::Γ) (qΓ.cons 0) qΔ (Nat.stepWk ρ)
   := step_of_le A 0 qΓ qΔ ρ (le_refl _)
 
+instance List.IsQRen.succ {Γ : List α}
+  (A : α) (qΓ : Vector' EQuant Γ.length) : IsQRen (Γ := A::Γ) (qΓ.cons 0) qΓ .succ
+  := step A qΓ qΓ _root_.id
+
 theorem List.IsQRen.lift_of_le {Γ Δ : List α}
   (A : α) (q q' : EQuant) (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length) (ρ)
   (hq : q ≤ q') [hρ : IsQRen qΓ qΔ ρ]

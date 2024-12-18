@@ -613,6 +613,14 @@ instance EQuant.instPartialOrder : PartialOrder EQuant where
 theorem EQuant.one_le_iff_ne_zero (q : EQuant) : 1 ≤ q ↔ q ≠ 0 := by cases q <;> decide
 
 @[simp]
+theorem EQuant.one_le_of_ne_zero {q : EQuant} (h : q ≠ 0) : 1 ≤ q
+  := by rw [one_le_iff_ne_zero]; exact h
+
+@[simp]
+theorem EQuant.ne_zero_of_one_le {q : EQuant} (h : 1 ≤ q) : q ≠ 0
+  := by rw [one_le_iff_ne_zero] at h; exact h
+
+@[simp]
 theorem EQuant.one_le_of_coe_le {q : Quant} {q' : EQuant} (h : q ≤ q') : 1 ≤ q'
   := le_trans one_le_coe h
 
@@ -705,6 +713,12 @@ theorem EQuant.coe_left_le_add {l : Quant} {r : EQuant} : l ≤ l + r
 
 theorem EQuant.coe_right_le_add {l : EQuant} {r : Quant} : r ≤ l + r
   := by cases l <;> cases r <;> decide
+
+theorem EQuant.left_le_add_of_ne_zero {l r : EQuant} (h : l ≠ 0) : l ≤ l + r
+  := by cases l <;> simp at h <;> cases r <;> decide
+
+theorem EQuant.right_le_add_of_ne_zero {l r : EQuant} (h : r ≠ 0) : r ≤ l + r
+  := by cases l <;> cases r <;> simp at h <;> decide
 
 def EQuant.toQ : EQuant → Quant
   | 0 => ⊥
@@ -933,6 +947,9 @@ instance Quant0.instDecidableLE : DecidableRel (· ≤ · : Quant0 → Quant0 �
   | (a : Quant), 0 => Decidable.isFalse (by simp [LE.le])
   | (a : Quant), (b : Quant) => (inferInstance : Decidable (a ≤ b))
 
+theorem Quant0.le.of_equant {l r : EQuant} (h : l ≤ r) : Quant0.instLE.le l r
+  := by cases h <;> decide
+
 instance Quant0.instOrderTop : OrderTop Quant0 where
   top := (⊤ : EQuant)
   le_top a := by cases a <;> simp [LE.le, Top.top]
@@ -988,6 +1005,27 @@ def Quant0.le.casesOn {motive : ∀{q q' : Quant0}, q ≤ q' → Sort _}
   | 1, 1, _ => one_le_one
   | 0, 1, _ => zero_le_one
   | 0, 0, _ => zero_le_zero
+
+@[elab_as_elim, induction_eliminator]
+def Quant0.le.inductionOn {motive : ∀{q q' : Quant0}, q ≤ q' → Sort _}
+  (zero_le_one : @motive 0 1 (by decide))
+  (zero_le_copy : @motive 0 .copy (by decide))
+  (rest : ∀{q q' : EQuant}, (h : q ≤ q') -> @motive q q' (Quant0.le.of_equant h))
+  : ∀{q q' : Quant0} (h : q ≤ q'), @motive q q' h
+  | ⊤, ⊤, _ => rest (by decide)
+  | .copy, ⊤, _ => rest (by decide)
+  | .del, ⊤, _ => rest (by decide)
+  | 1, ⊤, _ => rest (by decide)
+  | 0, ⊤, _ => rest (by decide)
+  | .copy, .copy, _ => rest (by decide)
+  | 1, .copy, _ => rest (by decide)
+  | 0, .copy, _ => zero_le_copy
+  | .del, .del, _ => rest (by decide)
+  | 1, .del, _ => rest (by decide)
+  | 0, .del, _ => rest (by decide)
+  | 1, 1, _ => rest (by decide)
+  | 0, 1, _ => zero_le_one
+  | 0, 0, _ => rest (by decide)
 
 instance Quant0.instPartialOrder : PartialOrder Quant0 where
   le_refl a := by cases a <;> decide
