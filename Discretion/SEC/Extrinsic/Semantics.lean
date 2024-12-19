@@ -16,7 +16,7 @@ variable
 
 open FreeSignature.Model
 
--- def WfqD.den {Γ qs a A} [WqCtx Γ qs] : WfqD (τ := τ) Γ qs a A → (ctxDen (C := C) Γ ⟶ tyDen A)
+-- def WfqD.den {Γ qΓ a A} [WqCtx Γ qΓ] : WfqD (τ := τ) Γ qΓ a A → (ctxDen (C := C) Γ qΓ ⟶ tyDen A)
 --   | .var h => sorry
 --   | .op hA hB ha => sorry
 --   | .let₁ hq ha hb => sorry

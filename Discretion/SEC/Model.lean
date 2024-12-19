@@ -1,5 +1,6 @@
 import Discretion.SEC.Signature
 import Discretion.Premonoidal.Effectful
+import Discretion.Premonoidal.Wk
 
 open CategoryTheory
 
@@ -23,8 +24,6 @@ variable {τ : Type u} [FreeSignature τ]
          {C : Type v} [Category C] [MonoidalCategoryStruct C] [HasQuant C]
          [FreeSignature.Model τ C]
 
-def ctxDen : List (Ty τ) → C
-  | [] => 𝟙_ C
-  | A :: Γ => tyDen A ⊗ ctxDen Γ
+def ctxDen : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → C := Monoidal.tensorZR tyDen
 
 -- TODO: effect model

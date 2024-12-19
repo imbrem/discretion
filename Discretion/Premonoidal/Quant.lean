@@ -8,6 +8,10 @@ open MonoidalCategory
 class HasQuant (τ : Type u) where
   quant : τ → Quant
 
+-- TODO: quant monotonic functions (id, comp)
+
+-- TODO: list quantities
+
 class MonoidalQuant (C : Type u) [Category C] [MonoidalCategoryStruct C] extends HasQuant C where
   le_quant_tensor : ∀{X Y : C}, quant X ⊓ quant Y ≤ quant (X ⊗ Y)
   quant_unit : quant (𝟙_ C) = ⊤
