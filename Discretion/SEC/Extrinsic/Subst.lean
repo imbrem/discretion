@@ -274,6 +274,11 @@ def LSubst.WfqD.lift
     (λh => .var ⟨⟨by simp, by simp [h], λj => by cases j using Fin.cases <;> simp⟩, rfl⟩)
     hσ.wk0In
 
+def LSubst.WfqD.id {Γ} (qΓ) : WfqD (τ := τ) Γ qΓ (LSubst.id Γ.length) Γ qΓ
+  := match Γ, qΓ with
+  | [], .nil => .nil (le_refl _)
+  | _::Γ, .cons _ qΓ => (id (Γ := Γ) (qΓ := qΓ)).lift
+
 structure LSubst.WfqD.Split (Γ : List (Ty τ)) (qΓ) (σ) (Δ) (qΔl qΔr) where
   (qΓl qΓr : Vector' EQuant Γ.length)
   (hσl : WfqD Γ qΓl σ Δ qΔl)

@@ -136,6 +136,9 @@ theorem Quant.is_del_iff {q : Quant} : q.is_del ↔ .del ≤ q := by cases q <;>
 
 theorem Quant.is_copy_iff {q : Quant} : q.is_copy ↔ .copy ≤ q := by cases q <;> decide
 
+@[simp]
+theorem Quant.one_le {q : Quant} : 1 ≤ q := by cases q <;> decide
+
 @[elab_as_elim, cases_eliminator]
 def Quant.le.casesOn_all {motive : ∀{q q' : Quant}, q ≤ q' → Sort _}
   (top_top : @motive ⊤ ⊤ (by simp))

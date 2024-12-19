@@ -26,7 +26,7 @@ section FNotation
 
 local notation "F" => FreeMonoidalCategory
 
-variable {C : Type u} [Category C] {D : Type u} [Category D] [MonoidalCategoryStruct D]
+variable {C : Type u} [Category C] {D : Type v} [Category D] [MonoidalCategoryStruct D]
 
 variable (f : C → D)
 

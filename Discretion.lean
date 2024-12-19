@@ -39,3 +39,4 @@ import Discretion.Elgot.Category
 import Discretion.Elgot.Strong
 import Discretion.Resource.Basic
 import Discretion.SEC.Intrinsic
+import Discretion.SEC.Extrinsic

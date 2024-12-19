@@ -81,6 +81,92 @@ instance IsNonlinear.tensor {X Y : C} [IsNonlinear X] [IsNonlinear Y] : IsNonlin
 
 end MonoidalQuant
 
+section WqCtx
+
+variable [HasQuant τ]
+
+inductive WqCtx : (Γ : List τ) → Vector' EQuant Γ.length → Prop
+  | nil : WqCtx [] .nil
+  | cons_zero (A) : ∀{Γ qΓ}, WqCtx Γ qΓ → WqCtx (A :: Γ) (qΓ.cons 0)
+  | cons_coe (A) (q : Quant) (hq : q ≤ quant A) : ∀{Γ qΓ}, WqCtx Γ qΓ → WqCtx (A :: Γ) (qΓ.cons q)
+
+attribute [class] WqCtx
+
+attribute [instance] WqCtx.nil
+
+theorem WqCtx.cons_quant (A) {Γ qΓ} (h : WqCtx Γ qΓ)
+  : WqCtx (τ := τ) (A::Γ) (qΓ.cons (quant A)) := h.cons_coe A (quant A) (le_refl _)
+
+theorem WqCtx.cons_one (A) {Γ qΓ} (h : WqCtx Γ qΓ)
+  : WqCtx (τ := τ) (A::Γ) (qΓ.cons 1) := h.cons_coe A 1 (by simp)
+
+instance WqCtx.instConsZero (A) {Γ qΓ} [h : WqCtx Γ qΓ] : WqCtx (τ := τ) (A::Γ) (qΓ.cons 0)
+  := cons_zero A h
+
+instance WqCtx.instConsOne (A) {Γ qΓ} [h : WqCtx Γ qΓ] : WqCtx (τ := τ) (A::Γ) (qΓ.cons 1)
+  := h.cons_one A
+
+instance WqCtx.instConsQuant (A) {Γ qΓ} [h : WqCtx Γ qΓ] : WqCtx (τ := τ) (A::Γ) (qΓ.cons (quant A))
+  := h.cons_quant A
+
+theorem WqCtx.cons_le (A) (q : EQuant) (hq : q ≤ quant A) {Γ qΓ} (h : WqCtx Γ qΓ)
+  : WqCtx (τ := τ) (A::Γ) (qΓ.cons q) := match q with
+  | 0 => cons_zero A h
+  | (q : Quant) => cons_coe A q hq h
+
+theorem WqCtx.cons_nonlinear (A) [IsNonlinear A] (q) {Γ qΓ} (h : WqCtx Γ qΓ)
+  : WqCtx (τ := τ) (A::Γ) (qΓ.cons q) := h.cons_le A q (by rw [IsNonlinear.quant_eq_top]; simp)
+
+instance WqCtx.instConsNonlinear (A) [IsNonlinear A] (q) {Γ qΓ} [h : WqCtx Γ qΓ]
+  : WqCtx (τ := τ) (A::Γ) (qΓ.cons q)
+  := h.cons_nonlinear A q
+
+theorem WqCtx.cons_copy (A) [IsRelevant A] {Γ qΓ} (h : WqCtx Γ qΓ)
+  : WqCtx (τ := τ) (A::Γ) (qΓ.cons .copy) := h.cons_le A .copy IsRelevant.copy_le_quant
+
+theorem WqCtx.cons_del (A) [IsAffine A] {Γ qΓ} (h : WqCtx Γ qΓ)
+  : WqCtx (τ := τ) (A::Γ) (qΓ.cons .del) := h.cons_le A .del IsAffine.del_le_quant
+
+instance WqCtx.instConsCopy (A) [IsRelevant A] {Γ qΓ} [h : WqCtx Γ qΓ]
+  : WqCtx (τ := τ) (A::Γ) (qΓ.cons .copy)
+  := h.cons_copy A
+
+instance WqCtx.instConsDel (A) [IsAffine A] {Γ qΓ} [h : WqCtx Γ qΓ]
+  : WqCtx (τ := τ) (A::Γ) (qΓ.cons .del)
+  := h.cons_del A
+
+theorem WqCtx.tail {Γ : List τ} {qΓ : Vector' _ _}
+  (h : WqCtx (A::Γ) (qΓ.cons qa)) : WqCtx Γ qΓ := by cases h <;> assumption
+
+theorem WqCtx.CoeHead {Γ : List τ} {qΓ : Vector' _ _}
+  (h : WqCtx (A::Γ) (qΓ.cons qa)) : qa = 0 ∨ qa ≤ quant A := by cases h <;> simp [*]
+
+theorem WqCtx.cons_zero_iff {Γ : List τ} {qΓ : Vector' _ _}
+  : WqCtx (A::Γ) (qΓ.cons 0) ↔ WqCtx Γ qΓ := ⟨tail, cons_zero A⟩
+
+theorem WqCtx.head_coe {Γ : List τ} {qΓ : Vector' _ _} {qa : Quant}
+  (h : WqCtx (A::Γ) (qΓ.cons qa)) : qa ≤ quant A := by cases h; simp [*]
+
+theorem WqCtx.head {Γ : List τ} {qΓ : Vector' _ _} {qa : EQuant}
+  (h : WqCtx (A::Γ) (qΓ.cons qa)) : qa = 0 ∨ qa ≤ quant A := match qa with
+  | 0 => Or.inl rfl
+  | (qa : Quant) => Or.inr h.head_coe
+
+theorem WqCtx.cons_le_quant_iff {Γ : List τ} {qΓ : Vector' _ _} {qa : EQuant}
+  (h : qa ≤ quant A) : WqCtx (A::Γ) (qΓ.cons qa) ↔ WqCtx Γ qΓ := ⟨tail, cons_le A qa h⟩
+
+theorem WqCtx.cons_quant_iff {Γ : List τ} {qΓ : Vector' _ _} {qa : Quant}
+  : WqCtx (A::Γ) (qΓ.cons qa) ↔ qa ≤ quant A ∧ WqCtx Γ qΓ
+  := ⟨λh => ⟨h.head_coe, h.tail⟩, λ⟨hq, h⟩ => h.cons_coe _ _ hq⟩
+
+theorem WqCtx.cons_iff {Γ : List τ} {qΓ : Vector' _ _} {qa : EQuant}
+  : WqCtx (A::Γ) (qΓ.cons qa) ↔ (qa = 0 ∨ qa ≤ quant A) ∧ WqCtx Γ qΓ
+  := ⟨λh => ⟨h.head, h.tail⟩, λ⟨hq, h⟩ => by
+    cases hq with | inl hq => cases hq; exact h.cons_zero _ | inr hq => exact h.cons_le _ _ hq
+  ⟩
+
+end WqCtx
+
 class HasPQuant (τ : Type u) [LE τ] [Bot τ] where
   pquant : τ → PQuant
   pquant_bot : pquant (⊥ : τ) = ⊤

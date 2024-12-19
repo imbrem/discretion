@@ -176,20 +176,53 @@ def List.Wk.minQ {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' EQuant Γ.len
   | _, _, .step _ ρ => (ρ.minQ).cons 0
   | _, _, .lift _ ρ => (ρ.minQ).cons 1
 
-def List.Wk.EWk {α} {Γ Δ : List α} (ρ : Wk Γ Δ) {ε} [PartialOrder ε]
-  (qΓ : Vector' ε Γ.length) (qΔ : Vector' ε Δ.length) := qΔ ≤ ρ.pv qΓ
-
-structure List.Wk.QWk {α} {Γ Δ : List α} (ρ : Wk Γ Δ)
-  (qΓ : Vector' EQuant Γ.length) (qΔ : Vector' EQuant Δ.length)
-  : Prop where
-  wf : ρ.Wf qΓ
-  pv_le : ρ.EWk qΓ qΔ
+-- eΔ ≤ ρ.pv eΓ
 
 -- TODO: Wk wf iff minQ leq qs...
 
 -- TODO: Split wf iff sum minQ leq qs...
 
-def List.QWk (Γ Δ : List α) (qs : Vector' EQuant Γ.length) := {ρ : Wk Γ Δ | ρ.Wf qs}
+inductive List.QWk {α} : (Γ Δ : List α) →
+  (qΓ : Vector' EQuant Γ.length) → (qΔ : Vector' EQuant Δ.length) → Type
+  | nil : QWk [] [] .nil .nil
+  | step (A qa) (h : qa = 0 ∨ .del ≤ qa) {Γ Δ qΓ qΔ}
+    : QWk Γ Δ qΓ qΔ → QWk (A :: Γ) Δ (qΓ.cons qa) qΔ
+  | lift (A lo hi) (h : lo ≤ hi) {Γ Δ qΓ qΔ}
+    : QWk Γ Δ qΓ qΔ → QWk (A :: Γ) (A :: Δ) (qΓ.cons hi) (qΔ.cons lo)
+
+def List.QWk.nw {α} {Γ Δ : List α} {qΓ qΔ} : QWk Γ Δ qΓ qΔ → Nat.Wk Γ.length Δ.length
+  | .nil => .nil
+  | .step _ _ _ ρ => ρ.nw.step
+  | .lift _ _ _ _ ρ => ρ.nw.lift
+
+def List.QWk.toWk {α} {Γ Δ : List α} {qΓ qΔ} : QWk Γ Δ qΓ qΔ → Wk Γ Δ
+  | .nil => .nil
+  | .step _ _ _ ρ => .step _ ρ.toWk
+  | .lift _ _ _ _ ρ => .lift _ ρ.toWk
+
+theorem List.QWk.nw_toWk {α} {Γ Δ : List α} {qΓ qΔ} (ρ : QWk Γ Δ qΓ qΔ)
+  : ρ.toWk.nw = ρ.nw := by
+  induction ρ <;> simp only [nw, toWk, Wk.nw, *]
+
+-- TODO: independent inductive definitions?
+def List.QWk.ix {α} {Γ Δ : List α} {qΓ qΔ} (ρ : QWk Γ Δ qΓ qΔ) : ℕ → ℕ := ρ.toWk.ix
+
+def List.QWk.pv {α} {Γ Δ : List α} {qΓ qΔ} (ρ : QWk Γ Δ qΓ qΔ)
+  : Vector' β Γ.length → Vector' β Δ.length := ρ.toWk.pv
+
+def List.QWk.toWk_injective {α} {Γ Δ : List α} {qΓ qΔ}
+  : Function.Injective (@List.QWk.toWk α Γ Δ qΓ qΔ)
+  := λρ ρ' => by induction ρ <;> cases ρ' <;> simp [toWk] <;> apply_assumption
+
+theorem List.QWk.nw_injective {α} {Γ Δ : List α} {qΓ qΔ}
+  : Function.Injective (@List.QWk.nw α Γ Δ qΓ qΔ)
+  := by convert Wk.nw_injective.comp toWk_injective; funext i; simp [nw_toWk]
+
+theorem List.QWk.ix_injective {α} {Γ Δ : List α} {qΓ qΔ}
+  : Function.Injective (@List.QWk.ix α Γ Δ qΓ qΔ)
+  := Wk.ix_injective.comp toWk_injective
+
+def List.QPWk (Γ Δ : List α) (qs : Vector' EQuant Γ.length) := {ρ : Wk Γ Δ | ρ.Wf qs}
 
 -- TODO: List.Wk is a subsingleton if Γ has no duplicates of elements of Δ
 -- (and therefore, in particular, if it has no duplicates at all!)
@@ -515,6 +548,16 @@ theorem List.IsRen.tail (hρ : IsRen (α := α) Γ (A::Δ) ρ) : IsRen Γ Δ (ρ
   bounded_on i h := by apply hρ.bounded_on; simp [h]
   getElem_eq i h := hρ.getElem_eq (i + 1) (Nat.succ_lt_succ h)
 
+instance List.IsRen.ix {Γ Δ : List α} (ρ : List.Wk Γ Δ) : List.IsRen Γ Δ ρ.ix where
+  toBoundedOn := by convert ρ.nw.ix_bounded_on; rw [List.Wk.ix_nw]
+  getElem_eq i h := by
+    induction ρ generalizing i with
+    | nil => cases h
+    | step => simp [Wk.ix, *]
+    | lift _ _ I => cases i with | zero => rfl | succ =>
+      simp only [Wk.ix, Nat.liftWk_succ, getElem_cons_succ]
+      rw [I]
+
 -- theorem List.IsRen.cons {Γ Δ} (A i) {hi : i < Γ.length} (hρ : IsRen Γ Δ ρ) (hΓ : Γ[i] = A)
 --   : IsRen (α := α) Γ Δ (λ| 0 => i | i + 1 => ρ i) where
 --   bounded_on j h := by cases j <;> simp [hρ.bounded_on, *]
@@ -574,8 +617,8 @@ theorem List.IsQRen.le_zero {Γ Δ : List α}
     simp
     assumption
 
-instance List.IsQRen.zero_zero (Γ Δ : List α) (ρ) [hρ : IsRen Γ Δ ρ] : IsQRen (Γ := Γ) (Δ := Δ) 0 0 ρ
-  where quant_le_sum := by simp
+instance List.IsQRen.zero_zero (Γ Δ : List α) (ρ) [hρ : IsRen Γ Δ ρ]
+  : IsQRen (Γ := Γ) (Δ := Δ) 0 0 ρ where quant_le_sum := by simp
 
 instance List.IsQRen.zero_nil (Γ : List α) (ρ) : IsQRen (Γ := Γ) (Δ := []) 0 .nil ρ
   := zero_zero Γ [] ρ

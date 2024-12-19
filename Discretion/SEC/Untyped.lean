@@ -198,18 +198,22 @@ theorem LSubst.lift_zero (σ : LSubst τ) : σ.lift[0]'(by simp) = .var 0 := rfl
 theorem LSubst.lift_succ (σ : LSubst τ) {i : ℕ} (h : i < σ.length)
   : σ.lift[i + 1]'(by simp [lift, wk, h]) = wk0 (σ[i]) := by simp [lift, wkIn]
 
-def LSubst.id (n : ℕ) : LSubst τ := List.ofFn (λi : Fin n => var i)
+def LSubst.id : ℕ → LSubst τ
+  | 0 => []
+  | n + 1 => (id n).lift
 
-theorem LSubst.id_zero : id (τ := τ) 0 = [] := rfl
+def LSubst.id' (n : ℕ) : LSubst τ := List.ofFn (λi : Fin n => var i)
 
-@[simp]
-theorem LSubst.getElem_id {n i} (h) : (id n)[i]'h = var (τ := τ) i := by simp [id]
-
-@[simp]
-theorem LSubst.length_id (n : ℕ) : (id (τ := τ) n).length = n := by simp [LSubst.id]
+theorem LSubst.id_zero' : id' (τ := τ) 0 = [] := rfl
 
 @[simp]
-theorem LSubst.lift_id (n : ℕ) : lift (id (τ := τ) n) = id (n + 1) := by
+theorem LSubst.getElem_id' {n i} (h) : (id' n)[i]'h = var (τ := τ) i := by simp [id']
+
+@[simp]
+theorem LSubst.length_id' (n : ℕ) : (id' (τ := τ) n).length = n := by simp [id']
+
+@[simp]
+theorem LSubst.lift_id' (n : ℕ) : lift (id' (τ := τ) n) = id' (n + 1) := by
   apply List.ext_getElem
   simp
   intro i hi hi'
@@ -217,7 +221,7 @@ theorem LSubst.lift_id (n : ℕ) : lift (id (τ := τ) n) = id (n + 1) := by
   | zero => simp
   | succ i =>
     simp at hi
-    rw [lift_succ, getElem_id, getElem_id]; simp
+    rw [lift_succ, getElem_id', getElem_id']; simp
     simp [hi]
 
 def LSubst.var : LSubst τ → Subst τ
@@ -238,7 +242,7 @@ theorem LSubst.var_ge_length  {σ : LSubst τ} {i} (h : i ≥ σ.length) : σ.va
 theorem LSubst.var_def' {σ : LSubst τ} {i} : σ.var i = if _ : i < σ.length then σ[i] else .invalid
   := by split; rw [var_lt_length]; rw [var_ge_length]; omega
 
-theorem LSubst.var_eq_on_id (n : ℕ) : (Set.Iio n).EqOn (id n).var (Subst.id (τ := τ))
+theorem LSubst.var_eq_on_id' (n : ℕ) : (Set.Iio n).EqOn (id' n).var (Subst.id (τ := τ))
   := λi => by simp [var_def']
 
 theorem LSubst.var_cons (t : Term τ) (σ : LSubst τ) : var (t :: σ) = σ.var.cons t
