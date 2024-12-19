@@ -1323,7 +1323,7 @@ instance PQuant.instCoe : Coe Quant PQuant := ⟨λq => (q, q)⟩
 
 instance PQuant.instOne : One PQuant := ⟨(1 : Quant)⟩
 
-def PQuant.split : PQuant := ⟨Quant.copy, 1⟩
+def PQuant.dup : PQuant := ⟨Quant.copy, 1⟩
 
 def PQuant.fuse : PQuant := ⟨1, Quant.copy⟩
 
@@ -1373,16 +1373,16 @@ def PQuant.c (q : PQuant) : Set ℕ := q.q.c
 theorem PQuant.c_coe (q : Quant) : PQuant.c q = q.c := by simp [c]
 
 @[simp]
-theorem PQuant.split_le_copy : PQuant.split ≤ PQuant.copy := by decide
+theorem PQuant.dup_le_copy : PQuant.dup ≤ PQuant.copy := by decide
 
 @[simp]
 theorem PQuant.fuse_le_copy : PQuant.fuse ≤ PQuant.copy := by decide
 
 @[simp]
-theorem PQuant.split_sup_fuse : PQuant.split ⊔ PQuant.fuse = PQuant.copy := by decide
+theorem PQuant.dup_sup_fuse : PQuant.dup ⊔ PQuant.fuse = PQuant.copy := by decide
 
 @[simp]
-theorem PQuant.fuse_sup_split : PQuant.fuse ⊔ PQuant.split = PQuant.copy := by decide
+theorem PQuant.fuse_sup_dup : PQuant.fuse ⊔ PQuant.dup = PQuant.copy := by decide
 
 @[simp]
 theorem PQuant.rem_le_del : PQuant.rem ≤ PQuant.del := by decide
