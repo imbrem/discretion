@@ -103,7 +103,7 @@ theorem Relation.StepGen.elementwise_eqvGen
   {β : Type u} {r : α → α → Prop} {f g : β → α}
   : Relation.StepGen β r f g → Relation.Elementwise β (EqvGen r) f g
   | ⟨b, hb, hg⟩, a => if ha : a = b then ha ▸ EqvGen.rel _ _ hb else by
-    rw [hg, Function.update_noteq ha]
+    rw [hg, Function.update_of_ne ha]
     apply EqvGen.refl
 
 theorem Relation.StepGen.le_elementwise_eqvGen
@@ -115,7 +115,7 @@ theorem Relation.StepGen.elementwise
   {β : Type u} {r : α → α → Prop} {f g : β → α} [IsRefl α r]
   : Relation.StepGen β r f g → Relation.Elementwise β r f g
   | ⟨b, hb, hg⟩, a => if ha : a = b then ha ▸ hb else by
-    rw [hg, Function.update_noteq ha]
+    rw [hg, Function.update_of_ne ha]
     apply IsRefl.refl
 
 theorem Relation.StepGen.le_elementwise {β : Type u} {r : α → α → Prop} [IsRefl α r]
@@ -148,12 +148,12 @@ theorem Relation.StepGen.eqvGen_le_eqvGen {β : Type u} {r : α → α → Prop}
     | trans x y z _ _ Il Ir =>
       apply EqvGen.trans
       apply Il _ (Function.update f b y)
-      rw [Function.update_same]
+      rw [Function.update_self]
       exact hfb
-      rw [Function.update_same]
+      rw [Function.update_self]
       apply Ir
-      rw [hg, Function.update_idem, Function.update_same]
-      rw [Function.update_same]
+      rw [hg, Function.update_idem, Function.update_self]
+      rw [Function.update_self]
       exact hgb
 
 theorem Relation.Elementwise.multiset_diff
@@ -173,16 +173,16 @@ theorem Relation.Elementwise.multiset_diff
     intro x
     if hb : x = b then
       cases hb
-      rw [Function.update_same]
+      rw [Function.update_self]
       apply EqvGen.refl
     else
-      rw [Function.update_noteq hb]
+      rw [Function.update_of_ne hb]
       exact hr x
     intro x hx
     have hb : x ≠ b := λhb => by cases hb; simp at hx
     apply Multiset.mem_of_mem_cons_of_ne
     apply hs
-    simp only [ne_eq, hb, not_false_eq_true, Function.update_noteq] at hx
+    simp only [ne_eq, hb, not_false_eq_true, Function.update_of_ne] at hx
     exact hx
     exact hb
 
