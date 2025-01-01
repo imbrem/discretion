@@ -13,3 +13,5 @@ class WhiskeringMonotone (C : Type u) [Category C] [MonoidalCategoryStruct C] [�
   : Prop where
   whiskerRight_mono : ∀{X Y Z : C} (f g : X ⟶ Y), f ≤ g → (f ▷ Z) ≤ (g ▷ Z)
   whiskerLeft_mono : ∀{X Y Z : C} (f g : Y ⟶ Z), f ≤ g → (X ◁ f) ≤ (X ◁ g)
+
+-- TODO:  the Kleisli category of an ordered monad is

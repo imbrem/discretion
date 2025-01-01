@@ -216,26 +216,26 @@ class OrderedPQuant (τ : Type u) [LE τ] [Bot τ] [HasPQuant τ] where
   pquant_bot : pquant (⊥ : τ) = ⊤
   pquant_anti : ∀lo hi : τ, lo ≤ hi → pquant hi ≤ pquant lo
 
-class EffectSystem (ε : Type u) [PartialOrder ε] [BoundedOrder ε] : Sort _ where
+class HasCommRel (ε : Type u) [PartialOrder ε] [BoundedOrder ε] : Sort _ where
   commutes : ε → ε → Prop
   commutes_symm : ∀e₁ e₂, commutes e₁ e₂ → commutes e₂ e₁
   commutes_anti_right : ∀e₁ e₂ e₂', e₂ ≤ e₂' → commutes e₁ e₂' → commutes e₁ e₂
   central_bot : commutes ⊥ ⊤
 
-namespace EffectSystem
+namespace HasCommRel
 
 scoped infixr:50 " ‖ " => commutes
 
-end EffectSystem
+end HasCommRel
 
-open EffectSystem
+open HasCommRel
 
-variable {ε} [PartialOrder ε] [BoundedOrder ε] [EffectSystem ε]
+variable {ε} [PartialOrder ε] [BoundedOrder ε] [HasCommRel ε]
 
-theorem commutes_symm  {l r : ε} : l ‖ r → r ‖ l := EffectSystem.commutes_symm l r
+theorem commutes_symm  {l r : ε} : l ‖ r → r ‖ l := HasCommRel.commutes_symm l r
 
 theorem commutes_anti_right {l r r' : ε} (hr : r ≤ r') : l ‖ r' → l ‖ r
-  := EffectSystem.commutes_anti_right l r r' hr
+  := HasCommRel.commutes_anti_right l r r' hr
 
 theorem commutes_anti_left {l l' r : ε} (hl : l ≤ l') (hlr : l' ‖ r) : l ‖ r
   := commutes_symm <| commutes_anti_right hl (commutes_symm hlr)
@@ -243,8 +243,15 @@ theorem commutes_anti_left {l l' r : ε} (hl : l ≤ l') (hlr : l' ‖ r) : l �
 theorem commutes_anti {l l' r r' : ε} (hl : l ≤ l') (hr : r ≤ r') (hlr : l' ‖ r') : l ‖ r
   := commutes_anti_right hr (commutes_anti_left hl hlr)
 
-theorem central_bot : (⊥ : ε) ‖ ⊤ := EffectSystem.central_bot
+theorem central_bot : (⊥ : ε) ‖ ⊤ := HasCommRel.central_bot
 
 theorem commutes_bot_left {r : ε} : (⊥ : ε) ‖ r := commutes_anti_right le_top central_bot
 
 theorem commutes_bot_right {l : ε} : l ‖ (⊥ : ε) := commutes_symm commutes_bot_left
+
+class EffectSystem (ε : Type u)
+  extends PartialOrder ε, BoundedOrder ε, HasCommRel ε, HasPQuant ε, OrderedPQuant ε
+
+instance EffectSystem.instMk {ε}
+  [PartialOrder ε] [BoundedOrder ε] [HasCommRel ε] [HasPQuant ε] [OrderedPQuant ε]
+  : EffectSystem ε where

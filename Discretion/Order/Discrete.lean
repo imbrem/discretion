@@ -1,4 +1,3 @@
--- import Discretion.Order.Disc
 import Discretion.WithDefault
 import Discretion.Disc
 
@@ -310,3 +309,7 @@ instance instDiscreteBoundedOrderLattice
 
 -- Some other fun facts:
 -- - Every preorder on a subsingleton is a partial order
+
+abbrev DiscTop (α : Type u) := WithTop (Disc α)
+
+abbrev DiscBot (α : Type u) := WithBot (Disc α)

@@ -40,3 +40,5 @@ import Discretion.Elgot.Strong
 import Discretion.Resource.Basic
 import Discretion.SEC.Intrinsic
 import Discretion.SEC.Extrinsic
+import Discretion.Monad.Ordered
+import Discretion.Monad.Commutative
