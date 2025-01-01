@@ -39,16 +39,11 @@ class PSubEffectful
   [HasQuant C] [CopyDrop C]
   (E : Type u) [PartialOrder E] [BoundedOrder E] [EffectSystem E] [HasPQuant E]
   extends Effectful C E where
+  eff_has_copy_drop : ∀e : E, (eff e).HasCopyDrop
   eff_fusable : ∀e : E, .fuse ≤ pquant e → (eff e).Fusable
   eff_duplicable : ∀e : E, .dup ≤ pquant e → (eff e).Duplicable
   eff_addable : ∀e : E, .add ≤ pquant e → (eff e).Addable
   eff_removable : ∀e : E, .rem ≤ pquant e → (eff e).Removable
-
--- TODO: PSubEffectful ==> SubEffectful for PartialOrder (X ⟶ Y)
-
--- TODO: hierarchy dance
-
--- TODO: every subeffectful category has a coherent comonoid supply, since monoidal is rel + aff
 
 class SubEffectful
   (C : Type v)
@@ -58,5 +53,27 @@ class SubEffectful
   extends Effectful C E where
   eff_copyable : ∀e : E, .copy ≤ quant e → (eff e).Copyable
   eff_discardable : ∀e : E, .del ≤ quant e → (eff e).Discardable
+
+instance SubEffectful.ofPSubEffectful
+  {C : Type v}
+  [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
+  [HasQuant C] [CopyDrop C] [∀X Y : C, PartialOrder (X ⟶ Y)]
+  {E : Type u} [PartialOrder E] [BoundedOrder E] [EffectSystem E] [HasPQuant E]
+  [PSubEffectful C E]
+  : SubEffectful C E where
+  eff_copyable e h :=
+    let fusable := PSubEffectful.eff_fusable e
+      (PQuant.fuse_le_copy.trans ((PQuant.coe_mono h).trans (PQuant.q_le _)))
+    let duplicable := PSubEffectful.eff_duplicable e
+      (PQuant.dup_le_copy.trans ((PQuant.coe_mono h).trans (PQuant.q_le _)))
+    Copyable.of_fusable_duplicable (hF := fusable) (hD := duplicable)
+  eff_discardable e h :=
+    let addable := PSubEffectful.eff_addable e
+      (PQuant.add_le_del.trans ((PQuant.coe_mono h).trans (PQuant.q_le _)))
+    let removable := PSubEffectful.eff_removable e
+      (PQuant.rem_le_del.trans ((PQuant.coe_mono h).trans (PQuant.q_le _)))
+    Discardable.of_addable_removable (hA := addable) (hR := removable)
+
+-- TODO: every subeffectful category has a coherent comonoid supply, since monoidal is rel + aff
 
 namespace Monoidal

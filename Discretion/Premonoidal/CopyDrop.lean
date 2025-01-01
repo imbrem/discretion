@@ -259,16 +259,17 @@ section PartialOrder
 
 variable [∀X Y : C, PartialOrder (X ⟶ Y)]
 
-instance Copyable.of_fusable_duplicable {W : MorphismProperty C} [Fusable W] [Duplicable W]
+instance Copyable.of_fusable_duplicable
+  {W : MorphismProperty C} [hF : Fusable W] [hD : Duplicable W]
   : Copyable W
   := ⟨λhf => have _ := mem_is_fusable hf; have _ := mem_is_duplicable hf; inferInstance⟩
 
 instance Droppable.of_addable_removable
-  {W : MorphismProperty C} [Addable W] [Removable W] : Droppable W
+  {W : MorphismProperty C} [hA : Addable W] [hR : Removable W] : Droppable W
   := ⟨λhf => have _ := mem_is_introducable hf; have _ := mem_is_deletable hf; inferInstance⟩
 
 instance Discardable.of_addable_removable
-  {W : MorphismProperty C} [Addable W] [Removable W] : Discardable W
+  {W : MorphismProperty C} [hA : Addable W] [hR : Removable W] : Discardable W
   := ⟨λhf => have _ := mem_is_introducable hf; have _ := mem_is_deletable hf; inferInstance⟩
 
 end PartialOrder
@@ -318,21 +319,21 @@ namespace MorphismProperty
 
 variable {C : Type u}
   [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
-  [MonoidalQuant C] [ComonoidSupply C]
+  [HasQuant C] [CopyDrop C]
 
 inductive isCopyDrop : MorphismProperty C
   | copy_mem : ∀ (X : C) [IsRelevant X], isCopyDrop (Δ_ X)
   | drop_mem : ∀ (X : C) [IsAffine X], isCopyDrop (!_ X)
 
-class HasComonoidSupply (W : MorphismProperty C) : Prop where
+class HasCopyDrop (W : MorphismProperty C) : Prop where
   copy_mem : ∀ (X : C) [IsRelevant X], W (Δ_ X)
   drop_mem : ∀ (X : C) [IsAffine X], W (!_ X)
 
-instance HasComonoidSupply.of_isCopyDrop : HasComonoidSupply (C := C) isCopyDrop where
+instance HasCopyDrop.of_isCopyDrop : HasCopyDrop (C := C) isCopyDrop where
   copy_mem := isCopyDrop.copy_mem
   drop_mem := isCopyDrop.drop_mem
 
--- TODO: HasComonoidSupply iff isCopyDrop ⊑ W
+-- TODO: HasCopyDrop iff isCopyDrop ⊑ W
 
 -- TODO: monotonic ==> preserved by closures
 

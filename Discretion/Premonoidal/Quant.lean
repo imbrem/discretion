@@ -1,5 +1,6 @@
 import Mathlib.CategoryTheory.Monoidal.Free.Basic
 import Discretion.Wk.Quant
+import Discretion.Premonoidal.Predicate.Basic
 
 namespace CategoryTheory
 
@@ -16,19 +17,33 @@ class MonoidalQuant (C : Type u) [Category C] [MonoidalCategoryStruct C] extends
   le_quant_tensor : ∀{X Y : C}, quant X ⊓ quant Y ≤ quant (X ⊗ Y)
   quant_unit : quant (𝟙_ C) = ⊤
 
-class CopyQuant (C : Type u) [Category C] [MonoidalCategoryStruct C] extends MonoidalQuant C
+class CopyQuant (C : Type u) [Category C] [MonoidalCategoryStruct C]
+  extends MonoidalQuant C
   where
   quant_tensor_of_copy : ∀{X : C}, .copy ≤ quant X → quant (X ⊗ X) = quant X
+  quant_tensor_eq_of_eqv : ∀{X Y : C}, Monoidal.SymmEqv X Y → quant X = quant Y
+
+-- TODO: show that in any CopyQuant, quant (X ⊗ (X ⊗ X)) = quant X for X copy (done on paper)
+
+theorem HasQuant.quant_tensor_eq_of_eqv_of_quant_tensor
+  {C : Type u} [Category C] [MonoidalCategoryStruct C] [HasQuant C]
+  (quant_unit : quant (𝟙_ C) = ⊤)
+  (quant_tensor : ∀{X Y : C}, quant (X ⊗ Y) = quant X ⊓ quant Y)
+  {X Y : C} : Monoidal.SymmEqv X Y → quant X = quant Y
+  | ⟨h⟩ => by induction h with
+  | refl => rfl
+  | trans _ _ If Ig => exact If.trans Ig
+  | tensor_left _ If => simp [quant_tensor, *]
+  | tensor_right _ If => simp [quant_tensor, *]
+  | base h =>
+    cases h <;> simp only [quant_tensor, quant_unit, top_inf_eq, inf_top_eq, inf_assoc, inf_comm]
 
 class StrictQuant (C : Type u) [Category C] [MonoidalCategoryStruct C]
   extends CopyQuant C where
   quant_tensor : ∀{X Y : C}, quant (X ⊗ Y) = quant X ⊓ quant Y
   le_quant_tensor := quant_tensor ▸ le_refl _
   quant_tensor_of_copy _ := quant_tensor.trans (inf_idem (quant _))
-
--- TODO: coherent quant : X ≃_{SymMon} Y => quant X = quant Y
-
--- TODO: strict quant ==> coherent quant (but coherent ¬==> copy)
+  quant_tensor_eq_of_eqv := HasQuant.quant_tensor_eq_of_eqv_of_quant_tensor quant_unit quant_tensor
 
 open HasQuant
 
@@ -189,8 +204,15 @@ theorem WqCtx.cons_iff {Γ : List τ} {qΓ : Vector' _ _} {qa : EQuant}
 
 end WqCtx
 
-class HasPQuant (τ : Type u) [LE τ] [Bot τ] where
+class HasPQuant (τ : Type u) where
   pquant : τ → PQuant
+
+instance HasPQuant.hasQuant {τ : Type u} [HasPQuant τ] : HasQuant τ where
+  quant a := (pquant a).q
+
+open HasPQuant
+
+class OrderedPQuant (τ : Type u) [LE τ] [Bot τ] [HasPQuant τ] where
   pquant_bot : pquant (⊥ : τ) = ⊤
   pquant_anti : ∀lo hi : τ, lo ≤ hi → pquant hi ≤ pquant lo
 
