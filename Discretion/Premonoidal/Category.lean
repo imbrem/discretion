@@ -156,6 +156,10 @@ theorem whiskerLeft_comp {X Y Z W : C} (f : X ⟶ Y) (g : Y ⟶ Z)
 theorem whiskerRight_comp {X Y Z W : C} (f : X ⟶ Y) (g : Y ⟶ Z)
   : (f ≫ g) ▷ W = (f ▷ W) ≫ (g ▷ W) :=  IsBinoidal.whiskerRight_comp f g
 
+@[reassoc]
+theorem whiskerMiddle_comp {X Y Z L R : C} (f : X ⟶ Y) (g : Y ⟶ Z) :
+  L ◁ (f ≫ g) ▷ R = L ◁ f ▷ R ≫ L ◁ g ▷ R := by simp
+
 @[reassoc, simp]
 theorem whiskerRight_comp_inv {X Y Z : C} (f : X ⟶ Y) [IsIso f]
   : f ▷ Z ≫ inv f ▷ Z = 𝟙 (X ⊗ Z) := by simp [<-whiskerRight_comp]
@@ -335,31 +339,38 @@ theorem associator_naturality {X₁ X₂ X₃ Y₁ Y₂ Y₃ : C} (f₁ : X₁ �
   ((f₁ ⊗ f₂) ⊗ f₃) ≫ (α_ Y₁ Y₂ Y₃).hom = (α_ X₁ X₂ X₃).hom ≫ (f₁ ⊗ (f₂ ⊗ f₃))
   := IsPremonoidal.associator_naturality f₁ f₂ f₃
 
+@[reassoc]
 theorem associator_naturality_right {X Y Z : C} (f : X ⟶ X') :
   (f ▷ Y) ▷ Z ≫ (α_ X' Y Z).hom = (α_ X Y Z).hom ≫ f ▷ (Y ⊗ Z) := by
   convert associator_naturality f (𝟙 Y) (𝟙 Z) using 1 <;> simp [tensorHom_def]
 
+@[reassoc]
 theorem associator_naturality_middle {X Y Z : C} (f : Y ⟶ Y') :
   (X ◁ f) ▷ Z ≫ (α_ X Y' Z).hom = (α_ X Y Z).hom ≫ X ◁ (f ▷ Z) := by
   convert associator_naturality (𝟙 _) f (𝟙 _) using 1 <;> simp [tensorHom_def]
 
+@[reassoc]
 theorem associator_naturality_left {X Y Z : C} (f : Z ⟶ Z') :
   (X ⊗ Y) ◁ f ≫ (α_ X Y Z').hom = (α_ X Y Z).hom ≫ X ◁ (Y ◁ f) := by
   convert associator_naturality (𝟙 _) (𝟙 _) f using 1 <;> simp [tensorHom_def]
 
+@[reassoc]
 theorem associator_inv_naturality
   {X₁ X₂ X₃ Y₁ Y₂ Y₃ : C} (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (f₃ : X₃ ⟶ Y₃) :
   (f₁ ⊗ (f₂ ⊗ f₃)) ≫ (α_ Y₁ Y₂ Y₃).inv = (α_ X₁ X₂ X₃).inv ≫ ((f₁ ⊗ f₂) ⊗ f₃)
   := (cancel_mono (α_ Y₁ Y₂ Y₃).hom).mp (by simp [associator_naturality])
 
+@[reassoc]
 theorem associator_inv_naturality_right {X Y Z : C} (f : X ⟶ X') :
   f ▷ (Y ⊗ Z) ≫ (α_ X' Y Z).inv = (α_ X Y Z).inv ≫ f ▷ Y ▷ Z := by
   convert associator_inv_naturality f (𝟙 _) (𝟙 _) using 1 <;> simp [tensorHom_def]
 
+@[reassoc]
 theorem associator_inv_naturality_middle {X Y Z : C} (f : Y ⟶ Y') :
   X ◁ (f ▷ Z) ≫ (α_ X Y' Z).inv = (α_ X Y Z).inv ≫ (X ◁ f) ▷ Z := by
   convert associator_inv_naturality (𝟙 _) f (𝟙 _) using 1 <;> simp [tensorHom_def]
 
+@[reassoc]
 theorem associator_inv_naturality_left {X Y Z : C} (f : Z ⟶ Z') :
   X ◁ (Y ◁ f) ≫ (α_ X Y Z').inv = (α_ X Y Z).inv ≫ (X ⊗ Y) ◁ f := by
   convert associator_inv_naturality (𝟙 _) (𝟙 _) f using 1 <;> simp [tensorHom_def]

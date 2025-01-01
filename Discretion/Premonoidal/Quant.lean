@@ -16,13 +16,19 @@ class MonoidalQuant (C : Type u) [Category C] [MonoidalCategoryStruct C] extends
   le_quant_tensor : ∀{X Y : C}, quant X ⊓ quant Y ≤ quant (X ⊗ Y)
   quant_unit : quant (𝟙_ C) = ⊤
 
-class StrictQuant (C : Type u) [Category C] [MonoidalCategoryStruct C] extends MonoidalQuant C where
+class CopyQuant (C : Type u) [Category C] [MonoidalCategoryStruct C] extends MonoidalQuant C
+  where
+  quant_tensor_of_copy : ∀{X : C}, .copy ≤ quant X → quant (X ⊗ X) = quant X
+
+class StrictQuant (C : Type u) [Category C] [MonoidalCategoryStruct C]
+  extends CopyQuant C where
   quant_tensor : ∀{X Y : C}, quant (X ⊗ Y) = quant X ⊓ quant Y
   le_quant_tensor := quant_tensor ▸ le_refl _
+  quant_tensor_of_copy _ := quant_tensor.trans (inf_idem (quant _))
 
 -- TODO: coherent quant : X ≃_{SymMon} Y => quant X = quant Y
 
--- TODO: strict quant ==> coherent quant
+-- TODO: strict quant ==> coherent quant (but coherent ¬==> copy)
 
 open HasQuant
 
@@ -84,6 +90,18 @@ instance IsNonlinear.tensor {X Y : C} [IsNonlinear X] [IsNonlinear Y] : IsNonlin
   := inferInstance
 
 end MonoidalQuant
+
+section CopyQuant
+
+variable [Category C] [MonoidalCategoryStruct C] [CopyQuant C]
+
+theorem IsAffine.of_copy {X : C} [IsRelevant X] [IsAffine (X ⊗ X)] : IsAffine X where
+  del_le_quant := by
+    rw [<-CopyQuant.quant_tensor_of_copy]
+    exact IsAffine.del_le_quant
+    exact IsRelevant.copy_le_quant
+
+end CopyQuant
 
 section WqCtx
 

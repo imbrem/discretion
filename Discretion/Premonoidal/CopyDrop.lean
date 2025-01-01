@@ -297,25 +297,134 @@ end CopyDrop
 
 class ComonoidSupply (C : Type u) [Category C]
   [MonoidalCategoryStruct C] [BraidedCategoryStruct C] [MonoidalQuant C]
-  extends CopyDrop C where
-  copy_central : ∀ (X : C) [IsRelevant X], Central (copy X) := by infer_instance
-  drop_central : ∀ (X : C) [IsAffine X], Central (drop X) := by infer_instance
-  copy_swap : ∀ (X : C) [IsRelevant X], copy X ≫ σ_ X X = copy X
+  extends CopyDrop C
+  where
+  copy_central : ∀ (X : C) [IsRelevant X], Central (Δ_ X) := by infer_instance
+  drop_central : ∀ (X : C) [IsAffine X], Central (!_ X) := by infer_instance
+  copy_swap : ∀ (X : C) [IsRelevant X], Δ_ X ≫ σ_ X X = Δ_ X
   copy_copy_left : ∀(X : C) [IsRelevant X],
-    copy X ≫ (copy X ▷ X) = copy X ≫ (X ◁ copy X) ≫ (α_ _ _ _).inv
+    Δ_ X ≫ (Δ_ X ▷ X) = Δ_ X ≫ (X ◁ Δ_ X) ≫ (α_ _ _ _).inv
   copy_drop_left : ∀ (X : C) [IsRelevant X] [IsAffine X],
-    copy X ≫ (drop X ▷ X) = (λ_ X).inv
-  copy_unit : copy (𝟙_ C) = (λ_ (𝟙_ C)).inv
-  drop_unit : drop (𝟙_ C) = 𝟙 _
+    Δ_ X ≫ (!_ X ▷ X) = (λ_ X).inv
+  copy_unit : Δ_ (𝟙_ C) = (λ_ (𝟙_ C)).inv
+  drop_unit : !_ (𝟙_ C) = 𝟙 _
   copy_tensor : ∀ {X Y : C} [IsRelevant X] [IsRelevant Y],
-    copy (X ⊗ Y) = (copy X ⊗ copy Y) ≫ swap_inner X X Y Y
+    Δ_ (X ⊗ Y) = (Δ_ X ⊗ Δ_ Y) ≫ swap_inner X X Y Y
   drop_tensor : ∀ {X Y : C} [IsAffine X] [IsAffine Y],
-    drop (X ⊗ Y) = (drop X ⊗ drop Y) ≫ (λ_ _).hom
+    !_ (X ⊗ Y) = (!_ X ⊗ !_ Y) ≫ (λ_ _).hom
+
+
+namespace MorphismProperty
+
+variable {C : Type u}
+  [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
+  [MonoidalQuant C] [ComonoidSupply C]
+
+inductive isCopyDrop : MorphismProperty C
+  | copy_mem : ∀ (X : C) [IsRelevant X], isCopyDrop (Δ_ X)
+  | drop_mem : ∀ (X : C) [IsAffine X], isCopyDrop (!_ X)
+
+class HasComonoidSupply (W : MorphismProperty C) : Prop where
+  copy_mem : ∀ (X : C) [IsRelevant X], W (Δ_ X)
+  drop_mem : ∀ (X : C) [IsAffine X], W (!_ X)
+
+instance HasComonoidSupply.of_isCopyDrop : HasComonoidSupply (C := C) isCopyDrop where
+  copy_mem := isCopyDrop.copy_mem
+  drop_mem := isCopyDrop.drop_mem
+
+-- TODO: HasComonoidSupply iff isCopyDrop ⊑ W
+
+-- TODO: monotonic ==> preserved by closures
+
+-- TODO: inf iff both
+
+-- TODO: sup of left
+
+-- TODO: sup of right
+
+end MorphismProperty
 
 section ComonoidSupply
 
 variable {C : Type u}
-  [Category C] [HasQuant C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C] [CopyDrop C]
+  [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
+  [MonoidalQuant C] [ComonoidSupply C]
+
+@[reassoc]
+theorem copy_swap {X : C} [IsRelevant X]
+  : Δ_ X ≫ σ_ X X = Δ_ X := ComonoidSupply.copy_swap X
+
+@[reassoc]
+theorem copy_copy_left {X : C} [IsRelevant X]
+  : Δ_ X ≫ (Δ_ X ▷ X) = Δ_ X ≫ (X ◁ Δ_ X) ≫ (α_ _ _ _).inv := ComonoidSupply.copy_copy_left X
+
+@[reassoc]
+theorem copy_drop_left {X : C} [IsRelevant X] [IsAffine X]
+  : Δ_ X ≫ (!_ X ▷ X) = (λ_ X).inv := ComonoidSupply.copy_drop_left X
+
+@[reassoc]
+theorem copy_unit : Δ_ (𝟙_ C) = (λ_ (𝟙_ C)).inv := ComonoidSupply.copy_unit
+
+@[reassoc]
+theorem drop_unit : !_ (𝟙_ C) = 𝟙 _ := ComonoidSupply.drop_unit
+
+@[reassoc]
+theorem copy_tensor {X Y : C} [IsRelevant X] [IsRelevant Y]
+  : Δ_ (X ⊗ Y) = (Δ_ X ⊗ Δ_ Y) ≫ swap_inner X X Y Y := ComonoidSupply.copy_tensor
+
+@[reassoc]
+theorem drop_tensor {X Y : C} [IsAffine X] [IsAffine Y]
+  : !_ (X ⊗ Y) = (!_ X ⊗ !_ Y) ≫ (λ_ _).hom := ComonoidSupply.drop_tensor
+
+@[reassoc]
+theorem copy_copy_left_associator {X : C} [IsRelevant X]
+  : Δ_ X ≫ (Δ_ X ▷ X) ≫ (α_ _ _ _).hom = Δ_ X ≫ (X ◁ Δ_ X) := by simp [copy_copy_left_assoc]
+
+instance copy_central {X : C} [IsRelevant X] : Central (Δ_ X) := ComonoidSupply.copy_central X
+
+instance drop_central {X : C} [IsAffine X] : Central (!_ X) := ComonoidSupply.drop_central X
+
+variable [IsPremonoidal C]
+
+theorem copy_drop {X : C} [IsRelevant X] [IsAffine X]
+  : Δ_ X ≫ !_ (X ⊗ X) = !_ X := by rw [
+    drop_tensor, tensorHom_def (f := !_ X), <-Category.assoc, <-Category.assoc, copy_drop_left,
+    <-leftUnitor_inv_naturality (!_ X), Category.assoc, Iso.inv_hom_id, Category.comp_id
+  ]
+
+instance copy_droppable {X : C} [IsRelevant X] : IsDroppable (Δ_ X) where
+  drop_hom := copy_drop
+
+instance copy_discardable' {X : C} [IsRelevant X] [IsAffine X] : IsDiscardable (Δ_ X) where
+  copy_drop_left_res := by intros; rw [copy_drop, copy_drop_left]
+
+@[reassoc]
+theorem copy_copy_assoc_inner {X : C} [IsRelevant X]
+  : Δ_ X ≫ (Δ_ X ⊗ Δ_ X) ≫ assoc_inner_hom X X X X
+  = Δ_ X ≫ Δ_ X ▷ X ≫ (α_ X X X).hom ≫ X ◁ Δ_ X ▷ X
+  := by
+  rw [
+    tensor_eq_ltimes, ltimes, Category.assoc, assoc_inner_hom,
+    Monoidal.associator_naturality_left_assoc, copy_copy_left_associator_assoc,
+     copy_copy_left_associator_assoc, <-Monoidal.whiskerLeft_comp,
+     <-Monoidal.whiskerLeft_comp, <-copy_copy_left, Monoidal.whiskerLeft_comp,
+  ]
+
+@[reassoc]
+theorem copy_copy_swap_inner {X : C} [IsRelevant X]
+  : Δ_ X ≫ (Δ_ X ⊗ Δ_ X) ≫ swap_inner X X X X = Δ_ X ≫ (Δ_ X ⊗ Δ_ X) := by
+  rw [
+    swap_inner, copy_copy_assoc_inner_assoc, <-whiskerMiddle_comp_assoc, copy_swap,
+    <-copy_copy_assoc_inner_assoc, assoc_inner_hom_assoc_inner_inv, Category.comp_id
+  ]
+
+instance copy_copyable {X : C} [IsRelevant X] : IsCopyable (Δ_ X) where
+  copy_hom_ltimes := by intros; rw [copy_tensor, copy_copy_swap_inner, tensor_eq_ltimes]
+  copy_hom_rtimes := by intros; rw [copy_tensor, copy_copy_swap_inner, tensor_eq_rtimes_left]
+
+theorem copy_copy_eq_copy_copy {X : C} [IsRelevant X]
+  : Δ_ X ≫ (Δ_ X ⊗ Δ_ X) = Δ_ X ≫ Δ_ (X ⊗ X)
+  := by rw [tensor_eq_ltimes, copy_hom_ltimes]
 
 -- TODO: if X is both affine and relevant, then droppable ==> discardable
 
@@ -338,3 +447,15 @@ variable {C : Type u}
 -- TODO: if everything is affine + relevant, then the comonoid supply is "coherent"
 
 end ComonoidSupply
+
+section CopyQuant
+
+variable {C : Type u}
+  [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
+  [CopyQuant C] [ComonoidSupply C] [IsPremonoidal C]
+
+instance copy_discardable {X : C} [IsRelevant X] : IsDiscardable (Δ_ X) where
+  copy_drop_left_res := by
+    intros; have _ := IsAffine.of_copy (X := X); rw [copy_drop, copy_drop_left]
+
+end CopyQuant
