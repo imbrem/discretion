@@ -310,6 +310,120 @@ instance instDiscreteBoundedOrderLattice
 -- Some other fun facts:
 -- - Every preorder on a subsingleton is a partial order
 
-abbrev DiscTop (α : Type u) := WithTop (Disc α)
+def DiscTop (α : Type u) := WithTop (Disc α)
 
-abbrev DiscBot (α : Type u) := WithBot (Disc α)
+instance DiscTop.instPartialOrder {α} : PartialOrder (DiscTop α)
+  := (inferInstance : PartialOrder (WithTop (Disc α)))
+
+instance DiscTop.instOrderTop {α} : OrderTop (DiscTop α)
+  := (inferInstance : OrderTop (WithTop (Disc α)))
+
+instance DiscTop.instDiscreteTopOrder {α} : DiscreteTopOrder (DiscTop α)
+  := (inferInstance : DiscreteTopOrder (WithTop (Disc α)))
+
+def DiscTop.some {α} (a : α) : DiscTop α := WithTop.some a
+
+instance DiscTop.instCoeTC {α} : CoeTC α (DiscTop α) where
+  coe := some
+
+@[simp]
+theorem DiscTop.coe_le_coe {α} {a b : α} : (a : DiscTop α) ≤ (b : DiscTop α) ↔ a = b
+  := WithTop.coe_le_coe
+
+@[elab_as_elim, cases_eliminator]
+def DiscTop.casesOn {α} {motive : DiscTop α → Sort v}
+  (top : motive ⊤) (coe : (a : α) → motive a) (a : DiscTop α) : motive a
+  := match a with
+  | ⊤ => top
+  | (a : α) => coe a
+
+def DiscTop.leCases {α} {motive : DiscTop α → DiscTop α → Sort v}
+  (top : ∀a, motive a ⊤)
+  (coe : ∀a : α, motive a a)
+  {a b : DiscTop α} (h : a ≤ b)
+  : motive a b := match a, b, h with
+  | a, ⊤, _ => top _
+  | (a : α), (b : α), h => coe_le_coe.mp h ▸ coe a
+  | ⊤, (a : α), h => by simp at h; cases h
+
+def DiscTop.leCases' {α} {motive : DiscTop α → DiscTop α → Sort v}
+  (top_top : motive ⊤ ⊤)
+  (coe_top : ∀a, motive a ⊤)
+  (coe_coe : ∀a : α, motive a a)
+  {a b : DiscTop α} (h : a ≤ b)
+  : motive a b := match a, b, h with
+  | ⊤, ⊤, _ => top_top
+  | (a : α), ⊤, _ => coe_top _
+  | (a : α), (b : α), h => coe_le_coe.mp h ▸ coe_coe a
+  | ⊤, (a : α), h => by simp at h; cases h
+
+def DiscBot (α : Type u) := WithBot (Disc α)
+
+instance DiscBot.instPartialOrder {α} : PartialOrder (DiscBot α)
+  := (inferInstance : PartialOrder (WithBot (Disc α)))
+
+instance DiscBot.instOrderBot {α} : OrderBot (DiscBot α)
+  := (inferInstance : OrderBot (WithBot (Disc α)))
+
+instance DiscBot.instDiscreteBotOrder {α} : DiscreteBotOrder (DiscBot α)
+  := (inferInstance : DiscreteBotOrder (WithBot (Disc α)))
+
+def DiscBot.some {α} (a : α) : DiscBot α := WithBot.some a
+
+instance DiscBot.instCoeTC {α} : CoeTC α (DiscBot α) where
+  coe := some
+
+@[simp]
+theorem DiscBot.coe_le_coe {α} {a b : α} : (a : DiscBot α) ≤ (b : DiscBot α) ↔ a = b
+  := WithBot.coe_le_coe
+
+@[elab_as_elim, cases_eliminator]
+def DiscBot.casesOn {α} {motive : DiscBot α → Sort v}
+  (a : DiscBot α) (bot : motive ⊥) (coe : (a : α) → motive a) : motive a
+  := match a with
+  | ⊥ => bot
+  | (a : α) => coe a
+
+def DiscBot.leCases {α} {motive : DiscBot α → DiscBot α → Sort v}
+  (bot : ∀a, motive ⊥ a)
+  (coe : ∀a : α, motive a a)
+  {a b : DiscBot α} (h : a ≤ b)
+  : motive a b := match a, b, h with
+  | ⊥, a, _ => bot _
+  | (a : α), (b : α), h => coe_le_coe.mp h ▸ coe a
+  | (a : α), ⊥, h => by simp at h; cases h
+
+def DiscBot.leCases' {α} {motive : DiscBot α → DiscBot α → Sort v}
+  (bot_bot : motive ⊥ ⊥)
+  (bot_coe : ∀a, motive ⊥ a)
+  (coe_coe : ∀a : α, motive a a)
+  {a b : DiscBot α} (h : a ≤ b)
+  : motive a b := match a, b, h with
+  | ⊥, ⊥, _ => bot_bot
+  | ⊥, (a : α), _ => bot_coe _
+  | (a : α), (b : α), h => coe_le_coe.mp h ▸ coe_coe a
+  | (a : α), ⊥, h => by simp at h; cases h
+
+def DiscBounds (α : Type u) := WithTop (WithBot (Disc α))
+
+instance DiscBounds.instPartialOrder {α} : PartialOrder (DiscBounds α)
+  := (inferInstance : PartialOrder (WithTop (WithBot (Disc α))))
+
+instance DiscBounds.instBoundedOrder {α} : BoundedOrder (DiscBounds α)
+  := (inferInstance : BoundedOrder (WithTop (WithBot (Disc α))))
+
+instance DiscBounds.instDiscreteBoundedOrder {α} : DiscreteBoundedOrder (DiscBounds α)
+  := (inferInstance : DiscreteBoundedOrder (WithTop (WithBot (Disc α))))
+
+def DiscBounds.some {α} (a : α) : DiscBounds α := WithTop.some (WithBot.some a)
+
+instance DiscBounds.instCoeTC {α} : CoeTC α (DiscBounds α) where
+  coe := some
+
+@[elab_as_elim, cases_eliminator]
+def DiscBounds.casesOn {α} {motive : DiscBounds α → Sort v}
+  (a : DiscBounds α) (bot : motive ⊥) (top : motive ⊤) (coe : (a : α) → motive a) : motive a
+  := match a with
+  | ⊥ => bot
+  | ⊤ => top
+  | (a : α) => coe a
