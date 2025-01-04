@@ -8,7 +8,15 @@ open Functor
 
 open LawfulMonad
 
-variable {m : Type u → Type v} [Monad m]
+variable {m : Type u → Type v}
+
+theorem ReaderT.run_def {α : Type u} (x : ReaderT ρ m α) (r : ρ)
+  : x.run r = x r := rfl
+
+theorem WriterT.run_mk {α ω : Type u} [Monoid ω] (a : m (α × ω))
+  : (WriterT.mk a).run = a := rfl
+
+variable [Monad m]
 
 def casesM {α β : Type u} (x : m (α ⊕ β)) (f : α → m γ) (g : β → m γ) : m γ :=
   x >>= Sum.elim f g
@@ -27,18 +35,98 @@ theorem elim_kleisli {α β γ γ' : Type u}
   : Sum.elim f g >=> h = Sum.elim (f >=> h) (g >=> h) := by
   funext a; cases a <;> simp [Bind.kleisliRight]
 
-theorem readerT_kleisli_bind {α β γ : Type u} (f : α → ReaderT ρ m β) (g : β → ReaderT ρ m γ)
-  : f >=> g = λa r => f a r >>= (λb => g b r) := rfl
+theorem ReaderT.bind_applied
+  {α β : Type u} (x : ReaderT ρ m α) (f : α → ReaderT ρ m β) (r : ρ)
+  : (x >>= f) r = (x.run r) >>= (λa => f a r) := rfl
 
--- theorem writerT_monoid_kleisli_bind {α β γ ω : Type u} [Monoid ω]
---   (f : α → WriterT ω m β) (g : β → WriterT ω m γ)
---   : f >=> g = λa => (f a).run >>= (λ(b, w) => (g b).run >>= λ(c, w') => pure (c, w * w'))
---   := sorry
+theorem ReaderT.kleisli_bind {α β γ : Type u} (f : α → ReaderT ρ m β) (g : β → ReaderT ρ m γ)
+  : f >=> g = λa r => (f a).run r >>= (λb => (g b).run r) := rfl
 
-theorem stateT_kleisli_bind {α β γ σ : Type u} (f : α → StateT σ m β) (g : β → StateT σ m γ)
-  : f >=> g = λa s => f a s >>= (λ(b, s) => g b s) := rfl
+theorem ReaderT.kleisli_bind_applied {α β γ : Type u}
+  (f : α → ReaderT ρ m β) (g : β → ReaderT ρ m γ) (a : α) (r : ρ)
+  : ((f >=> g) a).run r = (f a).run r >>= (λb => (g b).run r) := rfl
+
+theorem ReaderT.kleisli_kleisli {α β γ : Type u}
+  (f : α → ReaderT ρ m β) (g : β → ReaderT ρ m γ)
+  : f >=> g = λa r => ((λa => (f a).run r) >=> (λb => (g b).run r)) a := rfl
+
+theorem ReaderT.kleisli_kleisli_applied {α β γ : Type u}
+  (f : α → ReaderT ρ m β) (g : β → ReaderT ρ m γ) (a : α) (r : ρ)
+  : ((f >=> g) a).run r = ((λa => (f a).run r) >=> (λb => (g b).run r)) a := rfl
+
+def WriterT.append {ω α} [Monoid ω] (a : WriterT ω m α) (w : ω) : WriterT ω m α
+  := WriterT.mk ((λ(a, w') => (a, w' * w)) <$> a.run)
+
+@[simp]
+theorem WriterT.run_append {ω α} [Monoid ω] (a : WriterT ω m α) (w : ω)
+  : (a.append w).run = (λ(a, w') => (a, w' * w)) <$> a.run := rfl
+
+def WriterT.prepend {ω α} [Monoid ω] (w : ω) (a : WriterT ω m α) : WriterT ω m α
+  := WriterT.mk ((λ(a, w') => (a, w * w')) <$> a.run)
+
+@[simp]
+theorem WriterT.run_prepend {ω α} [Monoid ω] (w : ω) (a : WriterT ω m α)
+  : (a.prepend w).run = (λ(a, w') => (a, w * w')) <$> a.run := rfl
+
+@[simp]
+theorem WriterT.run_bind {α β ω : Type u} [Monoid ω] (a : WriterT ω m α) (f : α → WriterT ω m β)
+  : (a >>= f).run = a.run >>= (λ(b, w) => ((f b).prepend w).run) := rfl
+
+theorem WriterT.run_kleisli_bind {α β γ ω : Type u} [Monoid ω]
+  (f : α → WriterT ω m β) (g : β → WriterT ω m γ) (a : α)
+  : ((f >=> g) a).run = (f a).run >>= (λ(b, w) => ((g b).prepend w).run) := rfl
+
+theorem StateT.kleisli_bind {α β γ σ : Type u} (f : α → StateT σ m β) (g : β → StateT σ m γ)
+  : f >=> g = λa s => (f a).run s >>= (λ(b, s) => (g b).run s) := rfl
+
+@[simp]
+theorem WriterT.run_map {α β ω : Type u} [Monoid ω] (f : α → β) (a : WriterT ω m α)
+  : (f <$> a).run = (λ(a, w) => (f a, w)) <$> a.run := rfl
+
+@[simp]
+theorem WriterT.run_pure {α ω : Type u} [Monoid ω] (a : α)
+  : (pure a : WriterT ω m α).run = pure (a, 1) := rfl
 
 variable [LawfulMonad m]
+
+@[simp]
+theorem WriterT.append_one {ω α} [Monoid ω] (a : WriterT ω m α)
+  : a.append 1 = a := by ext; simp [WriterT.append, WriterT.mk, WriterT.run]
+
+@[simp]
+theorem WriterT.append_pure {ω α} [Monoid ω] (a : α) (w : ω)
+  : (pure a : WriterT ω m α).append w = WriterT.mk (pure (a, w))
+  := by simp [append, pure, WriterT.run]
+
+@[simp]
+theorem WriterT.append_mk_pure {ω α} [Monoid ω] (a : α) (w w' : ω)
+  : (WriterT.mk (pure (a, w))).append w' = WriterT.mk (M := m) (pure (a, w * w'))
+  := by simp [append, pure, WriterT.run, WriterT.mk]
+
+@[simp]
+theorem WriterT.prepend_one {ω α} [Monoid ω] (a : WriterT ω m α)
+  : a.prepend 1 = a := by ext; simp [WriterT.prepend, WriterT.mk, WriterT.run]
+
+@[simp]
+theorem WriterT.prepend_pure {ω α} [Monoid ω] (w : ω) (a : α)
+  : (pure a : WriterT ω m α).prepend w = WriterT.mk (pure (a, w))
+  := by simp [prepend, pure, WriterT.run]
+
+@[simp]
+theorem WriterT.prepend_mk_pure {ω α} [Monoid ω] (w w' : ω) (a : α)
+  : (WriterT.mk (pure (a, w))).prepend w' = WriterT.mk (M := m) (pure (a, w' * w))
+  := by simp [prepend, pure, WriterT.run, WriterT.mk]
+
+theorem WriterT.prepend_bind {ω α β} [Monoid ω] (a : WriterT ω m α) (f : α → WriterT ω m β) (w : ω)
+  : (a >>= f).prepend w = a.prepend w >>= f := by ext; simp [mul_assoc]
+
+theorem bind_kleisli {α β γ : Type u} (x : m α) (f : α → m β) (g : β → m γ)
+  : x >>= (f >=> g) = x >>= f >>= g := by rw [bind_assoc]; rfl
+
+theorem WriterT.prepend_kleisli {α β γ ω : Type u} [Monoid ω]
+  (f : α → WriterT ω m β) (g : β → WriterT ω m γ) (a : α) (w : ω)
+  : ((f >=> g) a).prepend w = (WriterT.mk (pure (a, w))) >>= (f >=> g) := by
+  ext; simp [Bind.kleisliRight, prepend_bind, run_mk]
 
 theorem kleisli_assoc {α β γ : Type u} (f : α → m β) (g : β → m γ) (h : γ → m δ)
   : f >=> g >=> h = (f >=> g) >=> h := by

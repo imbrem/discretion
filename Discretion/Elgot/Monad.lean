@@ -10,7 +10,9 @@ open Functor
 
 open LawfulMonad
 
-section Fixpoints
+open Sum
+
+section MonadParam
 
 variable (m : Type u → Type v) [Monad m]
 
@@ -46,6 +48,29 @@ class ElgotMonad extends LawfulMonad m, MonadIterate m where
     : iterate (iterate f) = iterate (f >=> Sum.elim pure (pure ∘ inr))
   uniformity {α β γ : Type u} (f : α → m (β ⊕ α)) (g : γ → m (β ⊕ γ)) (h : γ → α)
     : (f ∘ h) = g >=> sumM pure (pure ∘ h) → iterate f ∘ h = iterate g
+
+theorem ElgotMonad.iterate_applied [ElgotMonad m]
+  {α β : Type u} (f : α → m (β ⊕ α)) (a : α)
+  : iterate f a = (f a) >>= Sum.elim pure (iterate f) := by
+  conv => lhs; rw [<-fixpoint]
+  simp [Bind.kleisliRight]
+
+theorem ElgotMonad.iterate_applied' [ElgotMonad m]
+  {α β : Type u} (f : α → m (β ⊕ α)) (a : α)
+  : iterate f a = (do
+    let x <- f a
+    match x with
+    | inl b => pure b
+    | inr a => iterate f a)
+  := by
+  rw [iterate_applied]
+  congr
+  funext x; cases x <;> rfl
+
+theorem ElgotMonad.uniformity_applied [ElgotMonad m]
+  {α β γ : Type u} (f : α → m (β ⊕ α)) (g : γ → m (β ⊕ γ)) (h : γ → α)
+  (H : (f ∘ h) = g >=> sumM pure (pure ∘ h)) (a : γ)
+  : iterate f (h a) = iterate g a := congrFun (ElgotMonad.uniformity f g h H) a
 
 -- Based on proof of lemma 31 of Goncharov and Schröder (2018, Guarded Traced Categories)
 theorem ElgotMonad.squaring [ElgotMonad m]
@@ -112,31 +137,150 @@ theorem ElgotMonad.dinaturality [ElgotMonad m]
     rw [<-fixpoint]
   rw [<-kleisli_assoc, elim_kleisli, pure_inl_elim]
 
-instance instIterateReaderT {m : Type u → Type v} [Monad m] [MonadIterate m] {ρ : Type u}
+end MonadParam
+
+variable {m : Type u → Type v}
+
+open MonadIterate
+
+section MonadIterate
+
+variable [MonadIterate m]
+
+instance ReaderT.monad_iterate {ρ : Type u}
   : MonadIterate (ReaderT ρ m) where
-  iterate f a := λr => iterate (λx => f x r) a
+  iterate f a := λr => iterate (λx => (f x).run r) a
 
--- instance instElgotReaderT {m : Type u → Type v} [Monad m] [E : ElgotMonad m] {α : Type u}
---   : ElgotMonad (ReaderT α m) where
---   fixpoint f := sorry
---   naturality f g := sorry
---   codiagonal f := sorry
---   uniformity f g h := sorry
+theorem ReaderT.iterate_run {ρ α β : Type u}
+  (f : α → ReaderT ρ m (β ⊕ α)) (a : α) (r : ρ)
+  : (iterate f a).run r = iterate (λx => (f x).run r) a := rfl
 
-instance instIterateWriterTOfMonoid
-  {m : Type u → Type v} [Monad m] [MonadIterate m] {ω : Type u} [Monoid ω]
+theorem ReaderT.iterate_def {ρ α β : Type u}
+  (f : α → ReaderT ρ m (β ⊕ α))
+  : iterate f = λa r => iterate (λx => (f x).run r) a := rfl
+
+theorem ReaderT.iterate_abs {m : Type u → Type v} [MonadIterate m] {ρ α β : Type u}
+  (f : α → ReaderT ρ m (β ⊕ α)) (r : ρ)
+  : (λa => (iterate f a).run r) = iterate (λx => (f x).run r) := rfl
+
+end MonadIterate
+
+section Monad
+
+variable [Monad m]
+
+instance ReaderT.elgot [E : ElgotMonad m] {α : Type u}
+  : ElgotMonad (ReaderT α m) where
+  fixpoint f := by
+    ext a r
+    rw [
+      kleisli_bind_applied, iterate_run, <-E.fixpoint, Bind.kleisliRight,
+      <-iterate_abs
+    ]
+    congr
+    funext b
+    cases b <;> rfl
+  naturality f g := by
+    ext a r
+    simp only [iterate_run, kleisli_kleisli_applied]
+    rw [E.naturality]
+    congr
+    funext a
+    simp only [Bind.kleisliRight]
+    congr
+    funext b
+    cases b <;> rfl
+  codiagonal f := by
+    ext a r
+    simp only [iterate_run]
+    rw [E.codiagonal]
+    congr
+    funext a
+    simp only [Bind.kleisliRight]
+    congr
+    funext b
+    casesm* (_ ⊕ _) <;> rfl
+  uniformity f g h H := by
+    ext a r
+    simp only [Function.comp_apply, iterate_run]
+    apply E.uniformity_applied
+    funext a
+    convert congrFun (congrFun H a) r
+    simp only [Bind.kleisliRight, run_bind, bind_applied]
+    congr
+    funext b; cases b <;> rfl
+
+def WriterT.runSum {ω α β : Type u} [Monoid ω] (a : WriterT ω m (α ⊕ β)) : m (α × ω ⊕ β × ω)
+  := Equiv.sumProdDistrib _ _ _ <$> a.run
+
+def WriterT.prependSum {ω α β : Type u} [Monoid ω] (w : ω) (a : WriterT ω m (α ⊕ β))
+  := (λ| (inl a, w') => (inl (a, w * w')) | (inr b, w') => (inr (b, w * w'))) <$> a.run
+
+theorem WriterT.prependSum_def'
+  [LawfulMonad m] {ω α β : Type u} [Monoid ω] (w : ω) (a : WriterT ω m (α ⊕ β))
+  : WriterT.prependSum w a = (a.prepend w).runSum
+  := by
+  simp [prependSum, prepend, runSum, run_mk]
+  congr
+  funext ⟨x, w⟩
+  cases x <;> rfl
+
+instance WriterT.monad_iterate [MonadIterate m] {ω : Type u} [Monoid ω]
   : MonadIterate (WriterT ω m) where
-  iterate f a := (iterate (m := m) (λ(a, w) => (f a)
-    >>= λ| (Sum.inl b, w') => pure (Sum.inl (b, w * w'))
-         | (Sum.inr a, w') => pure (Sum.inr (a, w * w')))) (a, 1)
+  iterate f a := WriterT.mk (iterate (m := m) (λ(a, w) => ((f a).prependSum w)) (a, 1))
 
-instance instIterateStateT {m : Type u → Type v} [Monad m] [MonadIterate m] {σ : Type u}
+theorem WriterT.iterate_applied [MonadIterate m] {ω α β : Type u} [Monoid ω]
+  (f : α → WriterT ω m (β ⊕ α)) (a)
+  : iterate f a = WriterT.mk (iterate (m := m) (λ(a, w) => ((f a).prependSum w)) (a, 1)) := rfl
+
+theorem WriterT.iterate_def [MonadIterate m] {ω α β : Type u} [Monoid ω]
+  (f : α → WriterT ω m (β ⊕ α))
+  : iterate f = (λa : α
+    => WriterT.mk (iterate (m := m) (λ(a, w) => (f a).prependSum w) (a, 1))) := rfl
+
+theorem WriterT.iterate_run [MonadIterate m] {ω α β : Type u} [Monoid ω]
+  (f : α → WriterT ω m (β ⊕ α)) (a)
+  : (iterate f a).run = iterate (m := m) (λ(a, w) => (f a).prependSum w) (a, 1) := rfl
+
+-- -- TODO: use uniformity
+-- theorem WriterT.prepend_iterate_run [E : ElgotMonad m] {ω α β : Type u} [Monoid ω]
+--   (f : α → WriterT ω m (β ⊕ α)) (a) (w)
+--   : ((iterate f a).prepend w).run
+--   = iterate (m := m) (λ(a, w) => (f a).prependSum w) (a, w) := by
+--   sorry
+
+-- theorem WriterT.prepend_iterate [ElgotMonad m] {ω α β : Type u} [Monoid ω]
+--   (f : α → WriterT ω m (β ⊕ α)) (a) (w)
+--   : (iterate f a).prepend w
+--   = WriterT.mk (iterate (m := m) (λ(a, w) => (f a).prependSum w) (a, w))
+--   := prepend_iterate_run f a w
+
+-- instance WriterT.elgot [E : ElgotMonad m] {ω : Type u} [Monoid ω]
+--   : ElgotMonad (WriterT ω m) where
+--   fixpoint f := by
+--     ext a
+--     rw [iterate_run, <-E.fixpoint]
+--     simp [Bind.kleisliRight, prependSum]
+--     congr
+--     funext ⟨x, w⟩
+--     cases x with
+--     | inl => simp
+--     | inr => simp; exact prepend_iterate_run _ _ _
+--   naturality f g := by
+--     ext a
+--     sorry
+--   codiagonal f := by
+--     ext a
+--     sorry
+--   uniformity f g h H := by
+--     ext a
+--     sorry
+
+instance StateT.monad_iterate [MonadIterate m] {σ : Type u}
   : MonadIterate (StateT σ m) where
   iterate f a s := (iterate (λ(a, s) => (f a s)
-    >>= λ| (Sum.inl b, s) => pure (Sum.inl (b, s))
-         | (Sum.inr a, s) => pure (Sum.inr (a, s)))) (a, s)
-
-end Fixpoints
+    >>= λ| (inl b, s) => pure (inl (b, s))
+         | (inr a, s) => pure (inr (a, s)))) (a, s)
 
 -- attribute [local instance] Set.monad
 
