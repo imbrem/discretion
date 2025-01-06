@@ -138,6 +138,9 @@ theorem Quant.is_copy_iff {q : Quant} : q.is_copy ↔ .copy ≤ q := by cases q 
 @[simp]
 theorem Quant.one_le {q : Quant} : 1 ≤ q := by cases q <;> decide
 
+@[simp]
+theorem Quant.one_ne_top : (1 : Quant) ≠ ⊤ := by intro h; cases h
+
 @[elab_as_elim, cases_eliminator]
 def Quant.le.casesOn_all {motive : ∀{q q' : Quant}, q ≤ q' → Sort _}
   (top_top : @motive ⊤ ⊤ (by simp))
@@ -1406,6 +1409,12 @@ theorem Polarities.neg_neg : -Polarities.neg = Polarities.pos := rfl
 @[simp]
 theorem Polarities.neg_idem (p : Polarities) : -(-p) = p := by cases p <;> rfl
 
+@[simp]
+theorem Polarities.neg_inf (p q : Polarities) : -(p ⊓ q) = -p ⊓ -q := by cases p <;> cases q <;> rfl
+
+@[simp]
+theorem Polarities.neg_sup (p q : Polarities) : -(p ⊔ q) = -p ⊔ -q := by cases p <;> cases q <;> rfl
+
 instance Polarities.instHNot : HNot Polarities where
   hnot p := (¬p.1, ¬p.2)
 
@@ -1446,6 +1455,10 @@ theorem Polarities.ext_mem_iff {p q : Polarities} : (∀r, r ∈ p ↔ r ∈ q) 
 
 instance Polarities.instDecidableLE : DecidableRel (· ≤ · : Polarities → Polarities → Prop)
   := (inferInstance : DecidableRel (· ≤ · : Bool × Bool → Bool × Bool → Prop))
+
+@[simp]
+theorem Polarities.neg_le_iff (p q : Polarities) : -p ≤ -q ↔ p ≤ q
+  := by cases p <;> cases q <;> decide
 
 -- TODO: mem is an isomorphism
 
@@ -1505,6 +1518,19 @@ def PQuant.pq (q : PQuant) : Polarity → Quant | .pos => q.pos | .neg => q.neg
 
 def PQuant.qp (pq : PQuant) (q : Quant) : Polarities := (q ≤ pq.pos, q ≤ pq.neg)
 
+@[simp]
+theorem PQuant.qp_one (pq : PQuant) : pq.qp 1 = ⊤ := rfl
+
+@[simp]
+theorem PQuant.qp_bot (pq : PQuant) : pq.qp ⊥ = ⊤ := rfl
+
+theorem PQuant.qp_anti_quant (pq : PQuant) {q q' : Quant} : q ≤ q' → pq.qp q' ≤ pq.qp q := by
+  cases pq with | mk l r => cases l <;> cases r <;> cases q <;> cases q' <;> decide
+
+theorem PQuant.qp_mono_pquant {pq pq' : PQuant} (q : Quant) : pq ≤ pq' → pq.qp q ≤ pq'.qp q
+  := by cases pq with | mk l r => cases pq' with | mk l' r' =>
+    cases l <;> cases r <;> cases l' <;> cases r' <;> cases q <;> decide
+
 def PQuant.dc (q : PQuant) : Set (Polarity × DupCap) := {d | d.2 ∈ (q.pq d.1).dc}
 
 -- TODO: pq and dc are lattice isomorphisms
@@ -1551,9 +1577,14 @@ class Polar (ε : Type u) [LE ε] [Bot ε] : Sort _ where
   polarity : ε → ε → Polarities
   neg_polarity : ∀l r, -polarity l r = polarity r l
   bot_polarity : ∀e, polarity ⊥ e = ⊤
-  polarity_anti_right : ∀r lo hi, lo ≤ hi → polarity r hi ≤ polarity r lo
+  polarity_anti_right : ∀l lo hi, lo ≤ hi → polarity l hi ≤ polarity l lo
 
 open Polar
+
+theorem Polar.polarity_anti_left {ε} [LE ε] [Bot ε] [Polar ε] (r lo hi : ε) (h : hi ≤ lo)
+  : polarity lo r ≤ polarity hi r := by
+  rw [<-neg_polarity r lo, <-neg_polarity r hi, Polarities.neg_le_iff]
+  apply polarity_anti_right _ _ _ h
 
 instance Unit.instPolar : Polar Unit where
   polarity _ _ := ⊤
@@ -1606,3 +1637,80 @@ instance HasPQuant.hasQuant {τ : Type u} [HasPQuant τ] : HasQuant τ where
 class OrderedPQuant (τ : Type u) [LE τ] [Bot τ] extends HasPQuant τ where
   pquant_bot : pquant (⊥ : τ) = ⊤
   pquant_anti : ∀lo hi : τ, lo ≤ hi → pquant hi ≤ pquant lo
+
+def EQuant.subst_polarity
+  (q : EQuant)
+  {ε} [LE ε] [Bot ε] [HasPQuant ε] [Polar ε] (before after : ε) : Polarities
+  := match q with
+  | 0 => (pquant before).qp .del
+  | (q : Quant) => (pquant before).qp q ⊓ polarity before after
+
+@[simp]
+theorem EQuant.subst_polarity_zero
+  {ε} [LE ε] [Bot ε] [HasPQuant ε] [Polar ε] (before after : ε)
+  : EQuant.subst_polarity 0 before after = (pquant before).qp .del
+  := rfl
+
+@[simp]
+theorem EQuant.subst_polarity_coe
+  {ε} [LE ε] [Bot ε] [HasPQuant ε] [Polar ε] (q : Quant) (before after : ε)
+  : EQuant.subst_polarity q before after = (pquant before).qp q ⊓ polarity before after
+  := rfl
+
+@[simp]
+theorem EQuant.subst_polarity_one
+  {ε} [LE ε] [Bot ε] [HasPQuant ε] [Polar ε] (before after : ε)
+  : EQuant.subst_polarity 1 before after = polarity before after
+  := by simp [EQuant.subst_polarity]
+
+@[simp]
+theorem EQuant.subst_polarity_copy
+  {ε} [LE ε] [Bot ε] [HasPQuant ε] [Polar ε] (before after : ε)
+  : EQuant.subst_polarity .copy before after = (pquant before).qp .copy ⊓ polarity before after
+  := by simp [EQuant.subst_polarity]
+
+@[simp]
+theorem EQuant.subst_polarity_del
+  {ε} [LE ε] [Bot ε] [HasPQuant ε] [Polar ε] (before after : ε)
+  : EQuant.subst_polarity .del before after = (pquant before).qp .del ⊓ polarity before after
+  := by simp [EQuant.subst_polarity]
+
+@[simp]
+theorem EQuant.subst_polarity_top
+  {ε} [LE ε] [Bot ε] [HasPQuant ε] [Polar ε] (before after : ε)
+  : EQuant.subst_polarity ⊤ before after = (pquant before).qp ⊤ ⊓ polarity before after
+  := by simp [EQuant.subst_polarity]
+
+theorem EQuant.subst_polarity_anti_quant
+  {q q' : EQuant} (h : q ≤ q')
+  {ε} [LE ε] [Bot ε] [HasPQuant ε] [Polar ε] (before after : ε)
+  : EQuant.subst_polarity q' before after ≤ EQuant.subst_polarity q before after
+  := by cases h using EQuant.le.casesLE_all
+    <;> simp
+    <;> apply inf_le_of_left_le
+    <;> apply PQuant.qp_anti_quant
+    <;> decide
+
+theorem EQuant.subst_polarity_anti_before
+  {q : EQuant} {ε} [LE ε] [Bot ε] [OrderedPQuant ε] [Polar ε]
+  {before before'} (h : before ≤ before') (after : ε)
+  : EQuant.subst_polarity q before' after ≤ EQuant.subst_polarity q before after
+  := by cases q using EQuant.casesZero with
+  | zero =>
+    simp only [subst_polarity_zero]
+    apply PQuant.qp_mono_pquant
+    apply OrderedPQuant.pquant_anti _ _ h
+  | rest q =>
+    simp only [subst_polarity_coe]
+    apply inf_le_inf
+    apply PQuant.qp_mono_pquant
+    apply OrderedPQuant.pquant_anti _ _ h
+    apply Polar.polarity_anti_left _ _ _ h
+
+theorem EQuant.subst_polarity_anti_after
+  {q : EQuant} {ε} [LE ε] [Bot ε] [OrderedPQuant ε] [Polar ε]
+  (before : ε) {after after'} (h : after ≤ after')
+  : EQuant.subst_polarity q before after' ≤ EQuant.subst_polarity q before after
+  := by cases q using EQuant.casesZero with
+  | zero => simp
+  | rest q => simp; apply inf_le_of_right_le; apply Polar.polarity_anti_right _ _ _ h
