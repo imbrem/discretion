@@ -1308,6 +1308,52 @@ instance Polarity.instFintype : Fintype Polarity where
   elems := {Polarity.pos, Polarity.neg}
   complete x := by cases x <;> simp
 
+instance Polarity.instNeg : Neg Polarity where
+  neg | .pos => .neg | .neg => .pos
+
+@[simp]
+theorem Polarity.neg_pos : -Polarity.pos = Polarity.neg := rfl
+
+@[simp]
+theorem Polarity.neg_neg : -Polarity.neg = Polarity.pos := rfl
+
+@[simp]
+theorem Polarity.neg_idem (p : Polarity) : -(-p) = p := by cases p <;> rfl
+
+instance Polarity.instMul : Mul Polarity where
+  mul | .pos, p => p | .neg, p => -p
+
+@[simp]
+theorem Polarity.pos_mul : Polarity.pos * p = p := by cases p <;> rfl
+
+@[simp]
+theorem Polarity.neg_mul : Polarity.neg * p = -p := by cases p <;> rfl
+
+@[simp]
+theorem Polarity.mul_pos : p * Polarity.pos = p := by cases p <;> rfl
+
+@[simp]
+theorem Polarity.mul_neg : p * Polarity.neg = -p := by cases p <;> rfl
+
+@[simp]
+theorem Polarity.mul_neg_self (p : Polarity) : p * -p = Polarity.neg := by cases p <;> rfl
+
+@[simp]
+theorem Polarity.neg_self_mul (p : Polarity) : -p * p = Polarity.neg := by cases p <;> rfl
+
+@[simp]
+theorem Polarity.neg_mul_neg (p : Polarity) : -p * -p = Polarity.pos := by cases p <;> rfl
+
+@[simp]
+theorem Polarity.self_mul_self (p : Polarity) : p * p = Polarity.pos := by cases p <;> rfl
+
+instance Polarity.instCommMonoid : CommMonoid Polarity where
+  one := Polarity.pos
+  one_mul p := by cases p <;> rfl
+  mul_one p := by cases p <;> rfl
+  mul_assoc p q r := by cases p <;> cases q <;> cases r <;> rfl
+  mul_comm p q := by cases p <;> cases q <;> rfl
+
 def Polarities := Bool × Bool
 
 instance Polarities.instDecidableEq : DecidableEq Polarities
@@ -1342,9 +1388,61 @@ def Polarities.casesOn {motive : Polarities → Sort _}
   | .neg => neg
   | ⊥ => bot
 
-def Polarities.mem (p : Polarities) : Set Polarity
-  | .pos => p.1
-  | .neg => p.2
+instance Polarities.instNeg : Neg Polarities where
+  neg p := (p.2, p.1)
+
+@[simp]
+theorem Polarities.neg_top : -(⊤ : Polarities) = ⊤ := rfl
+
+@[simp]
+theorem Polarities.neg_bot : -(⊥ : Polarities) = ⊥ := rfl
+
+@[simp]
+theorem Polarities.neg_pos : -Polarities.pos = Polarities.neg := rfl
+
+@[simp]
+theorem Polarities.neg_neg : -Polarities.neg = Polarities.pos := rfl
+
+@[simp]
+theorem Polarities.neg_idem (p : Polarities) : -(-p) = p := by cases p <;> rfl
+
+instance Polarities.instHNot : HNot Polarities where
+  hnot p := (¬p.1, ¬p.2)
+
+@[simp]
+theorem Polarities.hnot_top : ￢(⊤ : Polarities) = ⊥ := rfl
+
+@[simp]
+theorem Polarities.hnot_bot : ￢(⊥ : Polarities) = ⊤ := rfl
+
+@[simp]
+theorem Polarities.hnot_pos : ￢Polarities.pos = Polarities.neg := rfl
+
+@[simp]
+theorem Polarities.hnot_neg : ￢Polarities.neg = Polarities.pos := rfl
+
+instance Polarities.instMembership : Membership Polarity Polarities where
+  mem p | .pos => p.1 | .neg => p.2
+
+theorem Polarities.pos_mem_iff {p : Polarities} : Polarity.pos ∈ p ↔ p.1 = true
+  := by cases p <;> rfl
+
+theorem Polarities.neg_mem_iff {p : Polarities} : Polarity.neg ∈ p ↔ p.2 = true
+  := by cases p <;> rfl
+
+instance Polarities.decidableMembership {ps : Polarities} : DecidablePred (· ∈ ps)
+  := λ | .pos => (inferInstance : Decidable (ps.1 = true))
+       | .neg => (inferInstance : Decidable (ps.2 = true))
+
+theorem Polarities.eta_mem (p : Polarities) : p = ((.pos ∈ p : Bool), (.neg ∈ p : Bool))
+  := by cases p <;> decide
+
+theorem Polarities.ext_mem {p q : Polarities} (h : ∀r, r ∈ p ↔ r ∈ q) : p = q := by
+  rw [p.eta_mem, q.eta_mem]
+  simp [h]
+
+theorem Polarities.ext_mem_iff {p q : Polarities} : (∀r, r ∈ p ↔ r ∈ q) ↔ p = q
+  := ⟨ext_mem, λh => by simp [h]⟩
 
 instance Polarities.instDecidableLE : DecidableRel (· ≤ · : Polarities → Polarities → Prop)
   := (inferInstance : DecidableRel (· ≤ · : Bool × Bool → Bool × Bool → Prop))
@@ -1448,3 +1546,48 @@ theorem PQuant.rem_sup_add : PQuant.rem ⊔ PQuant.add = PQuant.del := by decide
 theorem PQuant.add_sup_rem : PQuant.add ⊔ PQuant.rem = PQuant.del := by decide
 
 instance PQuant.instFintype : Fintype PQuant := (inferInstance : Fintype (Quant × Quant))
+
+class Polar (ε : Type u) [LE ε] [Bot ε] : Sort _ where
+  polarity : ε → ε → Polarities
+  neg_polarity : ∀l r, -polarity l r = polarity r l
+  bot_polarity : ∀e, polarity ⊥ e = ⊤
+  polarity_anti_right : ∀r lo hi, lo ≤ hi → polarity r hi ≤ polarity r lo
+
+open Polar
+
+instance Unit.instPolar : Polar Unit where
+  polarity _ _ := ⊤
+  neg_polarity _ _ := rfl
+  bot_polarity _ := rfl
+  polarity_anti_right := by intros; rfl
+
+instance Quant.instPolar : Polar Quant where
+  polarity _ _ := ⊤
+  neg_polarity _ _ := rfl
+  bot_polarity _ := rfl
+  polarity_anti_right := by intros; rfl
+
+instance PQuant.instPolar : Polar PQuant where
+  polarity _ _ := ⊤
+  neg_polarity _ _ := rfl
+  bot_polarity _ := rfl
+  polarity_anti_right := by intros; rfl
+
+instance WithTop.instPolar {ε} [PartialOrder ε] [OrderBot ε] [DecidableEq ε] [Polar ε]
+  : Polar (WithTop ε) where
+  polarity
+  | ⊤, e | e, ⊤ => if e = ⊥ then ⊤ else ⊥
+  | (l : ε), (r : ε) => polarity l r
+  neg_polarity l r := by cases l with
+    | top => cases r <;> simp only <;> split <;> simp
+    | coe => cases r <;> simp only [neg_polarity]; split <;> simp
+  bot_polarity e := by cases e with
+    | top => simp only; split; rfl; case isFalse h => exact (h rfl).elim
+    | coe => simp only [bot_polarity]
+  polarity_anti_right r lo hi h := by
+    cases r <;> cases lo <;> cases hi <;> simp at h
+    <;> simp only [polarity_anti_right, *]
+    <;> split
+    <;> simp
+    <;> case isTrue h => cases h
+      <;> simp [bot_polarity] at * <;> cases h <;> intro c <;> exact (c rfl).elim
