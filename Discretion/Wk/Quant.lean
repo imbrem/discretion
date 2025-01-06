@@ -1591,3 +1591,18 @@ instance WithTop.instPolar {ε} [PartialOrder ε] [OrderBot ε] [DecidableEq ε]
     <;> simp
     <;> case isTrue h => cases h
       <;> simp [bot_polarity] at * <;> cases h <;> intro c <;> exact (c rfl).elim
+
+class HasQuant (τ : Type u) where
+  quant : τ → Quant
+
+class HasPQuant (τ : Type u) where
+  pquant : τ → PQuant
+
+open HasPQuant
+
+instance HasPQuant.hasQuant {τ : Type u} [HasPQuant τ] : HasQuant τ where
+  quant a := (pquant a).q
+
+class OrderedPQuant (τ : Type u) [LE τ] [Bot τ] extends HasPQuant τ where
+  pquant_bot : pquant (⊥ : τ) = ⊤
+  pquant_anti : ∀lo hi : τ, lo ≤ hi → pquant hi ≤ pquant lo

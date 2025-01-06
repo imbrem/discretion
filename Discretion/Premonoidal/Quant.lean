@@ -6,8 +6,7 @@ namespace CategoryTheory
 
 open MonoidalCategory
 
-class HasQuant (τ : Type u) where
-  quant : τ → Quant
+open HasQuant
 
 -- TODO: quant monotonic functions (id, comp)
 
@@ -36,7 +35,9 @@ theorem HasQuant.quant_tensor_eq_of_eqv_of_quant_tensor
   | tensor_left _ If => simp [quant_tensor, *]
   | tensor_right _ If => simp [quant_tensor, *]
   | base h =>
-    cases h <;> simp only [quant_tensor, quant_unit, top_inf_eq, inf_top_eq, inf_assoc, inf_comm]
+    cases h
+    <;> simp only [quant_tensor, quant_unit, top_inf_eq, inf_top_eq]
+    <;> first | rw [inf_assoc] | rw [inf_comm]
 
 class StrictQuant (C : Type u) [Category C] [MonoidalCategoryStruct C]
   extends CopyQuant C where
@@ -204,17 +205,7 @@ theorem WqCtx.cons_iff {Γ : List τ} {qΓ : Vector' _ _} {qa : EQuant}
 
 end WqCtx
 
-class HasPQuant (τ : Type u) where
-  pquant : τ → PQuant
-
-instance HasPQuant.hasQuant {τ : Type u} [HasPQuant τ] : HasQuant τ where
-  quant a := (pquant a).q
-
 open HasPQuant
-
-class OrderedPQuant (τ : Type u) [LE τ] [Bot τ] [HasPQuant τ] where
-  pquant_bot : pquant (⊥ : τ) = ⊤
-  pquant_anti : ∀lo hi : τ, lo ≤ hi → pquant hi ≤ pquant lo
 
 class HasCommRel (ε : Type u) [PartialOrder ε] [BoundedOrder ε] : Sort _ where
   commutes : ε → ε → Prop
@@ -250,8 +241,8 @@ theorem commutes_bot_left {r : ε} : (⊥ : ε) ‖ r := commutes_anti_right le_
 theorem commutes_bot_right {l : ε} : l ‖ (⊥ : ε) := commutes_symm commutes_bot_left
 
 class EffectSystem (ε : Type u)
-  extends PartialOrder ε, BoundedOrder ε, HasCommRel ε, HasPQuant ε, OrderedPQuant ε
+  extends PartialOrder ε, BoundedOrder ε, HasCommRel ε, OrderedPQuant ε
 
 instance EffectSystem.instMk {ε}
-  [PartialOrder ε] [BoundedOrder ε] [HasCommRel ε] [HasPQuant ε] [OrderedPQuant ε]
+  [PartialOrder ε] [BoundedOrder ε] [HasCommRel ε] [OrderedPQuant ε]
   : EffectSystem ε where

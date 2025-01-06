@@ -53,8 +53,8 @@ class SubEffectful
   [HasQuant C] [CopyDrop C]
   (E : Type u) [PartialOrder E] [BoundedOrder E] [HasCommRel E] [HasQuant E]
   extends Effectful C E where
-  eff_copyable : ∀e : E, .copy ≤ quant e → (eff e).Copyable
-  eff_discardable : ∀e : E, .del ≤ quant e → (eff e).Discardable
+  eff_copyable : ∀e : E, .copy ≤ HasQuant.quant e → (eff e).Copyable
+  eff_discardable : ∀e : E, .del ≤ HasQuant.quant e → (eff e).Discardable
 
 instance SubEffectful.ofPSubEffectful
   {C : Type v}
