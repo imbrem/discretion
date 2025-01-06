@@ -134,7 +134,7 @@ theorem Nat.Wk.ix_inj {n m} {ρ σ : Nat.Wk n m} : ρ.ix = σ.ix ↔ ρ = σ
   := ix_injective.eq_iff
 
 @[simp]
-theorem Nat.Wk.pv_id {n} (v : Vector' α n) : (id n).pv v = v := by induction v <;> simp [*]
+theorem Nat.Wk.pv_id {n} (v : Vector' α n) : (id n).pv v = v := by induction v <;> simp [id, *]
 
 @[simp]
 theorem Nat.Wk.get_pv {n m} (ρ : Nat.Wk n m) (v : Vector' α n) (i : Fin m)

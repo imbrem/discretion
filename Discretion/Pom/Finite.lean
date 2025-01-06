@@ -82,7 +82,7 @@ def seq {α : Type u} (p q : GPom α) : GPom α where
 theorem seq_empty (p : GPom α) : p.seq ∅ = p := by simp [seq, poseq_zero, addCases, castLT]
 
 theorem empty_seq (p : GPom α) : seq ∅ p = p
-  := by cases p; simp [seq, zero_poseq, addCases, Fin.heq_fun_iff, cast]
+  := by cases p; simp [seq, zero_poseq, addCases, Fin.heq_fun_iff, Fin.cast]
 
 theorem seq_assoc (p q r : GPom α) : seq (seq p q) r = seq p (seq q r)
   := by
@@ -108,7 +108,7 @@ def par {α : Type u} (p q : GPom α) : GPom α where
 theorem par_empty (p : GPom α) : p.par ∅ = p := by simp [par, popar_zero, addCases, castLT]
 
 theorem empty_par (p : GPom α) : par ∅ p = p
-  := by cases p; simp [par, zero_popar, addCases, Fin.heq_fun_iff, cast]
+  := by cases p; simp [par, zero_popar, addCases, Fin.heq_fun_iff, Fin.cast]
 
 theorem par_assoc (p q r : GPom α) : par (par p q) r = par p (par q r)
   := by

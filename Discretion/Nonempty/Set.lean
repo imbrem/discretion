@@ -173,10 +173,34 @@ instance instLawfulMonad : LawfulMonad NSet :=
 --     else
 --       sorry
 
--- NOTE: this is a CPO, but we would need to change Lean's definition of a CPO to show this
--- since it requires sSup, which can only be defined (even incorrectly) for α inhabited for NSet α
+instance instMax : Max (NSet α) where
+  max s t := s ∪ t
+
+instance instOrderTop [Nonempty α] : OrderTop (NSet α) where
+  le_top a := by
+    apply subset_coe
+    apply Set.subset_univ
+
+instance instSemilatticeSup : SemilatticeSup (NSet α) where
+  sup := max
+  le_sup_left s t := by
+    apply subset_coe
+    apply Set.subset_union_left
+  le_sup_right s t := by
+    apply subset_coe
+    apply Set.subset_union_right
+  sup_le s t u hs hu := by
+    apply subset_coe
+    apply Set.union_subset hs hu
 
 instance instOmegaCompletePartialOrder : OmegaCompletePartialOrder (NSet α) where
   ωSup c := iUnion (λi => c i)
   le_ωSup c i a ha := ⟨c i, ⟨i, rfl⟩, ha⟩
   ωSup_le c s hc a | ⟨s, ⟨i, hi⟩, ha⟩ => by cases hi; exact hc i ha
+
+open Classical
+
+-- NOTE: this is a CPO, but we would need to change Lean's definition of a CPO to show this, since
+-- sSup will only be an LUB of a _nonempty_ directed set
+noncomputable instance instSupSet [Nonempty α] : SupSet (NSet α) where
+  sSup s := if h : s.Nonempty then sUnion ⟨s, h⟩ else ⊤

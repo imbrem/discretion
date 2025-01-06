@@ -3,6 +3,7 @@ import Discretion.OrderSupport
 import Discretion.Order.Basic
 import Discretion.Order.Discrete
 import Discretion.Order.Indiscrete
+import Discretion.Order.Lattice
 import Discretion.FinExcept.Defs
 import Discretion.FinExcept.Option
 import Discretion.FinExcept.Order
@@ -42,3 +43,5 @@ import Discretion.SEC.Intrinsic
 import Discretion.SEC.Extrinsic
 import Discretion.Monad.Ordered
 import Discretion.Monad.Commutative
+import Discretion.UB.Basic
+import Discretion.UB.Optional

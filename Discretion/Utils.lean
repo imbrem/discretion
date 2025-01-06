@@ -103,7 +103,7 @@ theorem Fin.strictMono_eq_id {n} {f : Fin n → Fin n} (h : StrictMono f) : f = 
     funext i
     cases Nat.lt_succ_iff_lt_or_eq.mp i.prop with
     | inl hi' =>
-      have hfi : (f i : ℕ) = (g ⟨i, hi'⟩ : ℕ) := by simp
+      have hfi : (f i : ℕ) = (g ⟨i, hi'⟩ : ℕ) := by simp [g]
       ext
       rw [hfi, I hg]
       rfl
@@ -117,5 +117,5 @@ theorem Fin.strictMono_eq_id {n} {f : Fin n → Fin n} (h : StrictMono f) : f = 
     -- | zero => sorry
     -- | succ i I => sorry
 
-theorem Fin.strictMono_eq_cast {n} {f : Fin n → Fin m} (h : StrictMono f) (eq : n = m) : f = cast eq
-  := by cases eq; exact Fin.strictMono_eq_id h
+theorem Fin.strictMono_eq_cast {n} {f : Fin n → Fin m} (h : StrictMono f) (eq : n = m)
+  : f = Fin.cast eq := by cases eq; exact Fin.strictMono_eq_id h

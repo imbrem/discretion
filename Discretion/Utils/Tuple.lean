@@ -316,8 +316,8 @@ theorem Fin.addCases_zero {n} {motive : Fin n → Sort _}
   rfl
 
 theorem Fin.addCases_zero_right {n} (l : Fin 0 → α) (r : Fin n → α)
-  : @addCases 0 n (λ_ => α) l r = r ∘ cast (by simp) := by
-  funext i
+  : @addCases 0 n (λ_ => α) l r = r ∘ Fin.cast (by simp) := by
+  funext ⟨i, _⟩
   simp [addCases, subNat, cast]
 
 theorem Fin.addCases_comp_castAdd {n m} (l : Fin n → α) (r : Fin m → α)
@@ -360,7 +360,8 @@ theorem Fin.addCases_injective {n m} {l : Fin n → α} {r : Fin m → α}
         have h := hr h;
         simp only [subNat, cast,mk.injEq, Fin.ext_iff] at *
         rw [<-@Nat.add_left_inj _ _ n] at h
-        rw [Nat.sub_add_cancel (Nat.le_of_not_lt ha), Nat.sub_add_cancel (Nat.le_of_not_lt hb)] at h
+        simp only [coe_cast, Nat.sub_add_cancel (Nat.le_of_not_lt ha),
+          Nat.sub_add_cancel (Nat.le_of_not_lt hb)] at h
         exact h
 
 theorem Set.iUnion_addCases {n m} (l : Fin n → Set α) (r : Fin m → Set α)

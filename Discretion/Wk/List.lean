@@ -41,7 +41,7 @@ theorem List.Wk.nw_lift {α} {Γ Δ : List α} (A) (ρ : Wk Γ Δ)
 
 @[simp]
 theorem List.Wk.nw_id {α} {Γ : List α} : List.Wk.nw (List.Wk.id Γ) = Nat.Wk.id Γ.length
-  := by induction Γ <;> simp only [nw, id, Nat.Wk.id, *]
+  := by induction Γ <;> simp only [nw, id, Nat.Wk.id, *] <;> rfl
 
 @[simp]
 theorem List.Wk.nw_comp {α} {Γ Δ Ξ : List α} (ρ : Wk Γ Δ) (σ : Wk Δ Ξ)
@@ -135,7 +135,7 @@ theorem List.Wk.ix0_varIx {α} {Γ : List α} (i : ℕ) (hi : i < Γ.length)
   | nil => cases hi
   | cons A Γ I => cases i with
   | zero => rfl
-  | succ i => simp only [ix0, getElem_cons_succ, add_left_inj, I]
+  | succ i => simp only [getElem_cons_succ, varIx, ix0, I]
 
 def List.Wk.varFin {α} {Γ : List α} (i : Fin Γ.length) : Wk Γ [Γ[i]]
   := varIx i.val i.is_lt
@@ -162,7 +162,10 @@ theorem List.Wk.pv_lift_cons {α} {A} {Γ Δ : List α} (ρ : Wk Γ Δ) (a) (v :
   : (ρ.lift A).pv (v.cons a) = (ρ.pv v).cons a := rfl
 
 theorem List.Wk.pv_nw {α} {Γ Δ : List α} (ρ : Wk Γ Δ)
-  : ρ.nw.pv = ρ.pv (β := β) := by funext v; induction ρ <;> cases v <;> simp [*]
+  : ρ.nw.pv = ρ.pv (β := β) := by
+  funext v; induction ρ with
+  | nil => rfl
+  | _ => cases v; simp [*]
 
 inductive List.Wk.Wf {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Vector' EQuant Γ.length → Prop
   | nil : Wf .nil Vector'.nil

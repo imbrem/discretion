@@ -299,12 +299,12 @@ def Fin.semiInv {ρ : Fin n → Fin m} (hρ : Function.Injective ρ) (i : Fin m)
 
 @[simp]
 theorem Fin.cast_comp_missedInv {ρ : Fin n → Fin m} (hρ : Function.Injective ρ)
-  : cast (by rw [Nat.add_comm, numMissed_injective_add_source hρ]) ∘ missedInv ρ = semiInv hρ
+  : Fin.cast (by rw [Nat.add_comm, numMissed_injective_add_source hρ]) ∘ missedInv ρ = semiInv hρ
   := rfl
 
 @[simp]
 theorem Fin.cast_comp_semiInv {ρ : Fin n → Fin m} (hρ : Function.Injective ρ)
-  : cast (by rw [Nat.add_comm, numMissed_injective_add_source hρ]) ∘ semiInv hρ = missedInv ρ
+  : Fin.cast (by rw [Nat.add_comm, numMissed_injective_add_source hρ]) ∘ semiInv hρ = missedInv ρ
   := rfl
 
 def Fin.missedBelow (ρ : Fin n → Fin m) (i : ℕ) : ℕ → ℕ
