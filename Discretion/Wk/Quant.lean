@@ -1,5 +1,4 @@
-import Mathlib.Order.CompleteBooleanAlgebra
-import Mathlib.Data.Fintype.Order
+-- import Mathlib.Data.Fintype.Order -- NOTE: this breaks partialorder for bool... lower priority?
 import Mathlib.Data.Fintype.Prod
 import Mathlib.Algebra.Group.WithOne.Defs
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
@@ -1305,9 +1304,52 @@ inductive Polarity : Type
   | neg
   deriving DecidableEq
 
-instance Polarity.instFinType : Fintype Polarity where
+instance Polarity.instFintype : Fintype Polarity where
   elems := {Polarity.pos, Polarity.neg}
   complete x := by cases x <;> simp
+
+def Polarities := Bool × Bool
+
+instance Polarities.instDecidableEq : DecidableEq Polarities
+  := (inferInstance : DecidableEq (Bool × Bool))
+
+instance Polarities.instLattice : Lattice Polarities
+  := (inferInstance : Lattice (Bool × Bool))
+
+instance Polarities.instBoundedOrder : BoundedOrder Polarities
+  := (inferInstance : BoundedOrder (Bool × Bool))
+
+@[match_pattern]
+def Polarities.pos : Polarities := (true, false)
+
+@[match_pattern]
+def Polarities.neg : Polarities := (false, true)
+
+instance Polarities.coePolarity : Coe Polarity Polarities
+  := ⟨λp => match p with | Polarity.pos => Polarities.pos | Polarity.neg => Polarities.neg⟩
+
+instance Polarities.instFintype : Fintype Polarities := (inferInstance : Fintype (Bool × Bool))
+
+@[elab_as_elim, cases_eliminator]
+def Polarities.casesOn {motive : Polarities → Sort _}
+  (top : motive ⊤)
+  (pos : motive Polarities.pos)
+  (neg : motive Polarities.neg)
+  (bot : motive ⊥)
+  : ∀(p : Polarities), motive p
+  | ⊤ => top
+  | .pos => pos
+  | .neg => neg
+  | ⊥ => bot
+
+def Polarities.mem (p : Polarities) : Set Polarity
+  | .pos => p.1
+  | .neg => p.2
+
+instance Polarities.instDecidableLE : DecidableRel (· ≤ · : Polarities → Polarities → Prop)
+  := (inferInstance : DecidableRel (· ≤ · : Bool × Bool → Bool × Bool → Prop))
+
+-- TODO: mem is an isomorphism
 
 def PQuant : Type := Quant × Quant
 
@@ -1362,6 +1404,8 @@ abbrev PQuant.pos (q : PQuant) : Quant := q.1
 abbrev PQuant.neg (q : PQuant) : Quant := q.2
 
 def PQuant.pq (q : PQuant) : Polarity → Quant | .pos => q.pos | .neg => q.neg
+
+def PQuant.qp (pq : PQuant) (q : Quant) : Polarities := (q ≤ pq.pos, q ≤ pq.neg)
 
 def PQuant.dc (q : PQuant) : Set (Polarity × DupCap) := {d | d.2 ∈ (q.pq d.1).dc}
 
