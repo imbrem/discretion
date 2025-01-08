@@ -12,6 +12,7 @@ import Discretion.Wk.Nat
 import Discretion.Wk.Fin
 import Discretion.Wk.List
 import Discretion.Wk.Multiset
+import Discretion.Wk.Finset
 import Discretion.Wk.Set
 import Discretion.Wk.Order
 import Discretion.Correspondence.Definitions
