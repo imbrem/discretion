@@ -28,6 +28,8 @@ theorem commutes_bot_right {l : ε} : l ‖ (⊥ : ε) := commutes_symm commutes
 
 theorem slides_self_iff {e : ε} : e >‖> e ↔ e ‖ e := by simp [commutes_def]
 
+end HasCommRel
+
 class EffectSystem (ε : Type u)
   extends PartialOrder ε, BoundedOrder ε, HasCommRel ε, OrderedPQuant ε
 
