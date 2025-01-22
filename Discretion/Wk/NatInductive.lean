@@ -1,5 +1,5 @@
 import Discretion.Wk.Fin
-import Discretion.Wk.Quant
+import Discretion.Quant.Basic
 import Discretion.Vector.Basic
 
 inductive Nat.Wk : Nat → Nat → Type

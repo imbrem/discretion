@@ -15,6 +15,8 @@ import Discretion.Wk.Multiset
 import Discretion.Wk.Finset
 import Discretion.Wk.Set
 import Discretion.Wk.Order
+import Discretion.Quant.Basic
+import Discretion.Quant.Class
 import Discretion.Correspondence.Definitions
 import Discretion.MorphismProperty.Basic
 import Discretion.MorphismProperty.BinaryProducts

@@ -1,5 +1,5 @@
 import Mathlib.CategoryTheory.Monoidal.Free.Basic
-import Discretion.Wk.Quant
+import Discretion.Quant.Basic
 import Discretion.Premonoidal.Predicate.Basic
 
 namespace CategoryTheory

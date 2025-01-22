@@ -1,4 +1,4 @@
-import Discretion.Wk.Quant
+import Discretion.Quant.Basic
 
 class HasCommRel (ε : Type u) [PartialOrder ε] [OrderBot ε] : Sort _ where
   slides : ε → ε → Prop
