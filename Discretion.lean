@@ -30,7 +30,6 @@ import Discretion.Premonoidal.Category
 import Discretion.Premonoidal.Braided
 import Discretion.Premonoidal.Distributive
 import Discretion.Premonoidal.CopyDrop
-import Discretion.Premonoidal.Additive
 import Discretion.Premonoidal.Property.Basic
 import Discretion.Premonoidal.Property.Braided
 import Discretion.Premonoidal.Property.WideSubcategory
@@ -46,3 +45,5 @@ import Discretion.Monad.Ordered
 import Discretion.Monad.Commutative
 import Discretion.UB.Basic
 import Discretion.UB.Optional
+import Discretion.AddMonoidalCategory.Basic
+import Discretion.AddMonoidalCategory.ChosenCoproducts
