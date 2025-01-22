@@ -79,6 +79,43 @@ theorem IsBinaryCoproduct.map_eq_desc
   congr
   funext x; cases x with | mk x => cases x <;> rfl
 
+theorem IsBinaryCoproduct.map_comp
+  {X Y P : C} {inl : X ⟶ P} {inr : Y ⟶ P}
+  (coprod : IsBinaryCoproduct inl inr)
+  {X' Y' P' : C} {inl' : X' ⟶ P'} {inr' : Y' ⟶ P'}
+  (coprod' : IsBinaryCoproduct inl' inr')
+  {X'' Y'' P'' : C}
+  (inl'' : X'' ⟶ P'') (inr'' : Y'' ⟶ P'')
+  (f : X ⟶ X') (g : Y ⟶ Y')
+  (f' : X' ⟶ X'') (g' : Y' ⟶ Y'')
+  : coprod.map inl' inr' f g ≫ coprod'.map inl'' inr'' f' g'
+  = coprod.map inl'' inr'' (f ≫ f') (g ≫ g')
+  := by simp [map_eq_desc, desc_comp]
+
+theorem IsBinaryCoproduct.map_comp_desc
+  {X Y P : C} {inl : X ⟶ P} {inr : Y ⟶ P}
+  (coprod : IsBinaryCoproduct inl inr)
+  {X' Y' P' : C} {inl' : X' ⟶ P'} {inr' : Y' ⟶ P'}
+  (coprod' : IsBinaryCoproduct inl' inr')
+  (f : X ⟶ X') (g : Y ⟶ Y')
+  (f' : X' ⟶ Z) (g' : Y' ⟶ Z)
+  : coprod.map inl' inr' f g ≫ coprod'.desc f' g' = coprod.desc (f ≫ f') (g ≫ g')
+  := by simp [map_eq_desc, desc_comp]
+
+@[simp]
+theorem IsBinaryCoproduct.map_id'
+  {X Y P : C} {inl : X ⟶ P} {inr : Y ⟶ P}
+  (coprod : IsBinaryCoproduct inl inr)
+  (inl' : X ⟶ P') (inr' : Y ⟶ P')
+  : coprod.map inl' inr' (𝟙 X) (𝟙 Y) = coprod.desc inl' inr'
+  := by simp [map_eq_desc]
+
+theorem IsBinaryCoproduct.map_id
+  {X Y P : C} {inl : X ⟶ P} {inr : Y ⟶ P}
+  (coprod : IsBinaryCoproduct inl inr)
+  : coprod.map inl inr (𝟙 X) (𝟙 Y) = 𝟙 P
+  := by simp
+
 @[simp, reassoc (attr := simp)]
 theorem IsBinaryCoproduct.inl_map
   {X Y P : C} {inl : X ⟶ P} {inr : Y ⟶ P}
@@ -120,6 +157,32 @@ def IsBinaryCoproduct.associator
     by simp [desc_comp]
   ⟩
 
+theorem IsBinaryCoproduct.associator_hom_def
+  {X Y PXY : C} {inl_xy : X ⟶ PXY} {inr_xy : Y ⟶ PXY}
+  {Z PYZ : C} {inl_yz : Y ⟶ PYZ} {inr_yz : Z ⟶ PYZ}
+  {PXY_Z : C} {inl_xy_z : PXY ⟶ PXY_Z} {inr_xy_z : Z ⟶ PXY_Z}
+  {PX_YZ : C} {inl_x_yz : X ⟶ PX_YZ} {inr_x_yz : PYZ ⟶ PX_YZ}
+  (coprod_xy : IsBinaryCoproduct inl_xy inr_xy)
+  (coprod_yz : IsBinaryCoproduct inl_yz inr_yz)
+  (coprod_xy_z : IsBinaryCoproduct inl_xy_z inr_xy_z)
+  (coprod_x_yz : IsBinaryCoproduct inl_x_yz inr_x_yz)
+  : (coprod_xy.associator coprod_yz coprod_xy_z coprod_x_yz).hom
+  = coprod_xy_z.desc (coprod_xy.desc inl_x_yz (inl_yz ≫ inr_x_yz)) (inr_yz ≫ inr_x_yz)
+  := rfl
+
+theorem IsBinaryCoproduct.associator_inv_def
+  {X Y PXY : C} {inl_xy : X ⟶ PXY} {inr_xy : Y ⟶ PXY}
+  {Z PYZ : C} {inl_yz : Y ⟶ PYZ} {inr_yz : Z ⟶ PYZ}
+  {PXY_Z : C} {inl_xy_z : PXY ⟶ PXY_Z} {inr_xy_z : Z ⟶ PXY_Z}
+  {PX_YZ : C} {inl_x_yz : X ⟶ PX_YZ} {inr_x_yz : PYZ ⟶ PX_YZ}
+  (coprod_xy : IsBinaryCoproduct inl_xy inr_xy)
+  (coprod_yz : IsBinaryCoproduct inl_yz inr_yz)
+  (coprod_xy_z : IsBinaryCoproduct inl_xy_z inr_xy_z)
+  (coprod_x_yz : IsBinaryCoproduct inl_x_yz inr_x_yz)
+  : (coprod_xy.associator coprod_yz coprod_xy_z coprod_x_yz).inv
+  = coprod_x_yz.desc (inl_xy ≫ inl_xy_z) (coprod_yz.desc (inr_xy ≫ inl_xy_z) inr_xy_z)
+  := rfl
+
 def IsBinaryCoproduct.leftUnitor
   {I X P : C} {inl : I ⟶ P} {inr : X ⟶ P}
   (initial : IsInitial I)
@@ -132,6 +195,20 @@ def IsBinaryCoproduct.leftUnitor
     by simp
   ⟩
 
+theorem IsBinaryCoproduct.leftUnitor_hom_def
+  {I X P : C} {inl : I ⟶ P} {inr : X ⟶ P}
+  (initial : IsInitial I)
+  (coprod : IsBinaryCoproduct inl inr)
+  : (coprod.leftUnitor initial).hom = coprod.desc (initial.to X) (𝟙 X)
+  := rfl
+
+theorem IsBinaryCoproduct.leftUnitor_inv_def
+  {I X P : C} {inl : I ⟶ P} {inr : X ⟶ P}
+  (initial : IsInitial I)
+  (coprod : IsBinaryCoproduct inl inr)
+  : (coprod.leftUnitor initial).inv = inr
+  := rfl
+
 def IsBinaryCoproduct.rightUnitor
   {X I P : C} {inl : X ⟶ P} {inr : I ⟶ P}
   (coprod : IsBinaryCoproduct inl inr)
@@ -143,6 +220,20 @@ def IsBinaryCoproduct.rightUnitor
     by apply coprod.eq_cases <;> simp; apply initial.hom_ext,
     by simp
   ⟩
+
+theorem IsBinaryCoproduct.rightUnitor_hom_def
+  {X I P : C} {inl : X ⟶ P} {inr : I ⟶ P}
+  (coprod : IsBinaryCoproduct inl inr)
+  (initial : IsInitial I)
+  : (coprod.rightUnitor initial).hom = coprod.desc (𝟙 X) (initial.to X)
+  := rfl
+
+theorem IsBinaryCoproduct.rightUnitor_inv_def
+  {X I P : C} {inl : X ⟶ P} {inr : I ⟶ P}
+  (coprod : IsBinaryCoproduct inl inr)
+  (initial : IsInitial I)
+  : (coprod.rightUnitor initial).inv = inl
+  := rfl
 
 def IsBinaryCoproduct.braiding
   {X Y P : C}
@@ -158,6 +249,24 @@ def IsBinaryCoproduct.braiding
     by simp [desc_comp]
   ⟩
 
+theorem IsBinaryCoproduct.braiding_hom_def
+  {X Y P : C}
+  {inl : X ⟶ P} {inr : Y ⟶ P}
+  {inl' : Y ⟶ Q} {inr' : X ⟶ Q}
+  (coprod : IsBinaryCoproduct inl inr)
+  (coprod' : IsBinaryCoproduct inl' inr')
+  : (coprod.braiding coprod').hom = coprod.desc inr' inl'
+  := rfl
+
+theorem IsBinaryCoproduct.braiding_inv_def
+  {X Y P : C}
+  {inl : X ⟶ P} {inr : Y ⟶ P}
+  {inl' : Y ⟶ Q} {inr' : X ⟶ Q}
+  (coprod : IsBinaryCoproduct inl inr)
+  (coprod' : IsBinaryCoproduct inl' inr')
+  : (coprod.braiding coprod').inv = coprod'.desc inr inl
+  := rfl
+
 class ChosenCoproducts (C : Type _) [Category C] extends AddMonoidalCategory C where
   inl : ∀ {X Y : C}, X ⟶ X +ₒ Y
   inr : ∀ {X Y : C}, Y ⟶ X +ₒ Y
@@ -168,61 +277,106 @@ class ChosenCoproducts (C : Type _) [Category C] extends AddMonoidalCategory C w
   rightUnitor_canonical {X : C} : ρ⁺ X = coprod.rightUnitor initial
   braiding_canonical {X Y : C} : σ⁺ X Y = coprod.braiding coprod
 
--- def monoidalOfBinaryCoproducts
---   (addObj : C → C → C)
---   (initialObj : C)
---   (inl : ∀ {X Y : C}, X ⟶ addObj X Y)
---   (inr : ∀ {X Y : C}, Y ⟶ addObj X Y)
---   (coprod : ∀{X Y : C}, IsBinaryCoproduct (X := X) (Y := Y) inl inr)
---   (initial : IsInitial initialObj)
---   : MonoidalCategory C where
---   tensorObj := addObj
---   tensorUnit := initialObj
---   tensorHom := coprod.map inl inr
---   whiskerLeft Z X Y f := coprod.map inl inr (𝟙 Z) f
---   whiskerRight f Z := coprod.map inl inr f (𝟙 Z)
---   associator _ _ _ := coprod.associator coprod coprod coprod
---   leftUnitor _ := coprod.leftUnitor initial
---   rightUnitor _ := coprod.rightUnitor initial
---   tensorHom_def _ _ := sorry
---   tensor_id := sorry
---   tensor_comp := sorry
---   whiskerLeft_id := sorry
---   id_whiskerRight := sorry
---   associator_naturality := sorry
---   leftUnitor_naturality := sorry
---   rightUnitor_naturality := sorry
---   pentagon := sorry
---   triangle := sorry
+def monoidalOfBinaryCoproducts
+  (addObj : C → C → C)
+  (initialObj : C)
+  (inl : ∀ {X Y : C}, X ⟶ addObj X Y)
+  (inr : ∀ {X Y : C}, Y ⟶ addObj X Y)
+  (coprod : ∀{X Y : C}, IsBinaryCoproduct (X := X) (Y := Y) inl inr)
+  (initial : IsInitial initialObj)
+  : MonoidalCategory C where
+  tensorObj := addObj
+  tensorUnit := initialObj
+  tensorHom := coprod.map inl inr
+  whiskerLeft Z X Y f := coprod.map inl inr (𝟙 Z) f
+  whiskerRight f Z := coprod.map inl inr f (𝟙 Z)
+  associator _ _ _ := coprod.associator coprod coprod coprod
+  leftUnitor _ := coprod.leftUnitor initial
+  rightUnitor _ := coprod.rightUnitor initial
+  tensorHom_def _ _ := by simp [IsBinaryCoproduct.map_comp]
+  tensor_id _ _ := by simp
+  tensor_comp _ _ _ _ := by simp [IsBinaryCoproduct.map_comp]
+  whiskerLeft_id _ _ := by simp
+  id_whiskerRight _ _ := by simp
+  associator_naturality _ _ _ := by simp [
+    IsBinaryCoproduct.associator_hom_def,
+    IsBinaryCoproduct.map_eq_desc,
+    IsBinaryCoproduct.desc_comp]
+  leftUnitor_naturality := by simp [
+    IsBinaryCoproduct.leftUnitor_hom_def,
+    IsBinaryCoproduct.map_eq_desc,
+    IsBinaryCoproduct.desc_comp]
+  rightUnitor_naturality := by simp [
+    IsBinaryCoproduct.rightUnitor_hom_def,
+    IsBinaryCoproduct.map_eq_desc,
+    IsBinaryCoproduct.desc_comp]
+  pentagon := by simp [
+    IsBinaryCoproduct.associator_hom_def,
+    IsBinaryCoproduct.map_eq_desc,
+    IsBinaryCoproduct.desc_comp]
+  triangle := by simp [
+    IsBinaryCoproduct.associator_hom_def,
+    IsBinaryCoproduct.leftUnitor_hom_def,
+    IsBinaryCoproduct.rightUnitor_hom_def,
+    IsBinaryCoproduct.map_eq_desc,
+    IsBinaryCoproduct.desc_comp]
 
--- def symmetricOfBinaryCoproducts
---   (addObj : C → C → C)
---   (initialObj : C)
---   (inl : ∀ {X Y : C}, X ⟶ addObj X Y)
---   (inr : ∀ {X Y : C}, Y ⟶ addObj X Y)
---   (coprod : ∀{X Y : C}, IsBinaryCoproduct (X := X) (Y := Y) inl inr)
---   (initial : IsInitial initialObj) :
---     let _ := monoidalOfBinaryCoproducts addObj initialObj inl inr coprod initial;
---     SymmetricCategory C
---   := let _ := monoidalOfBinaryCoproducts addObj initialObj inl inr coprod initial; {
---     braiding := λ _ _ => coprod.braiding coprod
---     braiding_naturality_right := sorry
---     braiding_naturality_left := sorry
---     hexagon_forward := sorry
---     hexagon_reverse := sorry
---     symmetry := sorry
---   }
+def symmetricOfBinaryCoproducts
+  (addObj : C → C → C)
+  (initialObj : C)
+  (inl : ∀ {X Y : C}, X ⟶ addObj X Y)
+  (inr : ∀ {X Y : C}, Y ⟶ addObj X Y)
+  (coprod : ∀{X Y : C}, IsBinaryCoproduct (X := X) (Y := Y) inl inr)
+  (initial : IsInitial initialObj) :
+    let _ := monoidalOfBinaryCoproducts addObj initialObj inl inr coprod initial;
+    SymmetricCategory C
+  := let _ := monoidalOfBinaryCoproducts addObj initialObj inl inr coprod initial; {
+    braiding := λ _ _ => coprod.braiding coprod
+    braiding_naturality_right := by simp [
+      monoidalOfBinaryCoproducts,
+      IsBinaryCoproduct.braiding_hom_def,
+      IsBinaryCoproduct.map_eq_desc,
+      IsBinaryCoproduct.desc_comp]
+    braiding_naturality_left := by simp [
+      monoidalOfBinaryCoproducts,
+      IsBinaryCoproduct.braiding_hom_def,
+      IsBinaryCoproduct.map_eq_desc,
+      IsBinaryCoproduct.desc_comp]
+    hexagon_forward := by simp [
+      monoidalOfBinaryCoproducts,
+      IsBinaryCoproduct.associator_hom_def,
+      IsBinaryCoproduct.braiding_hom_def,
+      IsBinaryCoproduct.map_eq_desc,
+      IsBinaryCoproduct.desc_comp]
+    hexagon_reverse := by simp [
+      monoidalOfBinaryCoproducts,
+      IsBinaryCoproduct.associator_inv_def,
+      IsBinaryCoproduct.braiding_hom_def,
+      IsBinaryCoproduct.map_eq_desc,
+      IsBinaryCoproduct.desc_comp]
+    symmetry := by simp [
+      monoidalOfBinaryCoproducts,
+      IsBinaryCoproduct.braiding_hom_def,
+      IsBinaryCoproduct.map_eq_desc,
+      IsBinaryCoproduct.desc_comp]
+  }
 
--- def ChosenCoproducts.mk'
---   (addObj : C → C → C)
---   (initialObj : C)
---   (inl : ∀ {X Y : C}, X ⟶ addObj X Y)
---   (inr : ∀ {X Y : C}, Y ⟶ addObj X Y)
---   (coprod : ∀{X Y : C}, IsBinaryCoproduct (X := X) (Y := Y) inl inr)
---   (initial : IsInitial initialObj) : ChosenCoproducts C where
---   addMonoidal := monoidalOfBinaryCoproducts addObj initialObj inl inr coprod initial
---   addSymmetric := symmetricOfBinaryCoproducts addObj initialObj inl inr coprod initial
---   inl := inl
---   inr := inr
---   coprod := coprod
---   initial := initial
+def ChosenCoproducts.mk'
+  (addObj : C → C → C)
+  (initialObj : C)
+  (inl : ∀ {X Y : C}, X ⟶ addObj X Y)
+  (inr : ∀ {X Y : C}, Y ⟶ addObj X Y)
+  (coprod : ∀{X Y : C}, IsBinaryCoproduct (X := X) (Y := Y) inl inr)
+  (initial : IsInitial initialObj) : ChosenCoproducts C where
+  addMonoidal := monoidalOfBinaryCoproducts addObj initialObj inl inr coprod initial
+  addSymmetric := symmetricOfBinaryCoproducts addObj initialObj inl inr coprod initial
+  inl := inl
+  inr := inr
+  coprod := coprod
+  initial := initial
+  assoc_canonical := rfl
+  leftUnitor_canonical := rfl
+  rightUnitor_canonical := rfl
+  braiding_canonical := rfl
+
+-- TODO: now define things for chosen coproducts!
