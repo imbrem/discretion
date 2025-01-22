@@ -272,6 +272,7 @@ class ChosenCoproducts (C : Type _) [Category C] extends AddMonoidalCategory C w
   inr : ∀ {X Y : C}, Y ⟶ X +ₒ Y
   coprod : ∀{X Y : C}, IsBinaryCoproduct (X := X) (Y := Y) inl inr
   initial : IsInitial (𝟘_ C)
+  tensorHom_canonical {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') : f +ₕ g = coprod.map inl inr f g
   assoc_canonical {X Y Z : C} : α⁺ X Y Z = coprod.associator coprod coprod coprod
   leftUnitor_canonical {X : C} : λ⁺ X = coprod.leftUnitor initial
   rightUnitor_canonical {X : C} : ρ⁺ X = coprod.rightUnitor initial
@@ -374,6 +375,7 @@ def ChosenCoproducts.mk'
   inr := inr
   coprod := coprod
   initial := initial
+  tensorHom_canonical _ _ := rfl
   assoc_canonical := rfl
   leftUnitor_canonical := rfl
   rightUnitor_canonical := rfl
