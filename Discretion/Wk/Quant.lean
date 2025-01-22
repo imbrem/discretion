@@ -1481,6 +1481,8 @@ instance PQuant.instOne : One PQuant := ⟨(1 : Quant)⟩
 
 theorem PQuant.coe_mono {l r : Quant} : l ≤ r → (l : PQuant) ≤ (r : PQuant) := λh => ⟨h, h⟩
 
+theorem PQuant.coe_le_coe {l r : Quant} : (l : PQuant) ≤ (r : PQuant) ↔ l ≤ r := by simp
+
 def PQuant.dup : PQuant := ⟨Quant.copy, 1⟩
 
 def PQuant.fuse : PQuant := ⟨1, Quant.copy⟩
