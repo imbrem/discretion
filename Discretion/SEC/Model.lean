@@ -24,6 +24,6 @@ variable {τ : Type u} [FreeSignature τ]
          {C : Type v} [Category C] [MonoidalCategoryStruct C] [HasQuant C]
          [FreeSignature.Model τ C]
 
-def ctxDen : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → C := Monoidal.tensorZR tyDen
+-- def ctxDen : (Γ : List (Ty τ)) → Vector' EQuant Γ.length → C := Monoidal.tensorZR tyDen
 
 -- TODO: effect model

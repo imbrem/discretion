@@ -1,2 +1,2 @@
-import Discretion.Premonoidal.Effectful
-import Discretion.Premonoidal.CopyDrop
+-- import Discretion.Premonoidal.Effectful
+-- import Discretion.Premonoidal.CopyDrop
