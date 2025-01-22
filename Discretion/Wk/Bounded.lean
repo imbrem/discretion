@@ -2,7 +2,6 @@ import Mathlib.Order.Monotone.Basic
 import Mathlib.Order.BoundedOrder.Basic
 import Mathlib.Order.Nat
 import Mathlib.Order.Disjoint
-import Mathlib.Algebra.BigOperators.Group.Finset
 import Mathlib.Data.Multiset.Functor
 
 import Discretion.Vector.Basic

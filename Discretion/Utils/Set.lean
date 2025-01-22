@@ -3,7 +3,11 @@ import Mathlib.Data.Fin.Tuple.Basic
 import Mathlib.Data.List.Basic
 import Mathlib.Data.Multiset.Basic
 import Mathlib.Data.Finset.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset
+import Mathlib.Data.Set.Lattice
+import Mathlib.Data.Finset.Lattice.Fold
+import Mathlib.Data.Fintype.Basic
+
+import Mathlib.Order.SetNotation
 
 theorem Set.iUnion_union_iUnion {α β : Type _} {f g : α → Set β} :
   Set.iUnion f ∪ Set.iUnion g = ⋃x, f x ∪ g x := by ext x; simp [exists_or]

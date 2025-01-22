@@ -3,7 +3,7 @@ import Mathlib.Data.Fin.Tuple.Basic
 import Mathlib.Data.List.Basic
 import Mathlib.Data.Multiset.Basic
 import Mathlib.Data.Finset.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 open Classical in
 theorem Finset.sum_nat_eq_zero (s : Finset α) (f : α → ℕ)

@@ -3,7 +3,8 @@ import Mathlib.Data.Fin.Tuple.Basic
 import Mathlib.Data.List.Basic
 import Mathlib.Data.Multiset.Basic
 import Mathlib.Data.Finset.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset
+import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.Fintype.Card
 
 def Fin.numMissedBefore (ρ : Fin n → Fin m) : ℕ → ℕ
   | 0 => 0

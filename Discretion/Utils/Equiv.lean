@@ -3,7 +3,6 @@ import Mathlib.Data.Fin.Tuple.Basic
 import Mathlib.Data.List.Basic
 import Mathlib.Data.Multiset.Basic
 import Mathlib.Data.Finset.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset
 
 import Discretion.Utils.Multiset
 

@@ -1,7 +1,6 @@
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Finset.Lattice.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset
 import Mathlib.Algebra.Order.Monoid.Defs
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 
