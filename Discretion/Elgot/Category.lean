@@ -2,6 +2,8 @@ import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 
 import Discretion.MorphismProperty.BinaryProducts
 
+import Discretion.AddMonoidalCategory.ChosenCoproducts
+
 namespace CategoryTheory
 
 open Limits

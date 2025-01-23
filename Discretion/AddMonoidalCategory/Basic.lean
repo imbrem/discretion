@@ -120,6 +120,10 @@ theorem addLeft_id : ∀ (X Y : C), X ◁⁺ 𝟙 Y = 𝟙 (X +ₒ Y) := addMono
 @[reassoc, simp]
 theorem id_addRight : ∀ (X Y : C), 𝟙 X ▷⁺ Y = 𝟙 (X +ₒ Y) := addMonoidal.id_whiskerRight
 
+theorem addHom_id_left {X X' Y : C} (f : X ⟶ X') : f +ₕ (𝟙 Y) = f ▷⁺ Y := by simp [addHom_def]
+
+theorem addHom_id_right {X Y Y' : C} (f : Y ⟶ Y') : (𝟙 X) +ₕ f = X ◁⁺ f := by simp [addHom_def]
+
 @[reassoc]
 theorem addAssoc_naturality :
   ∀ {X₁ X₂ X₃ Y₁ Y₂ Y₃ : C} (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (f₃ : X₃ ⟶ Y₃),
