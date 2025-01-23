@@ -381,7 +381,7 @@ def ChosenCoproducts.mk'
   rightZero_canonical := rfl
   addSymm_canonical := rfl
 
-namespace ChosenCoproducts
+namespace Monoidal
 
 variable [ChosenCoproducts C]
 
@@ -389,86 +389,91 @@ abbrev zero (X : C) : 𝟘_ C ⟶ X := ChosenCoproducts.initial.to X
 
 theorem zero_initial {X Y : C} (f : X ⟶ Y) : zero X ≫ f = zero Y := by simp
 
-abbrev desc {W X Y : C} (f : X ⟶ W) (g : Y ⟶ W) : X +ₒ Y ⟶ W := ChosenCoproducts.coprod.desc f g
+abbrev inl {X Y : C} : X ⟶ X +ₒ Y := ChosenCoproducts.inl
 
-theorem desc_comp {W X Y Z : C} (f : X ⟶ W) (g : Y ⟶ W) (h : W ⟶ Z)
-  : desc f g ≫ h = desc (f ≫ h) (g ≫ h) := ChosenCoproducts.coprod.desc_comp f g h
+abbrev inr {X Y : C} : Y ⟶ X +ₒ Y := ChosenCoproducts.inr
 
-theorem inl_desc {W X Y : C} (f : X ⟶ W) (g : Y ⟶ W)
-  : inl ≫ desc f g = f := ChosenCoproducts.coprod.inl_desc f g
+abbrev coprod {W X Y : C} (f : X ⟶ W) (g : Y ⟶ W) : X +ₒ Y ⟶ W := ChosenCoproducts.coprod.desc f g
 
-theorem inr_desc {W X Y : C} (f : X ⟶ W) (g : Y ⟶ W)
-  : inr ≫ desc f g = g := ChosenCoproducts.coprod.inr_desc f g
+theorem coprod_comp {W X Y Z : C} (f : X ⟶ W) (g : Y ⟶ W) (h : W ⟶ Z)
+  : coprod f g ≫ h = coprod (f ≫ h) (g ≫ h) := ChosenCoproducts.coprod.desc_comp f g h
+
+theorem inl_coprod {W X Y : C} (f : X ⟶ W) (g : Y ⟶ W)
+  : inl ≫ coprod f g = f := ChosenCoproducts.coprod.inl_desc f g
+
+theorem inr_coprod {W X Y : C} (f : X ⟶ W) (g : Y ⟶ W)
+  : inr ≫ coprod f g = g := ChosenCoproducts.coprod.inr_desc f g
+
+theorem addHom_coprod {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y')
+  : f +ₕ g = coprod (f ≫ inl) (g ≫ inr)
+  := by simp [ChosenCoproducts.addHom_canonical, IsBinaryCoproduct.map_eq_desc]
 
 @[simp]
 theorem inl_map {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z)
-  : inl ≫ (f +ₕ g) = f ≫ inl := by simp [addHom_canonical]
+  : inl ≫ (f +ₕ g) = f ≫ inl := by simp [addHom_coprod]
 
 @[simp]
 theorem inr_map {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z)
-  : inr ≫ (f +ₕ g) = g ≫ inr := by simp [addHom_canonical]
+  : inr ≫ (f +ₕ g) = g ≫ inr := by simp [addHom_coprod]
 
-theorem map_comp_desc {X Y X' Y' W : C} (f : X ⟶ Y) (f' : X' ⟶ Y') (g : Y ⟶ W) (g' : Y' ⟶ W)
-  : (f +ₕ f') ≫ desc g g' = desc (f ≫ g) (f' ≫ g')
-  := by simp [addHom_canonical, IsBinaryCoproduct.map_comp_desc]
+theorem map_comp_coprod {X Y X' Y' W : C} (f : X ⟶ Y) (f' : X' ⟶ Y') (g : Y ⟶ W) (g' : Y' ⟶ W)
+  : (f +ₕ f') ≫ coprod g g' = coprod (f ≫ g) (f' ≫ g')
+  := by simp [addHom_coprod, IsBinaryCoproduct.desc_comp]
 
-theorem map_eq_desc {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y')
-  : f +ₕ g = desc (f ≫ inl) (g ≫ inr) := by simp [addHom_canonical, IsBinaryCoproduct.map_eq_desc]
-
-theorem addHom_def {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y')
-  : f +ₕ g = desc (f ≫ inl) (g ≫ inr) := by simp [addHom_canonical, IsBinaryCoproduct.map_eq_desc]
+theorem map_eq_coprod {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y')
+  : f +ₕ g = coprod (f ≫ inl) (g ≫ inr) := by simp [addHom_coprod]
 
 theorem addLeft_def {X Y Z : C} (f : X ⟶ Y)
-  : f ▷⁺ Z = desc (f ≫ inl) inr := by simp [<-addHom_id_left, addHom_def]
+  : f ▷⁺ Z = coprod (f ≫ inl) inr := by simp [<-addHom_id_left, addHom_coprod]
 
 theorem addRight_def {X Y Z : C} (f : Y ⟶ Z)
-  : X ◁⁺ f = desc inl (f ≫ inr) := by simp [<-addHom_id_right, addHom_def]
+  : X ◁⁺ f = coprod inl (f ≫ inr) := by simp [<-addHom_id_right, addHom_coprod]
 
-theorem addLeft_comp_desc {X Y X' W : C} (f : X ⟶ Y) (g : Y ⟶ W) (g' : X' ⟶ W)
-  : (f ▷⁺ X') ≫ desc g g' = desc (f ≫ g) g' := by simp [addLeft_def, desc_comp]
+theorem addLeft_comp_coprod {X Y X' W : C} (f : X ⟶ Y) (g : Y ⟶ W) (g' : X' ⟶ W)
+  : (f ▷⁺ X') ≫ coprod g g' = coprod (f ≫ g) g' := by simp [addLeft_def, coprod_comp]
 
-theorem addRight_comp_desc {X X' Y' W : C} (f' : X' ⟶ Y') (g : X ⟶ W) (g' : Y' ⟶ W)
-  : (X ◁⁺ f') ≫ desc g g' = desc g (f' ≫ g') := by simp [addRight_def, desc_comp]
+theorem addRight_comp_coprod {X X' Y' W : C} (f' : X' ⟶ Y') (g : X ⟶ W) (g' : Y' ⟶ W)
+  : (X ◁⁺ f') ≫ coprod g g' = coprod g (f' ≫ g') := by simp [addRight_def, coprod_comp]
 
-theorem addAssoc_hom_def {X Y Z : C} : (α⁺ X Y Z).hom = desc (desc inl (inl ≫ inr)) (inr ≫ inr)
-  := by rw [addAssoc_canonical]; rfl
+theorem addAssoc_hom_def {X Y Z : C} : (α⁺ X Y Z).hom = coprod (coprod inl (inl ≫ inr)) (inr ≫ inr)
+  := by rw [ChosenCoproducts.addAssoc_canonical]; rfl
 
-theorem addAssoc_inv_def {X Y Z : C} : (α⁺ X Y Z).inv = desc (inl ≫ inl) (desc (inr ≫ inl) inr)
-  := by rw [addAssoc_canonical]; rfl
+theorem addAssoc_inv_def {X Y Z : C} : (α⁺ X Y Z).inv = coprod (inl ≫ inl) (coprod (inr ≫ inl) inr)
+  := by rw [ChosenCoproducts.addAssoc_canonical]; rfl
 
-theorem leftZero_hom_def {X : C} : (λ⁺ X).hom = desc (zero X) (𝟙 X)
-  := by rw [leftZero_canonical]; rfl
+theorem leftZero_hom_def {X : C} : (λ⁺ X).hom = coprod (zero X) (𝟙 X)
+  := by rw [ChosenCoproducts.leftZero_canonical]; rfl
 
 theorem leftZero_inv_def {X : C} : (λ⁺ X).inv = inr
-  := by rw [leftZero_canonical]; rfl
+  := by rw [ChosenCoproducts.leftZero_canonical]; rfl
 
-theorem rightZero_hom_def {X : C} : (ρ⁺ X).hom = desc (𝟙 X) (zero X)
-  := by rw [rightZero_canonical]; rfl
+theorem rightZero_hom_def {X : C} : (ρ⁺ X).hom = coprod (𝟙 X) (zero X)
+  := by rw [ChosenCoproducts.rightZero_canonical]; rfl
 
 theorem rightZero_inv_def {X : C} : (ρ⁺ X).inv = inl
-  := by rw [rightZero_canonical]; rfl
+  := by rw [ChosenCoproducts.rightZero_canonical]; rfl
 
-theorem addSymm_hom_def {X Y : C} : (σ⁺ X Y).hom = desc inr inl
-  := by rw [addSymm_canonical]; rfl
+theorem addSymm_hom_def {X Y : C} : (σ⁺ X Y).hom = coprod inr inl
+  := by rw [ChosenCoproducts.addSymm_canonical]; rfl
 
-theorem addSymm_inv_def {X Y : C} : (σ⁺ X Y).inv = desc inr inl
-  := by rw [addSymm_canonical]; rfl
+theorem addSymm_inv_def {X Y : C} : (σ⁺ X Y).inv = coprod inr inl
+  := by rw [ChosenCoproducts.addSymm_canonical]; rfl
 
 theorem addSymm_desc {W X Y : C} (f : X ⟶ W) (g : Y ⟶ W)
-  : (σ⁺ X Y).hom ≫ desc g f = desc f g := by simp [addSymm_hom_def, desc_comp]
+  : (σ⁺ X Y).hom ≫ coprod g f = coprod f g := by simp [addSymm_hom_def, coprod_comp]
 
 -- join is a commutative monoid on each object X ∈ C
 
-abbrev join (X : C) : X +ₒ X ⟶ X := desc (𝟙 X) (𝟙 X)
+abbrev join (X : C) : X +ₒ X ⟶ X := coprod (𝟙 X) (𝟙 X)
 
 theorem map_comp_join {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
-  : (f +ₕ g) ≫ join Z = desc f g := by simp [map_comp_desc]
+  : (f +ₕ g) ≫ join Z = coprod f g := by simp [map_comp_coprod]
 
 theorem addLeft_comp_join {X Y : C} (f : X ⟶ Y)
-  : f ▷⁺ Y ≫ join Y = desc f (𝟙 Y) := by simp [addLeft_comp_desc]
+  : f ▷⁺ Y ≫ join Y = coprod f (𝟙 Y) := by simp [addLeft_comp_coprod]
 
 theorem addRight_comp_join {X Y : C} (f : X ⟶ Y)
-  : Y ◁⁺ f ≫ join Y = desc (𝟙 Y) f := by simp [addRight_comp_desc]
+  : Y ◁⁺ f ≫ join Y = coprod (𝟙 Y) f := by simp [addRight_comp_coprod]
 
 @[simp]
 theorem join_zero_left {X : C} : zero X ▷⁺ X ≫ join X = (λ⁺ X).hom
@@ -479,19 +484,19 @@ theorem join_zero_right {X : C} : X ◁⁺ zero X ≫ join X = (ρ⁺ X).hom
   := by simp [addRight_comp_join, rightZero_hom_def]
 
 theorem addSymm_hom_join {X : C} : (σ⁺ X X).hom ≫ join X = join X
-  := by simp [addSymm_hom_def, desc_comp]
+  := by simp [addSymm_hom_def, coprod_comp]
 
 theorem addSymm_inv_join {X : C} : (σ⁺ X X).inv ≫ join X = join X
-  := by simp [addSymm_inv_def, desc_comp]
+  := by simp [addSymm_inv_def, coprod_comp]
 
 theorem addAssoc_hom_join {X : C} : (α⁺ X X X).hom ≫ X ◁⁺ join X ≫ join X = join X ▷⁺ X ≫ join X
-  := by simp [addAssoc_hom_def, addLeft_def, addRight_def, desc_comp]
+  := by simp [addAssoc_hom_def, addLeft_def, addRight_def, coprod_comp]
 
 theorem addAssoc_inv_join {X : C} : (α⁺ X X X).inv ≫ join X ▷⁺ X ≫ join X = X ◁⁺ join X ≫ join X
-  := by simp [addAssoc_inv_def, addLeft_def, addRight_def, desc_comp]
+  := by simp [addAssoc_inv_def, addLeft_def, addRight_def, coprod_comp]
 
 -- TODO: join is a commutative monoid supply on C; want addSwap_inner ...
 
 theorem join_zero : join (𝟘_ C) = (λ⁺ _).hom := by simp [leftZero_hom_def]
 
-end ChosenCoproducts
+end Monoidal
