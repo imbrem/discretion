@@ -409,11 +409,11 @@ theorem addHom_coprod {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y')
   := by simp [ChosenCoproducts.addHom_canonical, IsBinaryCoproduct.map_eq_desc]
 
 @[simp]
-theorem inl_map {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z)
+theorem inl_map {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y')
   : inl ≫ (f +ₕ g) = f ≫ inl := by simp [addHom_coprod]
 
 @[simp]
-theorem inr_map {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z)
+theorem inr_map {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y')
   : inr ≫ (f +ₕ g) = g ≫ inr := by simp [addHom_coprod]
 
 theorem map_comp_coprod {X Y X' Y' W : C} (f : X ⟶ Y) (f' : X' ⟶ Y') (g : Y ⟶ W) (g' : Y' ⟶ W)
