@@ -8,6 +8,8 @@ open Monoidal
 
 open Limits
 
+namespace AddMonoidalDesign
+
 variable {C : Type _} [Category C]
 
 abbrev IsBinaryCoproduct {X Y P : C} (inl : X ⟶ P) (inr : Y ⟶ P)

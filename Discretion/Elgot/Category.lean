@@ -1,14 +1,15 @@
 import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 
 import Discretion.MorphismProperty.BinaryProducts
-
-import Discretion.AddMonoidalCategory.ChosenCoproducts
+import Discretion.ChosenFiniteCoproducts
 
 namespace CategoryTheory
 
 open Limits
 
 open MorphismProperty
+
+-- TODO: port to chosen coproducts...
 
 class Iterate (C : Type u) [Category C] [HasBinaryCoproducts C] where
   iterate {X Y : C} : (X ⟶ Y ⨿ X) → (X ⟶ Y)
