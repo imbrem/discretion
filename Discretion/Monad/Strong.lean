@@ -2,6 +2,8 @@ import Mathlib.CategoryTheory.Monad.Basic
 import Mathlib.CategoryTheory.Monoidal.Category
 import Mathlib.CategoryTheory.Monoidal.Types.Basic
 
+import Discretion.Monad.Commutative
+
 namespace CategoryTheory
 
 variable {C : Type u} [Category C] [MonoidalCategoryStruct C]
@@ -141,6 +143,8 @@ class CommutativeMonad (T : Monad C) extends Strength T where
   is_commutative : ∀(X Y : C),
     leftStrength (T.obj X) Y ≫ T.map (rightStrength X Y) ≫ T.μ.app (X ⊗ Y)
       = rightStrength X (T.obj Y) ≫ T.map (leftStrength X Y) ≫ T.μ.app (X ⊗ Y)
+
+attribute [reassoc] CommutativeMonad.is_commutative
 
 --TODO: commutative monads for `Set`
 
