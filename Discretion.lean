@@ -52,3 +52,9 @@ import Discretion.UB.Basic
 import Discretion.UB.Optional
 import Discretion.AddMonoidalCategory.Basic
 import Discretion.AddMonoidalCategory.ChosenCoproducts
+import Discretion.Poset2.Basic
+import Discretion.Poset2.Premonoidal
+import Discretion.Poset2.ChosenFiniteProducts
+import Discretion.Poset2.Distributive
+import Discretion.Poset2.Effectful
+import Discretion.Poset2.Elgot
