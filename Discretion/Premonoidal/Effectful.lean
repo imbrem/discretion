@@ -54,7 +54,13 @@ class EffectfulCategory
   (E : Type u) [EffectSystem E] where
   eff : E →o MorphismProperty C
   eff_top : eff ⊤ = ⊤
+  eff_monoidal : ∀e, (eff e).IsMonoidal
   eff_braided : ∀e, (eff e).IsBraided
   eff_right_mover : ∀{e e' : E}, e ⇀ e' → RightMover (eff e) (eff e')
+
+abbrev EffectfulCategory.pure [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
+  [O : ∀X Y : C, PartialOrder (X ⟶ Y)]
+  (E : Type u) [EffectSystem E] [EC : EffectfulCategory C E] : MorphismProperty C
+  := EC.eff ⊥
 
 namespace Monoidal

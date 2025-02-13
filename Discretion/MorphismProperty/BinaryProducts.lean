@@ -29,10 +29,10 @@ theorem coprod_desc_mem {W : MorphismProperty C} [ContainsCoprodDesc W] {X Y Z :
   {f : X ⟶ Z} {g : Y ⟶ Z} (hf : W f) (hg : W g) : W (desc f g)
   := ContainsCoprodDesc.coprod_desc_mem hf hg
 
-class ContainsBinaryCoproducts (W : MorphismProperty C)
+class Cocartesian (W : MorphismProperty C)
   extends ContainsInjections W, ContainsCoprodDesc W, IsMultiplicative W : Prop
 
-theorem addHom_mem {W : MorphismProperty C} [ContainsBinaryCoproducts W]
+theorem addHom_mem {W : MorphismProperty C} [Cocartesian W]
   {X Y X' Y' : C} {f : X ⟶ X'} {g : Y ⟶ Y'}
   (hf : W f) (hg : W g) : W (f ⊕ₕ g) := by
   rw [addHom]
@@ -42,7 +42,7 @@ class ContainsInitial (W : MorphismProperty C) : Prop where
   initial_mem : ∀(X : C), W (fromZero X)
 
 class ContainsCoproducts (W : MorphismProperty C)
-  extends ContainsInitial W, ContainsBinaryCoproducts W
+  extends ContainsInitial W, Cocartesian W
 
-instance {W : MorphismProperty C} [ContainsInitial W] [ContainsBinaryCoproducts W]
+instance {W : MorphismProperty C} [ContainsInitial W] [Cocartesian W]
   : ContainsCoproducts W := ⟨⟩
