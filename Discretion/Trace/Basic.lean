@@ -1,7 +1,6 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Data.Set.Image
 import Mathlib.Data.Set.Lattice
-import Mathlib.Algebra.PUnitInstances.Module
 import Mathlib.Data.Set.Functor
 import Mathlib.Control.Functor
 

@@ -3,7 +3,7 @@ import Mathlib.Algebra.Group.Defs
 import Mathlib.Algebra.Group.Action.Prod
 import Mathlib.Algebra.Group.Action.Pi
 import Mathlib.Tactic.Convert
-import Mathlib.Algebra.PUnitInstances.Module
+import Mathlib.Algebra.Module.PUnit
 
 class StreamProd (α: Type u) (β: Type v) where
   streamProd: (Stream' α) -> β
