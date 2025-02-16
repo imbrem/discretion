@@ -52,3 +52,9 @@ class EffectSystem (ε : Type u)
 instance EffectSystem.instMk {ε}
   [PartialOrder ε] [BoundedOrder ε] [HasCommRel ε] [OrderedPQuant ε]
   : EffectSystem ε where
+
+class IterEffectSystem (ε : Type u)
+  extends EffectSystem ε where
+  iterative : Set ε
+  iterative_is_upper : IsUpperSet iterative
+  top_iterative : ⊤ ∈ iterative

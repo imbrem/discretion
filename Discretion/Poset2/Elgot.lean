@@ -26,12 +26,9 @@ open HasCommRel
 
 class Elgot2 (C : Type u)
   [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C] [ChosenFiniteCoproducts C]
-  [Iterate C] (E : Type v) [EffectSystem E]
+  [Iterate C] (E : Type v) [ES : IterEffectSystem E]
   extends Distributive2 C E where
-  iterative : Set E
-  iterative_is_upper : IsUpperSet iterative
-  top_iterative : ⊤ ∈ iterative
-  contains_iterates : ∀e ∈ iterative, (eff e).ContainsIterates
+  contains_iterates : ∀e ∈ ES.iterative, (eff e).ContainsIterates
   right_mover_right_uniform : ∀{e e' : E}, e ⇀ e' → (eff e).RightUniform (eff e')
   left_mover_left_uniform : ∀{e e' : E}, e ↽ e' → (eff e).LeftUniform (eff e')
 
