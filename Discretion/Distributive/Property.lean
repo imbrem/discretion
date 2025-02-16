@@ -1,5 +1,6 @@
 import Discretion.Distributive.Category
 import Discretion.MorphismProperty.BinaryProducts
+import Discretion.Premonoidal.Property.Basic
 
 namespace CategoryTheory.MorphismProperty
 
@@ -8,8 +9,12 @@ open Monoidal
 variable {C : Type u} [Category C] [MonoidalCategoryStruct C] [CC : ChosenFiniteCoproducts C]
                       [DistributiveCategory C]
 
-class Distributive (W : MorphismProperty C) extends Cocartesian W : Prop where
-  distl_inv_mem : ∀{X Y Z : C}, W (δl⁻¹ X Y Z : _ ⟶ _)
-  distr_inv_mem : ∀{X Y Z : C}, W (δr⁻¹ X Y Z : _ ⟶ _)
+-- Note: IsMonoidal W and Cocartesian W ==> contains distl, distr
+
+-- If closed under inverses, we get `Distributive` for free
+
+class Distributive (W : MorphismProperty C) extends IsMonoidal W, Cocartesian W : Prop where
+  distl_inv_mem : ∀{X Y Z : C}, W ((∂L X Y Z).inv : _ ⟶ _)
+  distr_inv_mem : ∀{X Y Z : C}, W ((∂R X Y Z).inv : _ ⟶ _)
 
 end CategoryTheory.MorphismProperty
