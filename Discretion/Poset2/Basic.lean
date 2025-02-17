@@ -9,6 +9,8 @@ class Refines (C : Type u) [Quiver C] where
 
 infix:50 " ↠ "  => Refines.refines
 
+infix:50 " ↞ " => (λf g => g ↠ f)
+
 class CompMono (C : Type u) [CategoryStruct C] [Refines C] : Prop where
   comp_mono_right : ∀{X Y Z : C} (f : X ⟶ Y) (g h : Y ⟶ Z), g ↠ h → (f ≫ g) ↠ (f ≫ h)
   comp_mono_left : ∀{X Y Z : C} (f g : X ⟶ Y) (h : Y ⟶ Z), f ↠ g → (f ≫ h) ↠ (g ≫ h)
