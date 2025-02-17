@@ -20,37 +20,37 @@ open MorphismProperty
 
 open HasCommRel
 
-class RightMover [Category C] [MonoidalCategoryStruct C] [O : ∀X Y : C, PartialOrder (X ⟶ Y)]
+class RightMover [Category C] [MonoidalCategoryStruct C] [Refines C]
   (L R : MorphismProperty C) where
-  left_fwd : ∀ {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y'), L f → R g → f ⋉ g ≤ f ⋊ g
-  right_fwd : ∀ {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y'), L f → R g → g ⋊ f ≤ g ⋉ f
+  left_fwd : ∀ {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y'), L f → R g → f ⋉ g ↠ f ⋊ g
+  right_fwd : ∀ {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y'), L f → R g → g ⋊ f ↠ g ⋉ f
 
-abbrev LeftMover [Category C] [MonoidalCategoryStruct C] [O : ∀X Y : C, PartialOrder (X ⟶ Y)]
+abbrev LeftMover [Category C] [MonoidalCategoryStruct C] [Refines C]
   (L R : MorphismProperty C) := RightMover R L
 
 theorem Commutes.of_left_right
-  [Category C] [MonoidalCategoryStruct C] [O : ∀X Y : C, PartialOrder (X ⟶ Y)]
+  [Category C] [MonoidalCategoryStruct C] [Poset2 C]
   (L R : MorphismProperty C) [right : RightMover L R] [left : LeftMover L R]
   : Commutes L R where
   left_sliding f g hf hg
-    := le_antisymm (RightMover.left_fwd f g hf hg) (RightMover.right_fwd g f hg hf)
+    := refines_antisymm (RightMover.left_fwd f g hf hg) (RightMover.right_fwd g f hg hf)
   right_sliding f g hf hg
-    := le_antisymm (RightMover.left_fwd g f hg hf) (RightMover.right_fwd f g hf hg)
+    := refines_antisymm (RightMover.left_fwd g f hg hf) (RightMover.right_fwd f g hf hg)
 
 theorem Commutes.right
-  [Category C] [MonoidalCategoryStruct C] [O : ∀X Y : C, PartialOrder (X ⟶ Y)]
+  [Category C] [MonoidalCategoryStruct C] [Poset2 C]
   (L R : MorphismProperty C) [hC : Commutes L R] : RightMover L R where
-  left_fwd f g hf hg := le_of_eq (Commutes.left_sliding f g hf hg)
-  right_fwd f g hf hg := le_of_eq (Commutes.right_sliding f g hf hg).symm
+  left_fwd f g hf hg := refines_of_eq (Commutes.left_sliding f g hf hg)
+  right_fwd f g hf hg := refines_of_eq (Commutes.right_sliding f g hf hg).symm
 
 theorem Commutes.left
-  [Category C] [MonoidalCategoryStruct C] [O : ∀X Y : C, PartialOrder (X ⟶ Y)]
+  [Category C] [MonoidalCategoryStruct C] [Poset2 C]
   (L R : MorphismProperty C) [hC : Commutes L R] : LeftMover L R
   := right R L (hC := hC.symm)
 
 class Effectful2
   (C : Type v) [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
-  [O : ∀X Y : C, LE (X ⟶ Y)] (E : Type u) [EffectSystem E] extends CompMono C, WhiskerMono C where
+  (E : Type u) [EffectSystem E] extends MonPoset2 C where
   eff : E →o MorphismProperty C
   eff_top : eff ⊤ = ⊤
   eff_monoidal : ∀e, (eff e).IsMonoidal
@@ -58,7 +58,7 @@ class Effectful2
   eff_right_mover : ∀{e e' : E}, e ⇀ e' → RightMover (eff e) (eff e')
 
 variable {C : Type v} [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
-  [O : ∀X Y : C, LE (X ⟶ Y)] {E : Type u} [EffectSystem E] [EC : Effectful2 C E]
+  {E : Type u} [EffectSystem E] [EC : Effectful2 C E]
 
 abbrev Effectful2.pure : MorphismProperty C := EC.eff ⊥
 

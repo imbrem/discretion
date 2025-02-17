@@ -11,14 +11,14 @@ namespace MorphismProperty
 variable {C : Type u} [Category C] [ChosenFiniteCoproducts C] [Iterate C]
 
 class RightUniform
-  [O : ∀X Y : C, LE (X ⟶ Y)] (L R : MorphismProperty C) : Prop where
+  [Refines C] (L R : MorphismProperty C) : Prop where
   left_uniform {X Y : C} {f : Y ⟶ Z ⊕ₒ Y} {g : X ⟶ Z ⊕ₒ X} {h : X ⟶ Y}
-    : L h → R f → R g → h ≫ f ≤ g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f ≤ iterate g
+    : L h → R f → R g → h ≫ f ↠ g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f ↠ iterate g
 
 class LeftUniform
-  [O : ∀X Y : C, LE (X ⟶ Y)] (L R : MorphismProperty C) : Prop where
+  [Refines C] (L R : MorphismProperty C) : Prop where
   right_uniform {X Y : C} {f : Y ⟶ Z ⊕ₒ Y} {g : X ⟶ Z ⊕ₒ X} {h : X ⟶ Y}
-    : L h → R f → R g → h ≫ f ≥ g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f ≥ iterate g
+    : L h → R f → R g → g ≫ ((𝟙 Z) ⊕ₕ h) ↠ h ≫ f → iterate g ↠ h ≫ iterate f
 
 end MorphismProperty
 
