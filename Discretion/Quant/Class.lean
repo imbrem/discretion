@@ -9,10 +9,16 @@ class IsAff [HasQuant α] (A : α) : Prop where
 
 attribute [simp] IsAff.del_le_quant
 
+theorem IsAff.is_aff_iff [HasQuant α] (a : α) : IsAff a ↔ .del ≤ quant a
+  := ⟨λ h => h.del_le_quant, λ h => ⟨h⟩⟩
+
 class IsRel [HasQuant α] (A : α) : Prop where
   copy_le_quant : .copy ≤ quant A
 
 attribute [simp] IsRel.copy_le_quant
+
+theorem IsRel.is_rel_iff [HasQuant α] (a : α) : IsRel a ↔ .copy ≤ quant a
+  := ⟨λ h => h.copy_le_quant, λ h => ⟨h⟩⟩
 
 class IsAdd [HasPQuant α] (a : α) : Prop where
   add_le_pquant : .add ≤ pquant a
