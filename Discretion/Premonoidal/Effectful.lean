@@ -46,8 +46,11 @@ theorem EffectfulCategory.HasEff.mono {e e' : E} (h : e ≤ e') {X Y : C} {f : X
 instance EffectfulCategory.HasEff.top {X Y : C} (f : X ⟶ Y) : EC.HasEff ⊤ f where
   has_eff := by rw [EC.eff_top]; trivial
 
-instance EffectfulCategory.HasEff.id (e : E) {X : C} : HasEff e (𝟙 X) where
+instance EffectfulCategory.HasEff.id {e : E} {X : C} : HasEff e (𝟙 X) where
   has_eff := (EC.eff_monoidal e).id_mem X
+
+instance EffectfulCategory.HasEff.eq_hom {e : E} {X Y : C} (h : X = Y) : HasEff e (eq_hom h)
+  := by cases h; exact id
 
 instance EffectfulCategory.HasEff.comp {e : E} {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z)
   [hf : HasEff e f] [hg : HasEff e g] : HasEff e (f ≫ g) where
