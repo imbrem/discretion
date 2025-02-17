@@ -39,6 +39,10 @@ variable {C : Type v} [Category C] [MonoidalCategoryStruct C] [BraidedCategorySt
 class EffectfulCategory.HasEff (e : E) {X Y : C} (f : X ⟶ Y) : Prop where
   has_eff : EC.eff e f
 
+theorem EffectfulCategory.HasEff.mono {e e' : E} (h : e ≤ e') {X Y : C} {f : X ⟶ Y}
+  [hf : HasEff e f] : HasEff e' f where
+  has_eff := EC.eff.monotone' h _ hf.has_eff
+
 instance EffectfulCategory.HasEff.id (e : E) {X : C} : HasEff e (𝟙 X) where
   has_eff := (EC.eff_monoidal e).id_mem X
 
