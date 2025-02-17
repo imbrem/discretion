@@ -204,10 +204,10 @@ theorem tensorHom_def {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ �
 theorem tensor_eq_ltimes {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) :
   f ⊗ g = f ⋉ g := tensorHom_def f g
 
-theorem tensor_eq_rtimes_left {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [Central f] :
+theorem tensor_eq_rtimes_left {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [hf : Central f] :
   f ⊗ g = f ⋊ g := by rw [tensor_eq_ltimes, left_sliding]
 
-theorem tensor_eq_rtimes_right {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [Central g] :
+theorem tensor_eq_rtimes_right {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [hg : Central g] :
   f ⊗ g = f ⋉ g := by rw [tensor_eq_ltimes, right_sliding]
 
 instance IsIso.instTensor' {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [IsIso f] [IsIso g] :
@@ -215,12 +215,12 @@ instance IsIso.instTensor' {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X�
 
 @[simp]
 theorem inv_tensor_left {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂)
-  [IsIso f] [IsIso g] [Central f] :
+  [hif : IsIso f] [hig : IsIso g] [hf : Central f] :
   inv (f ⊗ g) = inv f ⊗ inv g := by simp [tensorHom_def, left_sliding]
 
 @[simp]
 theorem inv_tensor_right {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂)
-  [IsIso f] [IsIso g] [Central g] :
+  [hif : IsIso f] [hig : IsIso g] [hg : Central g] :
   inv (f ⊗ g) = inv f ⊗ inv g := by simp [tensorHom_def, right_sliding]
 
 @[simp]
