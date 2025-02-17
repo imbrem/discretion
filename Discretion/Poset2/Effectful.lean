@@ -1,13 +1,4 @@
-import Mathlib.Order.BoundedOrder.Basic
-
-import Discretion.Premonoidal.Braided
-import Discretion.Premonoidal.Distributive
-import Discretion.Premonoidal.Predicate.Basic
-import Discretion.Premonoidal.Property.Braided
-import Discretion.Premonoidal.Property.Commutative
-import Discretion.Premonoidal.Quant
-import Discretion.EffectSystem.Basic
-
+import Discretion.Premonoidal.Effectful
 import Discretion.Poset2.Premonoidal
 
 namespace CategoryTheory
@@ -50,12 +41,10 @@ theorem Commutes.left
 
 class Effectful2
   (C : Type v) [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
-  (E : Type u) [EffectSystem E] extends MonPoset2 C where
-  eff : E →o MorphismProperty C
-  eff_top : eff ⊤ = ⊤
-  eff_monoidal : ∀e, (eff e).IsMonoidal
-  eff_braided : ∀e, (eff e).IsBraided
+  (E : Type u) [EffectSystem E] extends EffectfulCategory C E, MonPoset2 C where
   eff_right_mover : ∀{e e' : E}, e ⇀ e' → RightMover (eff e) (eff e')
+  eff_comm h
+    := Commutes.of_left_right _ _ (right := eff_right_mover h.1) (left := eff_right_mover h.2)
 
 variable {C : Type v} [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
   {E : Type u} [EffectSystem E] [EC : Effectful2 C E]
