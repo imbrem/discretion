@@ -43,6 +43,9 @@ theorem EffectfulCategory.HasEff.mono {e e' : E} (h : e ≤ e') {X Y : C} {f : X
   [hf : HasEff e f] : HasEff e' f where
   has_eff := EC.eff.monotone' h _ hf.has_eff
 
+theorem EffectfulCategory.HasEff.of_pure {X Y : C} {f : X ⟶ Y} (hf : EC.pure _ f) : EC.HasEff e f
+  := mono bot_le (hf := ⟨hf⟩)
+
 instance EffectfulCategory.HasEff.top {X Y : C} (f : X ⟶ Y) : EC.HasEff ⊤ f where
   has_eff := by rw [EC.eff_top]; trivial
 
