@@ -4,7 +4,7 @@ open HasQuant
 
 open HasPQuant
 
-class IsAff [HasQuant α] (A : semiOutParam α) : Prop where
+class IsAff [HasQuant α] (A : α) : Prop where
   del_le_quant : .del ≤ quant A
 
 attribute [simp] IsAff.del_le_quant
