@@ -499,6 +499,7 @@ instance rightUnitor_central {X : C} : Central (ρ_ X).hom := IsPremonoidal.righ
 
 theorem rightUnitor_inv_central {X : C} : Central (ρ_ X).inv := inferInstance
 
+@[reassoc]
 theorem tensor_comp_left {X₁ Y₁ Z₁ X₂ Y₂ Z₂ : C}
   (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (g₁ : Y₁ ⟶ Z₁) (g₂ : Y₂ ⟶ Z₂) [Central g₁] :
   (f₁ ≫ g₁) ⊗ (f₂ ≫ g₂) = (f₁ ⊗ f₂) ≫ (g₁ ⊗ g₂) := by
@@ -506,6 +507,7 @@ theorem tensor_comp_left {X₁ Y₁ Z₁ X₂ Y₂ Z₂ : C}
     apply congrArg₂ _ _ rfl
     simp only [Category.assoc, left_exchange g₁ f₂]
 
+@[reassoc]
 theorem tensor_comp_right {X₁ Y₁ Z₁ X₂ Y₂ Z₂ : C}
   (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (g₁ : Y₁ ⟶ Z₁) (g₂ : Y₂ ⟶ Z₂) [Central f₂] :
   (f₁ ≫ g₁) ⊗ (f₂ ≫ g₂) = (f₁ ⊗ f₂) ≫ (g₁ ⊗ g₂) := by
