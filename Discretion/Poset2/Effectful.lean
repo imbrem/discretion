@@ -49,8 +49,6 @@ class Effectful2
 variable {C : Type v} [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
   {E : Type u} [EffectSystem E] [EC : Effectful2 C E]
 
-abbrev Effectful2.pure : MorphismProperty C := EC.eff ⊥
-
 theorem Effectful2.eff_left_mover {e e' : E} (h : e ↽ e') : LeftMover (EC.eff e) (EC.eff e')
   := eff_right_mover h
 
@@ -58,14 +56,5 @@ theorem Effectful2.eff_commutes {e e' : E} (h : e ⇌ e') : Commutes (EC.eff e) 
   := Commutes.of_left_right (EC.eff e) (EC.eff e')
       (right := eff_right_mover h.1)
       (left := eff_left_mover h.2)
-
-theorem Effectful2.pure_commutes_eff (e : E) : Commutes (EC.pure) (EC.eff e)
-  := eff_commutes commutes_bot_left
-
-theorem Effectful2.pure_central : Central (EC.pure)
-  := Central.of_commutes_top (h := by convert pure_commutes_eff ⊤; rw [EC.eff_top])
-
-theorem Effectful2.pure_hom_central {f : X ⟶ Y} (h : EC.pure f) : Central f
-  := pure_central.central h
 
 namespace Monoidal

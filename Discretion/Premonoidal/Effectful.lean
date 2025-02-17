@@ -29,12 +29,11 @@ class EffectfulCategory
   eff_braided : ∀e, (eff e).IsBraided
   eff_comm : ∀{e e' : E}, e ⇌ e' → Commutes (eff e) (eff e')
 
-abbrev EffectfulCategory.pure [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
-  (E : Type u) [EffectSystem E] [EC : EffectfulCategory C E] : MorphismProperty C
-  := EC.eff ⊥
 
 variable {C : Type v} [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
   {E : Type u} [EffectSystem E] [EC : EffectfulCategory C E]
+
+abbrev EffectfulCategory.pure : MorphismProperty C := EC.eff ⊥
 
 class EffectfulCategory.HasEff (e : E) {X Y : C} (f : X ⟶ Y) : Prop where
   has_eff : EC.eff e f
@@ -43,7 +42,7 @@ theorem EffectfulCategory.HasEff.mono {e e' : E} (h : e ≤ e') {X Y : C} {f : X
   [hf : HasEff e f] : HasEff e' f where
   has_eff := EC.eff.monotone' h _ hf.has_eff
 
-theorem EffectfulCategory.HasEff.of_pure {X Y : C} {f : X ⟶ Y} (hf : EC.pure _ f) : EC.HasEff e f
+theorem EffectfulCategory.HasEff.of_pure {X Y : C} {f : X ⟶ Y} (hf : EC.pure f) : EC.HasEff e f
   := mono bot_le (hf := ⟨hf⟩)
 
 instance EffectfulCategory.HasEff.top {X Y : C} (f : X ⟶ Y) : EC.HasEff ⊤ f where
@@ -94,5 +93,17 @@ instance EffectfulCategory.HasEff.braiding_hom {e : E} {X Y : C} : HasEff e (σ_
   has_eff := (EC.eff_braided e).braiding_hom_mem
 
 abbrev EffectfulCategory.IsPure {X Y : C} (f : X ⟶ Y) : Prop := HasEff (E := E) ⊥ f
+
+theorem EffectfulCategory.pure_commutes_eff (e : E) : Commutes (EC.pure) (EC.eff e)
+  := EC.eff_comm commutes_bot_left
+
+theorem EffectfulCategory.pure_central : Central (EC.pure)
+  := Central.of_commutes_top (h := by convert pure_commutes_eff ⊤; rw [EC.eff_top])
+
+theorem EffectfulCategory.pure_hom_central {f : X ⟶ Y} (h : EC.pure f) : Central f
+  := pure_central.central h
+
+theorem EffectfulCategory.HasEff.pure_central (f : X ⟶ Y) [hf : EC.HasEff ⊥ f] : Central f
+  := pure_hom_central hf.has_eff
 
 namespace Monoidal
