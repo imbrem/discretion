@@ -1,5 +1,5 @@
 import Mathlib.Logic.Function.Basic
-import Mathlib.Data.Nat.Defs
+import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Fin.Basic
 import Mathlib.Order.Interval.Set.Basic
 import Mathlib.Order.Monotone.Basic
