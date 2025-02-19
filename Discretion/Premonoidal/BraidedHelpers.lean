@@ -1,8 +1,5 @@
 import Discretion.Monoidal.Braided.Basic
-import Discretion.Premonoidal.Predicate.Basic
-import Discretion.Premonoidal.Property.Braided
-import Discretion.Premonoidal.Quant
-import Mathlib.CategoryTheory.Monoidal.Subcategory
+import Discretion.Monoidal.CoherenceLemmas
 
 namespace CategoryTheory
 

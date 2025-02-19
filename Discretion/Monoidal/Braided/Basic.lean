@@ -7,6 +7,7 @@ import Discretion.Monoidal.Discrete
 import Discretion.Monoidal.NaturalTransformation
 import Mathlib.CategoryTheory.CommSq
 import Mathlib.CategoryTheory.Monoidal.Braided.Basic
+import Discretion.Tactic.CategoryTheory.Monoidal.Basic
 
 /-!
 # Braided and symmetric monoidal categories
@@ -166,12 +167,12 @@ theorem yang_baxter_iso (X Y Z : C) :
       whiskerRightIso (β'_ X Z) Y ≪≫ α_ Z X Y ≪≫
       whiskerLeftIso Z (β'_ X Y) := Iso.ext (yang_baxter X Y Z)
 
--- theorem yang_baxter' (X Y Z : C) :
---     (β'_ X Y).hom ▷ Z ⊗≫ Y ◁ (β'_ X Z).hom ⊗≫ (β'_ Y Z).hom ▷ X =
---       𝟙 _ ⊗≫ (X ◁ (β'_ Y Z).hom ⊗≫ (β'_ X Z).hom ▷ Y ⊗≫ Z ◁ (β'_ X Y).hom) ⊗≫ 𝟙 _ := by
---   rw [← cancel_epi (α_ X Y Z).inv, ← cancel_mono (α_ Z Y X).hom]
---   convert yang_baxter X Y Z using 1
---   all_goals premonoidal
+theorem yang_baxter' (X Y Z : C) :
+    (β'_ X Y).hom ▷ Z ⊗≫' Y ◁ (β'_ X Z).hom ⊗≫' (β'_ Y Z).hom ▷ X =
+      𝟙 _ ⊗≫' (X ◁ (β'_ Y Z).hom ⊗≫' (β'_ X Z).hom ▷ Y ⊗≫' Z ◁ (β'_ X Y).hom) ⊗≫' 𝟙 _ := by
+  rw [← cancel_epi (α_ X Y Z).inv, ← cancel_mono (α_ Z Y X).hom]
+  convert yang_baxter X Y Z using 1
+  all_goals premonoidal
 
 theorem hexagon_forward_iso (X Y Z : C) :
     α_ X Y Z ≪≫ β'_ X (Y ⊗ Z) ≪≫ α_ Y Z X =
@@ -287,89 +288,89 @@ I couldn't find a detailed proof in print, but this is discussed in:
 
 variable {C : Type u₁} [Category.{v₁} C] [MonoidalCategory' C] [BraidedCategory' C]
 
--- theorem braiding_leftUnitor_aux₁ (X : C) :
---     (α_ (𝟙_ C) (𝟙_ C) X).hom ≫
---         (𝟙_ C ◁ (β'_ X (𝟙_ C)).inv) ≫ (α_ _ X _).inv ≫ ((λ_ X).hom ▷ _) =
---       ((λ_ _).hom ▷ X) ≫ (β'_ X (𝟙_ C)).inv := by
---   premonoidal
+theorem braiding_leftUnitor_aux₁' (X : C) :
+    (α_ (𝟙_ C) (𝟙_ C) X).hom ≫
+        (𝟙_ C ◁ (β'_ X (𝟙_ C)).inv) ≫ (α_ _ X _).inv ≫ ((λ_ X).hom ▷ _) =
+      ((λ_ _).hom ▷ X) ≫ (β'_ X (𝟙_ C)).inv := by
+  premonoidal
 
--- theorem braiding_leftUnitor_aux₂ (X : C) :
---     ((β'_ X (𝟙_ C)).hom ▷ 𝟙_ C) ≫ ((λ_ X).hom ▷ 𝟙_ C) = (ρ_ X).hom ▷ 𝟙_ C :=
---   calc
---     ((β'_ X (𝟙_ C)).hom ▷ 𝟙_ C) ≫ ((λ_ X).hom ▷ 𝟙_ C) =
---       ((β'_ X (𝟙_ C)).hom ▷ 𝟙_ C) ≫ (α_ _ _ _).hom ≫ (α_ _ _ _).inv ≫ ((λ_ X).hom ▷ 𝟙_ C) := by
---       premonoidal
---     _ = ((β'_ X (𝟙_ C)).hom ▷ 𝟙_ C) ≫ (α_ _ _ _).hom ≫ (_ ◁ (β'_ X _).hom) ≫
---           (_ ◁ (β'_ X _).inv) ≫ (α_ _ _ _).inv ≫ ((λ_ X).hom ▷ 𝟙_ C) := by simp
---     _ = (α_ _ _ _).hom ≫ (β'_ _ _).hom ≫ (α_ _ _ _).hom ≫ (_ ◁ (β'_ X _).inv) ≫ (α_ _ _ _).inv ≫
---           ((λ_ X).hom ▷ 𝟙_ C) := by simp
---     _ = (α_ _ _ _).hom ≫ (β'_ _ _).hom ≫ ((λ_ _).hom ▷ X) ≫ (β'_ X _).inv := by
---       rw [braiding_leftUnitor_aux₁]
---     _ = (α_ _ _ _).hom ≫ (_ ◁ (λ_ _).hom) ≫ (β'_ _ _).hom ≫ (β'_ X _).inv := by
---       (slice_lhs 2 3 => rw [← braiding_naturality_right]); simp only [assoc]
---     _ = (α_ _ _ _).hom ≫ (_ ◁ (λ_ _).hom) := by rw [Iso.hom_inv_id, comp_id]
---     _ = (ρ_ X).hom ▷ 𝟙_ C := by rw [triangle]
+theorem braiding_leftUnitor_aux₂' (X : C) :
+    ((β'_ X (𝟙_ C)).hom ▷ 𝟙_ C) ≫ ((λ_ X).hom ▷ 𝟙_ C) = (ρ_ X).hom ▷ 𝟙_ C :=
+  calc
+    ((β'_ X (𝟙_ C)).hom ▷ 𝟙_ C) ≫ ((λ_ X).hom ▷ 𝟙_ C) =
+      ((β'_ X (𝟙_ C)).hom ▷ 𝟙_ C) ≫ (α_ _ _ _).hom ≫ (α_ _ _ _).inv ≫ ((λ_ X).hom ▷ 𝟙_ C) := by
+      premonoidal
+    _ = ((β'_ X (𝟙_ C)).hom ▷ 𝟙_ C) ≫ (α_ _ _ _).hom ≫ (_ ◁ (β'_ X _).hom) ≫
+          (_ ◁ (β'_ X _).inv) ≫ (α_ _ _ _).inv ≫ ((λ_ X).hom ▷ 𝟙_ C) := by simp
+    _ = (α_ _ _ _).hom ≫ (β'_ _ _).hom ≫ (α_ _ _ _).hom ≫ (_ ◁ (β'_ X _).inv) ≫ (α_ _ _ _).inv ≫
+          ((λ_ X).hom ▷ 𝟙_ C) := by simp
+    _ = (α_ _ _ _).hom ≫ (β'_ _ _).hom ≫ ((λ_ _).hom ▷ X) ≫ (β'_ X _).inv := by
+      rw [braiding_leftUnitor_aux₁']
+    _ = (α_ _ _ _).hom ≫ (_ ◁ (λ_ _).hom) ≫ (β'_ _ _).hom ≫ (β'_ X _).inv := by
+      (slice_lhs 2 3 => rw [← braiding_naturality_right]); simp only [assoc]
+    _ = (α_ _ _ _).hom ≫ (_ ◁ (λ_ _).hom) := by rw [Iso.hom_inv_id, comp_id]
+    _ = (ρ_ X).hom ▷ 𝟙_ C := by rw [triangle]
 
--- @[reassoc]
--- theorem braiding_leftUnitor (X : C) : (β'_ X (𝟙_ C)).hom ≫ (λ_ X).hom = (ρ_ X).hom := by
---   rw [← whiskerRight_iff, comp_whiskerRight, braiding_leftUnitor_aux₂]
+@[reassoc]
+theorem braiding_leftUnitor' (X : C) : (β'_ X (𝟙_ C)).hom ≫ (λ_ X).hom = (ρ_ X).hom := by
+  rw [← whiskerRight_iff, comp_whiskerRight, braiding_leftUnitor_aux₂']
 
--- theorem braiding_rightUnitor_aux₁ (X : C) :
---     (α_ X (𝟙_ C) (𝟙_ C)).inv ≫
---         ((β'_ (𝟙_ C) X).inv ▷ 𝟙_ C) ≫ (α_ _ X _).hom ≫ (_ ◁ (ρ_ X).hom) =
---       (X ◁ (ρ_ _).hom) ≫ (β'_ (𝟙_ C) X).inv := by
---   monoidal
+theorem braiding_rightUnitor_aux₁' (X : C) :
+    (α_ X (𝟙_ C) (𝟙_ C)).inv ≫
+        ((β'_ (𝟙_ C) X).inv ▷ 𝟙_ C) ≫ (α_ _ X _).hom ≫ (_ ◁ (ρ_ X).hom) =
+      (X ◁ (ρ_ _).hom) ≫ (β'_ (𝟙_ C) X).inv := by
+  premonoidal
 
--- theorem braiding_rightUnitor_aux₂ (X : C) :
---     (𝟙_ C ◁ (β'_ (𝟙_ C) X).hom) ≫ (𝟙_ C ◁ (ρ_ X).hom) = 𝟙_ C ◁ (λ_ X).hom :=
---   calc
---     (𝟙_ C ◁ (β'_ (𝟙_ C) X).hom) ≫ (𝟙_ C ◁ (ρ_ X).hom) =
---       (𝟙_ C ◁ (β'_ (𝟙_ C) X).hom) ≫ (α_ _ _ _).inv ≫ (α_ _ _ _).hom ≫ (𝟙_ C ◁ (ρ_ X).hom) := by
---       monoidal
---     _ = (𝟙_ C ◁ (β'_ (𝟙_ C) X).hom) ≫ (α_ _ _ _).inv ≫ ((β'_ _ X).hom ▷ _) ≫
---           ((β'_ _ X).inv ▷ _) ≫ (α_ _ _ _).hom ≫ (𝟙_ C ◁ (ρ_ X).hom) := by
---       simp
---     _ = (α_ _ _ _).inv ≫ (β'_ _ _).hom ≫ (α_ _ _ _).inv ≫ ((β'_ _ X).inv ▷ _) ≫ (α_ _ _ _).hom ≫
---           (𝟙_ C ◁ (ρ_ X).hom) := by
---       (slice_lhs 1 3 => rw [← hexagon_reverse]); simp only [assoc]
---     _ = (α_ _ _ _).inv ≫ (β'_ _ _).hom ≫ (X ◁ (ρ_ _).hom) ≫ (β'_ _ X).inv := by simp
---     _ = (α_ _ _ _).inv ≫ ((ρ_ _).hom ▷ _) ≫ (β'_ _ X).hom ≫ (β'_ _ _).inv := by
---       (slice_lhs 2 3 => rw [← braiding_naturality_left]); simp only [assoc]
---     _ = (α_ _ _ _).inv ≫ ((ρ_ _).hom ▷ _) := by rw [Iso.hom_inv_id, comp_id]
---     _ = 𝟙_ C ◁ (λ_ X).hom := by rw [triangle_assoc_comp_right]
+theorem braiding_rightUnitor_aux₂' (X : C) :
+    (𝟙_ C ◁ (β'_ (𝟙_ C) X).hom) ≫ (𝟙_ C ◁ (ρ_ X).hom) = 𝟙_ C ◁ (λ_ X).hom :=
+  calc
+    (𝟙_ C ◁ (β'_ (𝟙_ C) X).hom) ≫ (𝟙_ C ◁ (ρ_ X).hom) =
+      (𝟙_ C ◁ (β'_ (𝟙_ C) X).hom) ≫ (α_ _ _ _).inv ≫ (α_ _ _ _).hom ≫ (𝟙_ C ◁ (ρ_ X).hom) := by
+      premonoidal
+    _ = (𝟙_ C ◁ (β'_ (𝟙_ C) X).hom) ≫ (α_ _ _ _).inv ≫ ((β'_ _ X).hom ▷ _) ≫
+          ((β'_ _ X).inv ▷ _) ≫ (α_ _ _ _).hom ≫ (𝟙_ C ◁ (ρ_ X).hom) := by
+      simp
+    _ = (α_ _ _ _).inv ≫ (β'_ _ _).hom ≫ (α_ _ _ _).inv ≫ ((β'_ _ X).inv ▷ _) ≫ (α_ _ _ _).hom ≫
+          (𝟙_ C ◁ (ρ_ X).hom) := by
+      (slice_lhs 1 3 => rw [← hexagon_reverse]); simp only [assoc]
+    _ = (α_ _ _ _).inv ≫ (β'_ _ _).hom ≫ (X ◁ (ρ_ _).hom) ≫ (β'_ _ X).inv := by simp
+    _ = (α_ _ _ _).inv ≫ ((ρ_ _).hom ▷ _) ≫ (β'_ _ X).hom ≫ (β'_ _ _).inv := by
+      (slice_lhs 2 3 => rw [← braiding_naturality_left]); simp only [assoc]
+    _ = (α_ _ _ _).inv ≫ ((ρ_ _).hom ▷ _) := by rw [Iso.hom_inv_id, comp_id]
+    _ = 𝟙_ C ◁ (λ_ X).hom := by rw [triangle_assoc_comp_right]
 
--- @[reassoc]
--- theorem braiding_rightUnitor (X : C) : (β'_ (𝟙_ C) X).hom ≫ (ρ_ X).hom = (λ_ X).hom := by
---   rw [← whiskerLeft_iff, MonoidalCategory.whiskerLeft_comp, braiding_rightUnitor_aux₂]
+@[reassoc]
+theorem braiding_rightUnitor' (X : C) : (β'_ (𝟙_ C) X).hom ≫ (ρ_ X).hom = (λ_ X).hom := by
+  rw [← whiskerLeft_iff, MonoidalCategory'.whiskerLeft_comp, braiding_rightUnitor_aux₂']
 
--- @[reassoc, simp]
--- theorem braiding_tensorUnit_left (X : C) : (β'_ (𝟙_ C) X).hom = (λ_ X).hom ≫ (ρ_ X).inv := by
---   simp [← braiding_rightUnitor]
+@[reassoc, simp]
+theorem braiding_tensorUnit_left' (X : C) : (β'_ (𝟙_ C) X).hom = (λ_ X).hom ≫ (ρ_ X).inv := by
+  simp [← braiding_rightUnitor']
 
--- @[reassoc, simp]
--- theorem braiding_inv_tensorUnit_left (X : C) : (β'_ (𝟙_ C) X).inv = (ρ_ X).hom ≫ (λ_ X).inv := by
---   rw [Iso.inv_ext]
---   rw [braiding_tensorUnit_left]
---   monoidal
+@[reassoc, simp]
+theorem braiding_inv_tensorUnit_left' (X : C) : (β'_ (𝟙_ C) X).inv = (ρ_ X).hom ≫ (λ_ X).inv := by
+  rw [Iso.inv_ext]
+  rw [braiding_tensorUnit_left']
+  premonoidal
 
--- @[reassoc]
--- theorem leftUnitor_inv_braiding (X : C) : (λ_ X).inv ≫ (β'_ (𝟙_ C) X).hom = (ρ_ X).inv := by
---   simp
+@[reassoc]
+theorem leftUnitor_inv_braiding' (X : C) : (λ_ X).inv ≫ (β'_ (𝟙_ C) X).hom = (ρ_ X).inv := by
+  simp
 
--- @[reassoc]
--- theorem rightUnitor_inv_braiding (X : C) : (ρ_ X).inv ≫ (β'_ X (𝟙_ C)).hom = (λ_ X).inv := by
---   apply (cancel_mono (λ_ X).hom).1
---   simp only [assoc, braiding_leftUnitor, Iso.inv_hom_id]
+@[reassoc]
+theorem rightUnitor_inv_braiding' (X : C) : (ρ_ X).inv ≫ (β'_ X (𝟙_ C)).hom = (λ_ X).inv := by
+  apply (cancel_mono (λ_ X).hom).1
+  simp only [assoc, braiding_leftUnitor', Iso.inv_hom_id]
 
--- @[reassoc, simp]
--- theorem braiding_tensorUnit_right (X : C) : (β'_ X (𝟙_ C)).hom = (ρ_ X).hom ≫ (λ_ X).inv := by
---   simp [← rightUnitor_inv_braiding]
+@[reassoc, simp]
+theorem braiding_tensorUnit_right' (X : C) : (β'_ X (𝟙_ C)).hom = (ρ_ X).hom ≫ (λ_ X).inv := by
+  simp [← rightUnitor_inv_braiding']
 
--- @[reassoc, simp]
--- theorem braiding_inv_tensorUnit_right (X : C) : (β'_ X (𝟙_ C)).inv = (λ_ X).hom ≫ (ρ_ X).inv := by
---   rw [Iso.inv_ext]
---   rw [braiding_tensorUnit_right]
---   monoidal
+@[reassoc, simp]
+theorem braiding_inv_tensorUnit_right' (X : C) : (β'_ X (𝟙_ C)).inv = (λ_ X).hom ≫ (ρ_ X).inv := by
+  rw [Iso.inv_ext]
+  rw [braiding_tensorUnit_right']
+  premonoidal
 
 end
 
@@ -550,7 +551,6 @@ instance Discrete.monoidalFunctorBraided' (F : M →* N) :
 end CommMonoid
 
 namespace MonoidalCategory'
-
 section Tensor
 
 /-- Swap the second and third objects in `(X₁ ⊗ X₂) ⊗ (Y₁ ⊗ Y₂)`. This is used to strength the
@@ -614,112 +614,112 @@ theorem tensorμ_natural_right (Z₁ Z₂ : C) {X₁ X₂ Y₁ Y₂ : C} (f₁ :
       tensorμ Z₁ Z₂ X₁ X₂ ≫ (Z₁ ◁ f₁ ⊗ Z₂ ◁ f₂) := by
   convert tensorμ_natural (𝟙 Z₁) (𝟙 Z₂) f₁ f₂ using 1 <;> simp
 
--- @[reassoc]
--- theorem tensor_left_unitality (X₁ X₂ : C) :
---     (λ_ (X₁ ⊗ X₂)).hom =
---       ((λ_ (𝟙_ C)).inv ▷ (X₁ ⊗ X₂)) ≫
---         tensorμ (𝟙_ C) (𝟙_ C) X₁ X₂ ≫ ((λ_ X₁).hom ⊗ (λ_ X₂).hom) := by
---   dsimp only [tensorμ]
---   have :
---     ((λ_ (𝟙_ C)).inv ▷ (X₁ ⊗ X₂)) ≫
---         (α_ (𝟙_ C) (𝟙_ C) (X₁ ⊗ X₂)).hom ≫ (𝟙_ C ◁ (α_ (𝟙_ C) X₁ X₂).inv) =
---       𝟙_ C ◁ (λ_ X₁).inv ▷ X₂ := by
---     monoidal
---   slice_rhs 1 3 => rw [this]
---   clear this
---   slice_rhs 1 2 => rw [← MonoidalCategory.whiskerLeft_comp, ← comp_whiskerRight,
---     leftUnitor_inv_braiding]
---   simp [tensorHom_id, id_tensorHom, tensorHom_def]
+@[reassoc]
+theorem tensor_left_unitality (X₁ X₂ : C) :
+    (λ_ (X₁ ⊗ X₂)).hom =
+      ((λ_ (𝟙_ C)).inv ▷ (X₁ ⊗ X₂)) ≫
+        tensorμ (𝟙_ C) (𝟙_ C) X₁ X₂ ≫ ((λ_ X₁).hom ⊗ (λ_ X₂).hom) := by
+  dsimp only [tensorμ]
+  have :
+    ((λ_ (𝟙_ C)).inv ▷ (X₁ ⊗ X₂)) ≫
+        (α_ (𝟙_ C) (𝟙_ C) (X₁ ⊗ X₂)).hom ≫ (𝟙_ C ◁ (α_ (𝟙_ C) X₁ X₂).inv) =
+      𝟙_ C ◁ (λ_ X₁).inv ▷ X₂ := by
+    premonoidal
+  slice_rhs 1 3 => rw [this]
+  clear this
+  slice_rhs 1 2 => rw [← MonoidalCategory'.whiskerLeft_comp, ← comp_whiskerRight,
+    leftUnitor_inv_braiding']
+  simp [tensorHom_id, id_tensorHom, tensorHom_def]
 
--- @[reassoc]
--- theorem tensor_right_unitality (X₁ X₂ : C) :
---     (ρ_ (X₁ ⊗ X₂)).hom =
---       ((X₁ ⊗ X₂) ◁ (λ_ (𝟙_ C)).inv) ≫
---         tensorμ X₁ X₂ (𝟙_ C) (𝟙_ C) ≫ ((ρ_ X₁).hom ⊗ (ρ_ X₂).hom) := by
---   dsimp only [tensorμ]
---   have :
---     ((X₁ ⊗ X₂) ◁ (λ_ (𝟙_ C)).inv) ≫
---         (α_ X₁ X₂ (𝟙_ C ⊗ 𝟙_ C)).hom ≫ (X₁ ◁ (α_ X₂ (𝟙_ C) (𝟙_ C)).inv) =
---       (α_ X₁ X₂ (𝟙_ C)).hom ≫ (X₁ ◁ (ρ_ X₂).inv ▷ 𝟙_ C) := by
---     monoidal
---   slice_rhs 1 3 => rw [this]
---   clear this
---   slice_rhs 2 3 => rw [← MonoidalCategory.whiskerLeft_comp, ← comp_whiskerRight,
---     rightUnitor_inv_braiding]
---   simp [tensorHom_id, id_tensorHom, tensorHom_def]
+@[reassoc]
+theorem tensor_right_unitality (X₁ X₂ : C) :
+    (ρ_ (X₁ ⊗ X₂)).hom =
+      ((X₁ ⊗ X₂) ◁ (λ_ (𝟙_ C)).inv) ≫
+        tensorμ X₁ X₂ (𝟙_ C) (𝟙_ C) ≫ ((ρ_ X₁).hom ⊗ (ρ_ X₂).hom) := by
+  dsimp only [tensorμ]
+  have :
+    ((X₁ ⊗ X₂) ◁ (λ_ (𝟙_ C)).inv) ≫
+        (α_ X₁ X₂ (𝟙_ C ⊗ 𝟙_ C)).hom ≫ (X₁ ◁ (α_ X₂ (𝟙_ C) (𝟙_ C)).inv) =
+      (α_ X₁ X₂ (𝟙_ C)).hom ≫ (X₁ ◁ (ρ_ X₂).inv ▷ 𝟙_ C) := by
+    premonoidal
+  slice_rhs 1 3 => rw [this]
+  clear this
+  slice_rhs 2 3 => rw [← MonoidalCategory'.whiskerLeft_comp, ← comp_whiskerRight,
+    rightUnitor_inv_braiding']
+  simp [tensorHom_id, id_tensorHom, tensorHom_def]
 
--- @[reassoc]
--- theorem tensor_associativity (X₁ X₂ Y₁ Y₂ Z₁ Z₂ : C) :
---     (tensorμ X₁ X₂ Y₁ Y₂ ▷ (Z₁ ⊗ Z₂)) ≫
---         tensorμ (X₁ ⊗ Y₁) (X₂ ⊗ Y₂) Z₁ Z₂ ≫ ((α_ X₁ Y₁ Z₁).hom ⊗ (α_ X₂ Y₂ Z₂).hom) =
---       (α_ (X₁ ⊗ X₂) (Y₁ ⊗ Y₂) (Z₁ ⊗ Z₂)).hom ≫
---         ((X₁ ⊗ X₂) ◁ tensorμ Y₁ Y₂ Z₁ Z₂) ≫ tensorμ X₁ X₂ (Y₁ ⊗ Z₁) (Y₂ ⊗ Z₂) := by
---   dsimp only [tensor_obj, prodMonoidal_tensorObj, tensorμ]
---   simp only [braiding_tensor_left, braiding_tensor_right]
---   calc
---     _ = 𝟙 _ ⊗≫
---       X₁ ◁ ((β'_ X₂ Y₁).hom ▷ (Y₂ ⊗ Z₁) ≫ (Y₁ ⊗ X₂) ◁ (β'_ Y₂ Z₁).hom) ▷ Z₂ ⊗≫
---         X₁ ◁ Y₁ ◁ (β'_ X₂ Z₁).hom ▷ Y₂ ▷ Z₂ ⊗≫ 𝟙 _ := by monoidal
---     _ = _ := by rw [← whisker_exchange]; monoidal
+@[reassoc]
+theorem tensor_associativity (X₁ X₂ Y₁ Y₂ Z₁ Z₂ : C) :
+    (tensorμ X₁ X₂ Y₁ Y₂ ▷ (Z₁ ⊗ Z₂)) ≫
+        tensorμ (X₁ ⊗ Y₁) (X₂ ⊗ Y₂) Z₁ Z₂ ≫ ((α_ X₁ Y₁ Z₁).hom ⊗ (α_ X₂ Y₂ Z₂).hom) =
+      (α_ (X₁ ⊗ X₂) (Y₁ ⊗ Y₂) (Z₁ ⊗ Z₂)).hom ≫
+        ((X₁ ⊗ X₂) ◁ tensorμ Y₁ Y₂ Z₁ Z₂) ≫ tensorμ X₁ X₂ (Y₁ ⊗ Z₁) (Y₂ ⊗ Z₂) := by
+  dsimp only [tensor_obj, prodMonoidal_tensorObj, tensorμ]
+  simp only [braiding_tensor_left, braiding_tensor_right]
+  calc
+    _ = 𝟙 _ ⊗≫'
+      X₁ ◁ ((β'_ X₂ Y₁).hom ▷ (Y₂ ⊗ Z₁) ≫ (Y₁ ⊗ X₂) ◁ (β'_ Y₂ Z₁).hom) ▷ Z₂ ⊗≫'
+        X₁ ◁ Y₁ ◁ (β'_ X₂ Z₁).hom ▷ Y₂ ▷ Z₂ ⊗≫' 𝟙 _ := by premonoidal
+    _ = _ := by rw [← whisker_exchange]; premonoidal
 
--- instance tensorMonoidal : (tensor C).Monoidal :=
---     Functor.CoreMonoidal.toMonoidal
---       { εIso := (λ_ (𝟙_ C)).symm
---         μIso := fun X Y ↦
---           { hom := tensorμ X.1 X.2 Y.1 Y.2
---             inv := tensorδ X.1 X.2 Y.1 Y.2 }
---         μIso_hom_natural_left := fun f Z ↦ tensorμ_natural_left f.1 f.2 Z.1 Z.2
---         μIso_hom_natural_right := fun Z f ↦ tensorμ_natural_right Z.1 Z.2 f.1 f.2
---         associativity := fun X Y Z ↦ tensor_associativity X.1 X.2 Y.1 Y.2 Z.1 Z.2
---         left_unitality := fun ⟨X₁, X₂⟩ ↦ tensor_left_unitality X₁ X₂
---         right_unitality := fun ⟨X₁, X₂⟩ ↦ tensor_right_unitality X₁ X₂ }
+instance tensorMonoidal : (tensor C).Monoidal' :=
+    Functor.CoreMonoidal'.toMonoidal
+      { εIso := (λ_ (𝟙_ C)).symm
+        μIso := fun X Y ↦
+          { hom := tensorμ X.1 X.2 Y.1 Y.2
+            inv := tensorδ X.1 X.2 Y.1 Y.2 }
+        μIso_hom_natural_left := fun f Z ↦ tensorμ_natural_left f.1 f.2 Z.1 Z.2
+        μIso_hom_natural_right := fun Z f ↦ tensorμ_natural_right Z.1 Z.2 f.1 f.2
+        associativity := fun X Y Z ↦ tensor_associativity X.1 X.2 Y.1 Y.2 Z.1 Z.2
+        left_unitality := fun ⟨X₁, X₂⟩ ↦ tensor_left_unitality X₁ X₂
+        right_unitality := fun ⟨X₁, X₂⟩ ↦ tensor_right_unitality X₁ X₂ }
 
--- @[simp] lemma tensor_ε : ε (tensor C) = (λ_ (𝟙_ C)).inv := rfl
--- @[simp] lemma tensor_η : η (tensor C) = (λ_ (𝟙_ C)).hom := rfl
--- @[simp] lemma tensor_μ (X Y : C × C) : μ (tensor C) X Y = tensorμ X.1 X.2 Y.1 Y.2 := rfl
--- @[simp] lemma tensor_δ (X Y : C × C) : δ (tensor C) X Y = tensorδ X.1 X.2 Y.1 Y.2 := rfl
+@[simp] lemma tensor_ε : ε (tensor C) = (λ_ (𝟙_ C)).inv := rfl
+@[simp] lemma tensor_η : η (tensor C) = (λ_ (𝟙_ C)).hom := rfl
+@[simp] lemma tensor_μ (X Y : C × C) : μ (tensor C) X Y = tensorμ X.1 X.2 Y.1 Y.2 := rfl
+@[simp] lemma tensor_δ (X Y : C × C) : δ (tensor C) X Y = tensorδ X.1 X.2 Y.1 Y.2 := rfl
 
--- @[reassoc]
--- theorem leftUnitor_monoidal (X₁ X₂ : C) :
---     (λ_ X₁).hom ⊗ (λ_ X₂).hom =
---       tensorμ (𝟙_ C) X₁ (𝟙_ C) X₂ ≫ ((λ_ (𝟙_ C)).hom ▷ (X₁ ⊗ X₂)) ≫ (λ_ (X₁ ⊗ X₂)).hom := by
---   dsimp only [tensorμ]
---   have :
---     (λ_ X₁).hom ⊗ (λ_ X₂).hom =
---       (α_ (𝟙_ C) X₁ (𝟙_ C ⊗ X₂)).hom ≫
---         (𝟙_ C ◁ (α_ X₁ (𝟙_ C) X₂).inv) ≫ (λ_ ((X₁ ⊗ 𝟙_ C) ⊗ X₂)).hom ≫ ((ρ_ X₁).hom ▷ X₂) := by
---     monoidal
---   rw [this]; clear this
---   rw [← braiding_leftUnitor]
---   monoidal
+@[reassoc]
+theorem leftUnitor_monoidal (X₁ X₂ : C) :
+    (λ_ X₁).hom ⊗ (λ_ X₂).hom =
+      tensorμ (𝟙_ C) X₁ (𝟙_ C) X₂ ≫ ((λ_ (𝟙_ C)).hom ▷ (X₁ ⊗ X₂)) ≫ (λ_ (X₁ ⊗ X₂)).hom := by
+  dsimp only [tensorμ]
+  have :
+    (λ_ X₁).hom ⊗ (λ_ X₂).hom =
+      (α_ (𝟙_ C) X₁ (𝟙_ C ⊗ X₂)).hom ≫
+        (𝟙_ C ◁ (α_ X₁ (𝟙_ C) X₂).inv) ≫ (λ_ ((X₁ ⊗ 𝟙_ C) ⊗ X₂)).hom ≫ ((ρ_ X₁).hom ▷ X₂) := by
+    premonoidal
+  rw [this]; clear this
+  rw [← braiding_leftUnitor']
+  premonoidal
 
--- @[reassoc]
--- theorem rightUnitor_monoidal (X₁ X₂ : C) :
---     (ρ_ X₁).hom ⊗ (ρ_ X₂).hom =
---       tensorμ X₁ (𝟙_ C) X₂ (𝟙_ C) ≫ ((X₁ ⊗ X₂) ◁ (λ_ (𝟙_ C)).hom) ≫ (ρ_ (X₁ ⊗ X₂)).hom := by
---   dsimp only [tensorμ]
---   have :
---     (ρ_ X₁).hom ⊗ (ρ_ X₂).hom =
---       (α_ X₁ (𝟙_ C) (X₂ ⊗ 𝟙_ C)).hom ≫
---         (X₁ ◁ (α_ (𝟙_ C) X₂ (𝟙_ C)).inv) ≫ (X₁ ◁ (ρ_ (𝟙_ C ⊗ X₂)).hom) ≫ (X₁ ◁ (λ_ X₂).hom) := by
---     monoidal
---   rw [this]; clear this
---   rw [← braiding_rightUnitor]
---   monoidal
+@[reassoc]
+theorem rightUnitor_monoidal (X₁ X₂ : C) :
+    (ρ_ X₁).hom ⊗ (ρ_ X₂).hom =
+      tensorμ X₁ (𝟙_ C) X₂ (𝟙_ C) ≫ ((X₁ ⊗ X₂) ◁ (λ_ (𝟙_ C)).hom) ≫ (ρ_ (X₁ ⊗ X₂)).hom := by
+  dsimp only [tensorμ]
+  have :
+    (ρ_ X₁).hom ⊗ (ρ_ X₂).hom =
+      (α_ X₁ (𝟙_ C) (X₂ ⊗ 𝟙_ C)).hom ≫
+        (X₁ ◁ (α_ (𝟙_ C) X₂ (𝟙_ C)).inv) ≫ (X₁ ◁ (ρ_ (𝟙_ C ⊗ X₂)).hom) ≫ (X₁ ◁ (λ_ X₂).hom) := by
+    premonoidal
+  rw [this]; clear this
+  rw [← braiding_rightUnitor']
+  premonoidal
 
--- @[reassoc]
--- theorem associator_monoidal (X₁ X₂ X₃ Y₁ Y₂ Y₃ : C) :
---     tensorμ (X₁ ⊗ X₂) X₃ (Y₁ ⊗ Y₂) Y₃ ≫
---         (tensorμ X₁ X₂ Y₁ Y₂ ▷ (X₃ ⊗ Y₃)) ≫ (α_ (X₁ ⊗ Y₁) (X₂ ⊗ Y₂) (X₃ ⊗ Y₃)).hom =
---       ((α_ X₁ X₂ X₃).hom ⊗ (α_ Y₁ Y₂ Y₃).hom) ≫
---         tensorμ X₁ (X₂ ⊗ X₃) Y₁ (Y₂ ⊗ Y₃) ≫ ((X₁ ⊗ Y₁) ◁ tensorμ X₂ X₃ Y₂ Y₃) := by
---   dsimp only [tensorμ]
---   calc
---     _ = 𝟙 _ ⊗≫ X₁ ◁ X₂ ◁ (β'_ X₃ Y₁).hom ▷ Y₂ ▷ Y₃ ⊗≫
---       X₁ ◁ ((X₂ ⊗ Y₁) ◁ (β'_ X₃ Y₂).hom ≫
---         (β'_ X₂ Y₁).hom ▷ (Y₂ ⊗ X₃)) ▷ Y₃ ⊗≫ 𝟙 _ := by
---           rw [braiding_tensor_right]; monoidal
---     _ = _ := by rw [whisker_exchange, braiding_tensor_left]; monoidal
+@[reassoc]
+theorem associator_monoidal (X₁ X₂ X₃ Y₁ Y₂ Y₃ : C) :
+    tensorμ (X₁ ⊗ X₂) X₃ (Y₁ ⊗ Y₂) Y₃ ≫
+        (tensorμ X₁ X₂ Y₁ Y₂ ▷ (X₃ ⊗ Y₃)) ≫ (α_ (X₁ ⊗ Y₁) (X₂ ⊗ Y₂) (X₃ ⊗ Y₃)).hom =
+      ((α_ X₁ X₂ X₃).hom ⊗ (α_ Y₁ Y₂ Y₃).hom) ≫
+        tensorμ X₁ (X₂ ⊗ X₃) Y₁ (Y₂ ⊗ Y₃) ≫ ((X₁ ⊗ Y₁) ◁ tensorμ X₂ X₃ Y₂ Y₃) := by
+  dsimp only [tensorμ]
+  calc
+    _ = 𝟙 _ ⊗≫' X₁ ◁ X₂ ◁ (β'_ X₃ Y₁).hom ▷ Y₂ ▷ Y₃ ⊗≫'
+      X₁ ◁ ((X₂ ⊗ Y₁) ◁ (β'_ X₃ Y₂).hom ≫
+        (β'_ X₂ Y₁).hom ▷ (Y₂ ⊗ X₃)) ▷ Y₃ ⊗≫' 𝟙 _ := by
+          rw [braiding_tensor_right]; premonoidal
+    _ = _ := by rw [whisker_exchange, braiding_tensor_left]; premonoidal
 
 end Tensor
 

@@ -63,7 +63,7 @@ def monoidalComp' {W X Y Z : C} [MonoidalCoherence' X Y] (f : W ⟶ X) (g : Y �
   f ≫ ⊗𝟙.hom ≫ g
 
 @[inherit_doc monoidalComp']
-scoped[CategoryTheory.MonoidalCategory'] infixr:80 " ⊗≫ " =>
+scoped[CategoryTheory.MonoidalCategory'] infixr:80 " ⊗≫' " =>
   monoidalComp' -- type as \ot \gg
 
 /-- Compose two isomorphisms in a monoidal category,
@@ -72,7 +72,7 @@ def monoidalIsoComp' {W X Y Z : C} [MonoidalCoherence' X Y] (f : W ≅ X) (g : Y
   f ≪≫ ⊗𝟙 ≪≫ g
 
 @[inherit_doc monoidalIsoComp']
-scoped[CategoryTheory.MonoidalCategory'] infixr:80 " ≪⊗≫ " =>
+scoped[CategoryTheory.MonoidalCategory'] infixr:80 " ≪⊗≫' " =>
   monoidalIsoComp' -- type as \ll \ot \gg
 
 namespace MonoidalCoherence'
@@ -135,7 +135,7 @@ instance assoc' (W X Y Z : C) [MonoidalCoherence' W (X ⊗ (Y ⊗ Z))] :
 end MonoidalCoherence'
 
 @[simp] lemma monoidalComp_refl' {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z) :
-    f ⊗≫ g = f ≫ g := by
+    f ⊗≫' g = f ≫ g := by
   simp [monoidalComp']
 
 end CategoryTheory

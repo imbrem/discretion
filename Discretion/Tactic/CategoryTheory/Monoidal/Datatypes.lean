@@ -98,7 +98,7 @@ instance : MonadMor₁ MonoidalM where
   id₁M a := do
     let ctx ← read
     let .some _monoidal := ctx.instPremonoidal? | synthPremonoidalError
-    return .id (q(MonoidalCategory.tensorUnit) : Q($ctx.C)) a
+    return .id (q(MonoidalCategory'.tensorUnit) : Q($ctx.C)) a
   comp₁M f g := do
     let ctx ← read
     let .some _monoidal := ctx.instPremonoidal? | synthPremonoidalError
@@ -119,7 +119,7 @@ theorem structuralIsoOfExpr_comp {f g h : C}
 
 theorem StructuralOfExpr_monoidalComp {f g h i : C} [MonoidalCoherence' g h]
     (η : f ⟶ g) (η' : f ≅ g) (ih_η : η'.hom = η) (θ : h ⟶ i) (θ' : h ≅ i) (ih_θ : θ'.hom = θ) :
-    (η' ≪⊗≫ θ').hom = η ⊗≫ θ := by
+    (η' ≪⊗≫' θ').hom = η ⊗≫' θ := by
   simp [ih_η, ih_θ, monoidalIsoComp', monoidalComp', MonoidalCoherence'.iso]
 
 variable [PremonoidalCategory C]
@@ -247,7 +247,7 @@ instance : MonadMor₂Iso MonoidalM where
     have _inst : Q(MonoidalCoherence' $g_e $h_e) := α.inst
     have η_e : Q($f_e ≅ $g_e) := η.e
     have θ_e : Q($h_e ≅ $i_e) := θ.e
-    return .coherenceComp q($η_e ≪⊗≫ $θ_e) f g h i α η θ
+    return .coherenceComp q($η_e ≪⊗≫' $θ_e) f g h i α η θ
 
 open MonadMor₂Iso
 
@@ -405,7 +405,7 @@ instance : MonadMor₂ MonoidalM where
         let eq := q(StructuralOfExpr_monoidalComp _ _ $η_iso_eq _ _ $θ_iso_eq)
         return .some ⟨← coherenceCompM α η_iso.e θ_iso.e, eq⟩
       | _ => return none)
-    let e : Q($f_e ⟶ $i_e) := q($η_e ⊗≫ $θ_e)
+    let e : Q($f_e ⟶ $i_e) := q($η_e ⊗≫' $θ_e)
     return .coherenceComp e iso_lift? f g h i α η θ
 
 /-- Check that `e` is definitionally equal to `𝟙_ C`. -/
@@ -413,7 +413,7 @@ def id₁? (e : Expr) : MonoidalM (Option Obj) := do
   let ctx ← read
   match ctx.instPremonoidal? with
   | .some _monoidal => do
-    if ← withDefault <| isDefEq e (q(MonoidalCategory.tensorUnit) : Q($ctx.C)) then
+    if ← withDefault <| isDefEq e (q(MonoidalCategory'.tensorUnit) : Q($ctx.C)) then
       return some ⟨none⟩
     else
       return none
@@ -466,9 +466,9 @@ partial def Mor₂IsoOfExpr (e : Expr) : MonoidalM Mor₂Iso := do
     symmM (← Mor₂IsoOfExpr η)
   | (``Iso.trans, #[_, _, _, _, _, η, θ]) =>
     comp₂M (← Mor₂IsoOfExpr η) (← Mor₂IsoOfExpr θ)
-  | (``MonoidalCategory.whiskerLeftIso, #[_, _, _, f, _, _, η]) =>
+  | (``MonoidalCategory'.whiskerLeftIso, #[_, _, _, f, _, _, η]) =>
     whiskerLeftM (← MkMor₁.ofExpr f) (← Mor₂IsoOfExpr η)
-  | (``MonoidalCategory.whiskerRightIso, #[_, _, _, _, _, η, h]) =>
+  | (``MonoidalCategory'.whiskerRightIso, #[_, _, _, _, _, η, h]) =>
     whiskerRightM (← Mor₂IsoOfExpr η) (← MkMor₁.ofExpr h)
   | (``PremonoidalCategory.tensorIso, #[_, _, _, _, _, _, _, η, θ]) =>
     horizontalCompM (← Mor₂IsoOfExpr η) (← Mor₂IsoOfExpr θ)
