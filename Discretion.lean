@@ -32,6 +32,8 @@ import Discretion.Premonoidal.Property.Basic
 import Discretion.Premonoidal.Property.Braided
 import Discretion.Premonoidal.Property.WideSubcategory
 import Discretion.Premonoidal.Property.Cartesian
+import Discretion.Premonoidal.BraidedHelpers
+import Discretion.Premonoidal.Effectful
 import Discretion.Distributive.Category
 import Discretion.Distributive.Effectful
 import Discretion.Elgot.Monad

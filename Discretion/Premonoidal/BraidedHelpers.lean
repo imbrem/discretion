@@ -1,4 +1,4 @@
-import Discretion.CategoryTheory.Monoidal.Braided.Basic
+import Discretion.Monoidal.Braided.Basic
 import Discretion.Premonoidal.Predicate.Basic
 import Discretion.Premonoidal.Property.Braided
 import Discretion.Premonoidal.Quant
@@ -6,13 +6,16 @@ import Mathlib.CategoryTheory.Monoidal.Subcategory
 
 namespace CategoryTheory
 
-open MonoidalCategory
+open scoped MonoidalCategory
+open MonoidalCategory'
 
-open Monoidal
+namespace MonoidalCategory'
 
-namespace Monoidal
+variable {C : Type u} [Category C]
 
-variable {C : Type u} [Category C] [MonoidalCategoryStruct C]
+section MonoidalCategoryStruct
+
+variable [MonoidalCategoryStruct C]
 
 def assoc_inner_hom
   (X Y Z W : C)
@@ -24,15 +27,21 @@ def assoc_inner_inv
   : X ⊗ (Y ⊗ Z) ⊗ W ⟶ (X ⊗ Y) ⊗ (Z ⊗ W)
   := X ◁ (α_ Y Z W).hom ≫ (α_ X Y (Z ⊗ W)).inv
 
-theorem assoc_inner_hom_assoc_inner_inv [IsBinoidal C]
+end MonoidalCategoryStruct
+
+variable [PremonoidalCategory C]
+
+@[simp]
+theorem assoc_inner_hom_assoc_inner_inv
   (X Y Z W : C) : assoc_inner_hom X Y Z W ≫ assoc_inner_inv X Y Z W = 𝟙 _ := by
   simp [assoc_inner_hom, assoc_inner_inv, <-whiskerLeft_comp_assoc]
 
-theorem assoc_inner_inv_assoc_inner_hom [IsBinoidal C]
+@[simp]
+theorem assoc_inner_inv_assoc_inner_hom
   (X Y Z W : C) : assoc_inner_inv X Y Z W ≫ assoc_inner_hom X Y Z W = 𝟙 _ := by
   simp [assoc_inner_hom, assoc_inner_inv, <-whiskerLeft_comp]
 
-def assoc_inner [IsBinoidal C]
+def assoc_inner
   (X Y Z W : C) : (X ⊗ Y) ⊗ (Z ⊗ W) ≅ X ⊗ (Y ⊗ Z) ⊗ W
   := ⟨
     assoc_inner_hom X Y Z W,
@@ -41,70 +50,117 @@ def assoc_inner [IsBinoidal C]
     assoc_inner_inv_assoc_inner_hom X Y Z W
   ⟩
 
-variable [BraidedCategoryStruct C]
+scoped notation "αi_" => assoc_inner
 
-def swap_inner
+section BraidedCategory
+
+variable [BraidedCategory' C]
+
+def swap_inner_hom
   (X Y Z W : C) : (X ⊗ Y) ⊗ (Z ⊗ W) ⟶ (X ⊗ Z) ⊗ (Y ⊗ W)
-  := assoc_inner_hom X Y Z W
-  ≫ X ◁ σ_ Y Z ▷ W
-  ≫ assoc_inner_inv X Z Y W
+  := (αi_ X Y Z W).hom
+  ≫ X ◁ (β'_ Y Z).hom ▷ W
+  ≫ (αi_ X Z Y W).inv
 
 def swap_inner_inv
-  (X Y Z W : C) : (X ⊗ Y) ⊗ (Z ⊗ W) ⟶ (X ⊗ Z) ⊗ (Y ⊗ W)
-  := assoc_inner_hom X Y Z W
-  ≫ X ◁ (BraidedCategoryStruct.braiding Z Y).inv ▷ W
-  ≫ assoc_inner_inv X Z Y W
+  (X Y Z W : C) : (X ⊗ Z) ⊗ (Y ⊗ W) ⟶ (X ⊗ Y) ⊗ (Z ⊗ W)
+  := (αi_ X Z Y W).hom
+  ≫ X ◁ (β'_ Y Z).inv ▷ W
+  ≫ (αi_ X Y Z W).inv
 
 @[simp]
-theorem swap_inner_inv_eq_swap_inner [IsSymmetric C]
-  (X Y Z W : C) : swap_inner_inv X Y Z W = swap_inner X Y Z W := by
-  simp [swap_inner, swap_inner_inv]
-
-variable [IsPremonoidal C]
-
-@[simp]
-theorem swap_inner_swap_inner_inv
-  (X Y Z W : C) : swap_inner X Y Z W ≫ swap_inner_inv X Z Y W = 𝟙 _ := by
+theorem swap_inner_hom_swap_inner_inv
+  (X Y Z W : C) : swap_inner_hom X Y Z W ≫ swap_inner_inv X Y Z W = 𝟙 _ := by
   simp only [
-    swap_inner, swap_inner_inv, Category.assoc, Iso.inv_hom_id_assoc, assoc_inner_hom,
-    assoc_inner_inv
+    swap_inner_hom, swap_inner_inv, Category.assoc, Iso.inv_hom_id_assoc, assoc_inner_hom,
+    assoc_inner_inv, assoc_inner
   ]
   apply (cancel_epi (α_ X Y (Z ⊗ W)).inv).mp
   apply (cancel_mono (α_ X Y (Z ⊗ W)).hom).mp
   simp only [Iso.inv_hom_id_assoc, Category.assoc, Iso.inv_hom_id, Category.comp_id, ←
     whiskerLeft_comp, Iso.hom_inv_id_assoc]
-  rw [<-Category.assoc _ _ (α_ _ _ _).hom, <-whiskerRight_comp]
+  rw [<-Category.assoc _ _ (α_ _ _ _).hom, <-comp_whiskerRight]
   simp
 
 @[simp]
-theorem swap_inner_inv_swap_inner
-  (X Y Z W : C) : swap_inner_inv X Y Z W ≫ swap_inner X Z Y W = 𝟙 _ := by
+theorem swap_inner_inv_swap_inner_hom
+  (X Y Z W : C) : swap_inner_inv X Y Z W ≫ swap_inner_hom X Y Z W = 𝟙 _ := by
   simp only [
-    swap_inner, swap_inner_inv, Category.assoc, Iso.inv_hom_id_assoc, assoc_inner_hom,
-    assoc_inner_inv
+    swap_inner_hom, swap_inner_inv, Category.assoc, Iso.inv_hom_id_assoc, assoc_inner_hom,
+    assoc_inner_inv, assoc_inner
   ]
-  apply (cancel_epi (α_ X Y (Z ⊗ W)).inv).mp
-  apply (cancel_mono (α_ X Y (Z ⊗ W)).hom).mp
+  apply (cancel_epi (α_ X Z (Y ⊗ W)).inv).mp
+  apply (cancel_mono (α_ X Z (Y ⊗ W)).hom).mp
   simp only [Iso.inv_hom_id_assoc, Category.assoc, Iso.inv_hom_id, Category.comp_id, ←
     whiskerLeft_comp, Iso.hom_inv_id_assoc]
-  rw [<-Category.assoc _ _ (α_ _ _ _).hom, <-whiskerRight_comp]
+  rw [<-Category.assoc _ _ (α_ _ _ _).hom, <-comp_whiskerRight]
   simp
 
-instance IsIso.swap_inner {X Y Z W : C} : IsIso (swap_inner X Y Z W)
-  := ⟨_, swap_inner_swap_inner_inv X Y Z W, swap_inner_inv_swap_inner X Z Y W⟩
+def swap_inner
+  (X Y Z W : C) : (X ⊗ Y) ⊗ (Z ⊗ W) ≅ (X ⊗ Z) ⊗ (Y ⊗ W)
+  := ⟨
+    swap_inner_hom X Y Z W,
+    swap_inner_inv X Y Z W,
+    swap_inner_hom_swap_inner_inv X Y Z W,
+    swap_inner_inv_swap_inner_hom X Y Z W
+  ⟩
 
-instance IsIso.swap_inner_inv {X Y Z W : C} : IsIso (swap_inner_inv X Y Z W)
-  := ⟨_, swap_inner_inv_swap_inner X Y Z W, swap_inner_swap_inner_inv X Z Y W⟩
+scoped notation "βi_" => swap_inner
 
-variable [IsSymmetric C]
+theorem assoc_inner_swap_inner
+  (X Y Z W : C) :
+  (αi_ X Y Z W).inv ≫ (βi_ X Y Z W).hom
+  = X ◁ (β'_ Y Z).hom ▷ W ≫ (αi_ X Z Y W).inv := by simp [swap_inner, swap_inner_hom]
+
+theorem assoc_inner_swap_inner_inv
+  (X Y Z W : C) :
+  (αi_ X Z Y W).inv ≫ (βi_ X Y Z W).inv
+  = X ◁ (β'_ Y Z).inv ▷ W ≫ (αi_ X Y Z W).inv := by simp [swap_inner, swap_inner_inv]
+
+theorem swap_inner_assoc_inner
+  (X Y Z W : C) :
+  (βi_ X Y Z W).hom ≫ (αi_ X Z Y W).hom
+  = (αi_ X Y Z W).hom ≫ X ◁ (β'_ Y Z).hom ▷ W := by simp [swap_inner, swap_inner_hom]
+
+theorem swap_inner_inv_assoc_inner
+  (X Y Z W : C) :
+  (βi_ X Y Z W).inv ≫ (αi_ X Y Z W).hom
+  = (αi_ X Z Y W).hom ≫ X ◁ (β'_ Y Z).inv ▷ W := by simp [swap_inner, swap_inner_inv]
+
+--TODO: swap_inner and unitors...
+
+end BraidedCategory
+
+section SymmetricCategory
+
+variable [SymmetricCategory' C]
+
+theorem swap_inner_inv_eq_swap_inner_hom
+  (X Y Z W : C) : swap_inner_inv X Z Y W = swap_inner_hom X Y Z W := by
+  simp [swap_inner_hom, swap_inner_inv, SymmetricCategory'.braiding_swap_eq_inv_braiding]
 
 @[simp]
-theorem swap_inner_swap_inner
-  (X Y Z W : C) : swap_inner X Y Z W ≫ swap_inner X Z Y W = 𝟙 _
-  := by rw [<-swap_inner_inv_eq_swap_inner, swap_inner_inv_swap_inner]
+theorem swap_inner_hom_swap_inner_hom
+  (X Y Z W : C) : swap_inner_hom X Y Z W ≫ swap_inner_hom X Z Y W = 𝟙 _
+  := by rw [<-swap_inner_inv_eq_swap_inner_hom, swap_inner_inv_swap_inner_hom]
 
+@[simp]
 theorem swap_inner_inv_swap_inner_inv
   (X Y Z W : C) : swap_inner_inv X Y Z W ≫ swap_inner_inv X Z Y W = 𝟙 _
-  := by simp
+  := by simp [swap_inner_inv_eq_swap_inner_hom]
 
-end Monoidal
+theorem swap_inner_eq_inv
+  (X Y Z W : C) : (βi_ X Y Z W).hom = (βi_ X Z Y W).inv := by
+  simp [swap_inner, swap_inner_inv_eq_swap_inner_hom]
+
+theorem swap_inner_swap_inner
+  (X Y Z W : C) : (βi_ X Y Z W).hom ≫ (βi_ X Z Y W).hom = 𝟙 _ := by simp [swap_inner]
+
+theorem swap_inner_swap_inner_inv
+  (X Y Z W : C) : (βi_ X Y Z W).inv ≫ (βi_ X Z Y W).inv = 𝟙 _ := by simp [swap_inner]
+
+end SymmetricCategory
+
+end MonoidalCategory'
+
+end CategoryTheory
