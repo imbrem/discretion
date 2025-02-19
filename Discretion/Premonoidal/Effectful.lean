@@ -104,19 +104,19 @@ instance EffectfulCategory.HasEff.braiding_inv {e : E} {X Y : C} : HasEff e (β'
 
 @[simp]
 instance EffectfulCategory.HasEff.assoc_inner {e : E} {X Y Z W : C} : HasEff e (αi_ X Y Z W).hom
-  := by simp only [MonoidalCategory'.assoc_inner, assoc_inner_hom]; infer_instance
+  := by simp only [MonoidalCategory'.assoc_inner]; infer_instance
 
 @[simp]
 instance EffectfulCategory.HasEff.assoc_inner_inv {e : E} {X Y Z W : C} : HasEff e (αi_ X Y Z W).inv
-  := by simp only [MonoidalCategory'.assoc_inner, MonoidalCategory'.assoc_inner_inv]; infer_instance
+  := by simp only [MonoidalCategory'.assoc_inner]; infer_instance
 
 @[simp]
 instance EffectfulCategory.HasEff.swap_inner {e : E} {X Y Z W : C} : HasEff e (βi_ X Y Z W).hom
-  := by simp only [MonoidalCategory'.swap_inner, swap_inner_hom]; infer_instance
+  := by simp only [MonoidalCategory'.swap_inner]; infer_instance
 
 @[simp]
 instance EffectfulCategory.HasEff.swap_inner_inv {e : E} {X Y Z W : C} : HasEff e (βi_ X Y Z W).inv
-  := by simp only [MonoidalCategory'.swap_inner, MonoidalCategory'.swap_inner_inv]; infer_instance
+  := by simp only [MonoidalCategory'.swap_inner]; infer_instance
 
 abbrev EffectfulCategory.IsPure {X Y : C} (f : X ⟶ Y) : Prop := HasEff (E := E) ⊥ f
 
