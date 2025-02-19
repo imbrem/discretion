@@ -7,7 +7,7 @@ import Mathlib.CategoryTheory.Monoidal.Subcategory
 namespace CategoryTheory
 
 open scoped MonoidalCategory
-open MonoidalCategory'
+open PremonoidalCategory MonoidalCategory'
 
 namespace MonoidalCategory'
 
@@ -41,6 +41,14 @@ theorem assoc_inner_inv_assoc_inner_hom
   (X Y Z W : C) : assoc_inner_inv X Y Z W ≫ assoc_inner_hom X Y Z W = 𝟙 _ := by
   simp [assoc_inner_hom, assoc_inner_inv, <-whiskerLeft_comp]
 
+@[simp]
+instance assoc_inner_hom_central (X Y Z W : C) : Central (assoc_inner_hom X Y Z W) := by
+  simp only [assoc_inner_hom]; infer_instance
+
+@[simp]
+instance assoc_inner_inv_central (X Y Z W : C) : Central (assoc_inner_inv X Y Z W) := by
+  simp only [assoc_inner_inv]; infer_instance
+
 def assoc_inner
   (X Y Z W : C) : (X ⊗ Y) ⊗ (Z ⊗ W) ≅ X ⊗ (Y ⊗ Z) ⊗ W
   := ⟨
@@ -52,6 +60,9 @@ def assoc_inner
 
 scoped notation "αi_" => assoc_inner
 
+@[simp]
+instance assoc_inner_central (X Y Z W : C) : Central (αi_ X Y Z W).hom := by
+  simp only [assoc_inner]; infer_instance
 section BraidedCategory
 
 variable [BraidedCategory' C]
@@ -67,6 +78,14 @@ def swap_inner_inv
   := (αi_ X Z Y W).hom
   ≫ X ◁ (β'_ Y Z).inv ▷ W
   ≫ (αi_ X Y Z W).inv
+
+@[simp]
+instance swap_inner_hom_central (X Y Z W : C) : Central (swap_inner_hom X Y Z W) := by
+  simp only [swap_inner_hom]; infer_instance
+
+@[simp]
+instance swap_inner_inv_central (X Y Z W : C) : Central (swap_inner_inv X Y Z W) := by
+  simp only [swap_inner_inv]; infer_instance
 
 @[simp]
 theorem swap_inner_hom_swap_inner_inv
@@ -106,6 +125,10 @@ def swap_inner
   ⟩
 
 scoped notation "βi_" => swap_inner
+
+@[simp]
+instance swap_inner_central (X Y Z W : C) : Central (βi_ X Y Z W).hom := by
+  simp only [swap_inner]; infer_instance
 
 theorem assoc_inner_swap_inner
   (X Y Z W : C) :
