@@ -286,7 +286,7 @@ I couldn't find a detailed proof in print, but this is discussed in:
   "Tensor categories", vol 25, Mathematical Surveys and Monographs (2015), AMS.
 -/
 
-variable {C : Type u₁} [Category.{v₁} C] [MonoidalCategory' C] [BraidedCategory' C]
+variable {C : Type u₁} [Category.{v₁} C] [PremonoidalCategory C] [BraidedCategory' C]
 
 theorem braiding_leftUnitor_aux₁' (X : C) :
     (α_ (𝟙_ C) (𝟙_ C) X).hom ≫
