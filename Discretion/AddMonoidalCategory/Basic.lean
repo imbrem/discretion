@@ -2,7 +2,6 @@ import Mathlib.CategoryTheory.Monoidal.Category
 import Mathlib.CategoryTheory.Limits.Shapes.IsTerminal
 import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 import Mathlib.CategoryTheory.Monoidal.Braided.Basic
-import Discretion.Utils.Category
 
 namespace CategoryTheory
 
