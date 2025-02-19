@@ -1,4 +1,4 @@
-import Discretion.Premonoidal.Braided
+import Discretion.Monoidal.Braided.Basic
 import Discretion.Premonoidal.Property.Basic
 import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 import Mathlib.CategoryTheory.Widesubcategory
@@ -9,11 +9,11 @@ namespace CategoryTheory.MorphismProperty
 
 open Limits
 
-open MonoidalCategory
+open MonoidalCategory'
 
-open Monoidal
+open scoped MonoidalCategory
 
-variable {C} [Category C] [MonoidalCategoryStruct C] [IsBinoidal C]
+variable {C} [Category C] [PremonoidalCategory C]
 
 class CartesianMonoidal (W : MorphismProperty C) extends IsMonoidal W : Type _ where
   fst : ∀(X Y : WideSubcategory W), (X ⊗ Y) ⟶ X
@@ -23,4 +23,5 @@ class CartesianMonoidal (W : MorphismProperty C) extends IsMonoidal W : Type _ w
   monoidal_unit_is_terminal
     : IsTerminal (𝟙_ (WideSubcategory W))
 
--- TODO: if a morphism property is CartesianMonoidal, then its WideSubcategory HasBinaryProducts
+-- TODO: if a morphism property is CartesianMonoidal, then its WideSubcategory has
+-- ChosenFiniteProducts

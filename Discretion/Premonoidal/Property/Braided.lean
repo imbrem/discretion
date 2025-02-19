@@ -1,33 +1,32 @@
-import Discretion.Premonoidal.Braided
+import Discretion.Monoidal.Braided.Basic
 import Discretion.Premonoidal.Property.Basic
 
 namespace CategoryTheory.MorphismProperty
 
-open MonoidalCategory
+open scoped MonoidalCategory
+open MonoidalCategory'
 
-open Monoidal
-
-inductive braidedStructure (C) [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
+inductive braidedStructure (C) [Category C] [PremonoidalCategory C] [BraidedCategory' C]
   : MorphismProperty C
-  | braiding_hom : braidedStructure C (σ_ X Y)
-  | braiding_inv : braidedStructure C (BraidedCategoryStruct.braiding X Y).inv
+  | braiding_hom : braidedStructure C (β'_ X Y).hom
+  | braiding_inv : braidedStructure C (β'_ X Y).inv
   | monoidal : monoidalStructure C f → braidedStructure C f
 
-variable {C : Type _} [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
+variable {C : Type _} [Category C] [PremonoidalCategory C] [BraidedCategory' C]
 
 class ContainsBraidings (W : MorphismProperty C) : Prop where
-  braiding_hom_mem : ∀ {X Y : C}, W (σ_ X Y)
-  braiding_inv_mem : ∀ {X Y : C}, W (BraidedCategoryStruct.braiding X Y).inv
+  braiding_hom_mem : ∀ {X Y : C}, W (β'_ X Y).hom
+  braiding_inv_mem : ∀ {X Y : C}, W (β'_ X Y).inv
 
 class IsBraided (W : MorphismProperty C) extends ContainsBraidings W, IsMonoidal W : Prop where
 
 instance {W : MorphismProperty C} [ContainsBraidings W] [IsMonoidal W] : IsBraided W := ⟨⟩
 
 theorem braiding_hom_mem {W : MorphismProperty C} [ContainsBraidings W] {X Y : C}
-  : W (σ_ X Y) := ContainsBraidings.braiding_hom_mem
+  : W (β'_ X Y).hom := ContainsBraidings.braiding_hom_mem
 
 theorem braiding_inv_mem {W : MorphismProperty C} [ContainsBraidings W] {X Y : C}
-  : W (BraidedCategoryStruct.braiding X Y).inv := ContainsBraidings.braiding_inv_mem
+  : W (β'_ X Y).inv := ContainsBraidings.braiding_inv_mem
 
 def braidedClosure (W : MorphismProperty C) : MorphismProperty C
   := whiskerClosure (braidedStructure C ⊔ W)
@@ -73,10 +72,10 @@ theorem braidedClosure.rightUnitor_inv {X : C}
   : braidedClosure W (ρ_ X).inv := monoidalS monoidalStructure.rightUnitor_inv
 
 theorem braidedClosure.braiding_hom {X Y : C}
-  : braidedClosure W (σ_ X Y) := braided braidedStructure.braiding_hom
+  : braidedClosure W (β'_ X Y).hom := braided braidedStructure.braiding_hom
 
 theorem braidedClosure.braiding_inv {X Y : C}
-  : braidedClosure W (BraidedCategoryStruct.braiding X Y).inv
+  : braidedClosure W (β'_ X Y).inv
     := braided braidedStructure.braiding_inv
 
 theorem braidedClosure.base {X Y : C} (f : X ⟶ Y)
@@ -109,27 +108,27 @@ theorem braidedClosure.induction {motive : ∀ {X Y : C} (f : X ⟶ Y), braidedC
   | base h => cases h with | inl h => exact braided h | inr h => exact base h
   | _ => apply_assumption <;> assumption
 
-@[simp]
+@[match_pattern, simp]
 theorem braidedStructure.associator_hom {X Y Z : C}
   : braidedStructure C (α_ X Y Z).hom := braidedStructure.monoidal monoidalStructure.associator_hom
 
-@[simp]
+@[match_pattern, simp]
 theorem braidedStructure.associator_inv {X Y Z : C}
   : braidedStructure C (α_ X Y Z).inv := braidedStructure.monoidal monoidalStructure.associator_inv
 
-@[simp]
+@[match_pattern, simp]
 theorem braidedStructure.leftUnitor_hom {X : C}
   : braidedStructure C (λ_ X).hom := braidedStructure.monoidal monoidalStructure.leftUnitor_hom
 
-@[simp]
+@[match_pattern, simp]
 theorem braidedStructure.leftUnitor_inv {X : C}
   : braidedStructure C (λ_ X).inv := braidedStructure.monoidal monoidalStructure.leftUnitor_inv
 
-@[simp]
+@[match_pattern, simp]
 theorem braidedStructure.rightUnitor_hom {X : C}
   : braidedStructure C (ρ_ X).hom := braidedStructure.monoidal monoidalStructure.rightUnitor_hom
 
-@[simp]
+@[match_pattern, simp]
 theorem braidedStructure.rightUnitor_inv {X : C}
   : braidedStructure C (ρ_ X).inv := braidedStructure.monoidal monoidalStructure.rightUnitor_inv
 
@@ -142,9 +141,8 @@ theorem braidedStructure.cases' {motive : ∀ {X Y : C} (f : X ⟶ Y), braidedSt
   (leftUnitor_inv : ∀ {X : C}, motive (λ_ X).inv braidedStructure.leftUnitor_inv)
   (rightUnitor_hom : ∀ {X : C}, motive (ρ_ X).hom braidedStructure.rightUnitor_hom)
   (rightUnitor_inv : ∀ {X : C}, motive (ρ_ X).inv braidedStructure.rightUnitor_inv)
-  (braiding_hom : ∀ {X Y : C}, motive (σ_ X Y) braidedStructure.braiding_hom)
-  (braiding_inv : ∀ {X Y : C},
-    motive (BraidedCategoryStruct.braiding X Y).inv braidedStructure.braiding_inv)
+  (braiding_hom : ∀ {X Y : C}, motive (β'_ X Y).hom braidedStructure.braiding_hom)
+  (braiding_inv : ∀ {X Y : C}, motive (β'_ X Y).inv braidedStructure.braiding_inv)
   {f : X ⟶ Y} (hf : braidedStructure C f)
   : motive f hf
   := by induction hf with
@@ -179,9 +177,9 @@ theorem braidedClosure.induction' {motive : ∀ {X Y : C} (f : X ⟶ Y), braided
   (rightUnitor_inv : ∀{X : C}, motive
     (ρ_ X).inv braidedClosure.rightUnitor_inv)
   (braiding_hom : ∀{X Y : C}, motive
-    (σ_ X Y) braidedClosure.braiding_hom)
+    (β'_ X Y).hom braidedClosure.braiding_hom)
   (braiding_inv : ∀{X Y : C}, motive
-    (BraidedCategoryStruct.braiding X Y).inv braidedClosure.braiding_inv)
+    (β'_ X Y).inv braidedClosure.braiding_inv)
   (base : ∀ {X Y : C} {f : X ⟶ Y}
     (hf : W f),
     motive f (braidedClosure.base f hf))
@@ -191,7 +189,7 @@ theorem braidedClosure.induction' {motive : ∀ {X Y : C} (f : X ⟶ Y), braided
   | braided h => cases h using braidedStructure.cases' <;> apply_assumption
   | _ => apply_assumption <;> assumption
 
-def braided (C) [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
+def braided (C) [Category C] [PremonoidalCategory C] [BraidedCategory' C]
   : MorphismProperty C
   := braidedClosure ⊥
 
@@ -244,11 +242,11 @@ theorem braided.rightUnitor_inv {X : C}
 
 @[simp]
 theorem braided.braiding_hom {X Y : C}
-  : braided C (σ_ X Y) := braidedClosure.braiding_hom
+  : braided C (β'_ X Y).hom := braidedClosure.braiding_hom
 
 @[simp]
 theorem braided.braiding_inv {X Y : C}
-  : braided C (BraidedCategoryStruct.braiding X Y).inv
+  : braided C (β'_ X Y).inv
     := braidedClosure.braiding_inv
 
 theorem braided.induction {motive : ∀ {X Y : C} (f : X ⟶ Y), braided C f → Prop}
@@ -302,16 +300,14 @@ theorem braided.induction' {motive : ∀ {X Y : C} (f : X ⟶ Y), braided C f �
   (rightUnitor_inv : ∀{X : C}, motive
     (ρ_ X).inv braided.rightUnitor_inv)
   (braiding_hom : ∀{X Y : C}, motive
-    (σ_ X Y) braided.braiding_hom)
+    (β'_ X Y).hom braided.braiding_hom)
   (braiding_inv : ∀{X Y : C}, motive
-    (BraidedCategoryStruct.braiding X Y).inv braided.braiding_inv)
+    (β'_ X Y).inv braided.braiding_inv)
   {f : X ⟶ Y} (hf : braided C f)
   : motive f hf
   := by induction hf using braidedClosure.induction' with
   | base h => cases h
   | _ => apply_assumption <;> assumption
-
-variable [IsPremonoidal C]
 
 instance IsIso.instBraidedStructure : IsIso (braidedStructure C) where
   is_iso hf := by cases hf using braidedStructure.cases' <;> infer_instance
@@ -333,8 +329,6 @@ instance IsStableUnderInverse.instBraided
   : IsStableUnderInverse (braided C)
   := instBraidedClosure
 
-variable [CategoryTheory.IsBraided C]
-
 instance ContainsBraidings.instCenter : ContainsBraidings (center C) where
-  braiding_hom_mem := braiding_central
-  braiding_inv_mem := braiding_inv_central
+  braiding_hom_mem := BraidedCategory'.braiding_central _ _
+  braiding_inv_mem {X Y} := by simp [center]; infer_instance

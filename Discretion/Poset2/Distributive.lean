@@ -11,13 +11,14 @@ open DistributiveCategory
 open Monoidal
 
 class Distributive2 (C : Type u)
-  [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C] [ChosenFiniteCoproducts C]
+  [Category C] [PremonoidalCategory C] [BraidedCategory' C] [ChosenFiniteCoproducts C]
   (E : Type v) [EffectSystem E] extends Effectful2 C E, DistributiveCategory C, DescMono C where
   eff_distributive: ∀e, (eff e).Distributive
 
 variable  {C : Type u}
-          [Category C] [MonoidalCategoryStruct C] [BraidedCategoryStruct C]
-          [ChosenFiniteCoproducts C] {E : Type v} [EffectSystem E] [D2 : Distributive2 C E]
+          [Category C] [PremonoidalCategory C] [BraidedCategory' C]
+          [ChosenFiniteCoproducts C]
+          {E : Type v} [EffectSystem E] [D2 : Distributive2 C E]
 
 instance EffectfulCategory.HasEff.inl {e : E} {X Y : C} : HasEff e (inl X Y) where
   has_eff := (D2.eff_distributive e).inl_mem X Y

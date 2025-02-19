@@ -11,17 +11,17 @@ theorem WideSubcategory.hom_ext {W : MorphismProperty C} [W.IsMultiplicative]
   {X Y : WideSubcategory W} (f g : X ⟶ Y)
   (h : f.val = g.val) : f = g := by cases f; cases g; cases h; rfl
 
-variable [MonoidalCategoryStruct C]
+open scoped MonoidalCategory
 
-open MonoidalCategory
+open MonoidalCategory'
 
-open Monoidal
+open PremonoidalCategory
 
 open MorphismProperty
 
-section IsBinoidal
+section PremonoidalCategory
 
-variable [IsBinoidal C]
+variable [PremonoidalCategory C]
 
 instance WideSubcategory.monoidalCategoryStruct (W : MorphismProperty C) [W.IsMonoidal]
   : MonoidalCategoryStruct (WideSubcategory W) where
@@ -67,45 +67,45 @@ theorem coe_ltimes {W : MorphismProperty C} [W.IsMonoidal]
 theorem coe_rtimes {W : MorphismProperty C} [W.IsMonoidal]
   {X Y X' Y' : WideSubcategory W} (f : X ⟶ Y) (g : X' ⟶ Y') : (f ⋊ g).val = f.val ⋊ g.val := rfl
 
-theorem Monoidal.Central.wide {W : MorphismProperty C} [W.IsMonoidal]
+theorem PremonoidalCategory.Central.wide {W : MorphismProperty C} [W.IsMonoidal]
   {X Y : C} (f : X ⟶ Y) [Central f] (hf : W f)
   : Central (C := WideSubcategory W) (X := ⟨X⟩) (Y := ⟨Y⟩) (Subtype.mk f hf) where
-  left_sliding g := by ext; simp [Central.left_sliding]
-  right_sliding g := by ext; simp [Central.right_sliding]
+  left_exchange g := by ext; simp [Central.left_exchange]
+  right_exchange g := by ext; simp [Central.right_exchange]
 
-theorem Monoidal.Central.of_val {W : MorphismProperty C} [W.IsMonoidal]
+theorem PremonoidalCategory.Central.of_val {W : MorphismProperty C} [W.IsMonoidal]
   {X Y : WideSubcategory W} (f : X ⟶ Y) [Central f.val]
   : Central f where
-  left_sliding g := by ext; simp [left_sliding]
-  right_sliding g := by ext; simp [right_sliding]
+  left_exchange g := by ext; simp [PremonoidalCategory.Central.left_exchange]
+  right_exchange g := by ext; simp [PremonoidalCategory.Central.right_exchange]
 
-instance Monoidal.Central.ofCentral {W : MorphismProperty C} [W.IsMonoidal] [W.Central]
+instance PremonoidalCategory.Central.ofCentral {W : MorphismProperty C} [W.IsMonoidal] [W.Central]
   {X Y : WideSubcategory W} (f : X ⟶ Y)
   : Central f where
-  left_sliding g := by ext; have _ := mem_central f.prop; simp [left_sliding]
-  right_sliding g := by ext; have _ := mem_central f.prop; simp [right_sliding]
+  left_exchange g := by
+    ext; have _ := mem_central f.prop;
+    simp [PremonoidalCategory.Central.left_exchange]
+  right_exchange g := by
+    ext; have _ := mem_central f.prop;
+    simp [PremonoidalCategory.Central.right_exchange]
 
-end IsBinoidal
-
-section IsPremonoidal
-
-variable [IsPremonoidal C]
-
-instance WideSubcategory.is_premonoidal (W : MorphismProperty C) [W.IsMonoidal]
-  : IsPremonoidal (WideSubcategory W) where
-  tensorHom_def f g := by ext; simp [Monoidal.tensorHom_def]
+instance WideSubcategory.instPremonoidalCategory (W : MorphismProperty C) [W.IsMonoidal]
+  : PremonoidalCategory (WideSubcategory W) where
+  tensorHom_def f g := by ext; simp [PremonoidalCategory.tensorHom_def]
   associator_central := Central.wide (α_ _ _ _).hom _
   leftUnitor_central := Central.wide (λ_ _).hom _
   rightUnitor_central := Central.wide (ρ_ _).hom _
-  associator_naturality f g h := by ext; apply Monoidal.associator_naturality
-  leftUnitor_naturality f := by ext; apply Monoidal.leftUnitor_naturality
-  rightUnitor_naturality f := by ext; apply Monoidal.rightUnitor_naturality
-  pentagon W X Y Z := by ext; apply IsPremonoidal.pentagon
-  triangle X Y := by ext; apply IsPremonoidal.triangle
+  associator_naturality f g h := by ext; apply PremonoidalCategory.associator_naturality
+  leftUnitor_naturality f := by ext; apply PremonoidalCategory.leftUnitor_naturality
+  rightUnitor_naturality f := by ext; apply PremonoidalCategory.rightUnitor_naturality
+  pentagon W X Y Z := by ext; apply PremonoidalCategory.pentagon
+  triangle X Y := by ext; apply PremonoidalCategory.triangle
 
-theorem WideSubcategory.is_monoidal (W : MorphismProperty C) [W.IsMonoidal] [W.Central]
-  : IsMonoidal (WideSubcategory W) := inferInstance
+instance WideSubcategory.instMonoidalCategory (W : MorphismProperty C)
+  [W.IsMonoidal] [HWC : W.Central] : MonoidalCategory' (WideSubcategory W) where
+  whisker_exchange | ⟨f, hf⟩, ⟨g, hg⟩
+                    => by simp [CategoryStruct.comp, (HWC.central hf).left_exchange g]
 
 -- TODO: WideSubcategory also inherits braidedness
 
-end IsPremonoidal
+end PremonoidalCategory

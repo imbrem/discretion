@@ -1,4 +1,4 @@
-import Discretion.Premonoidal.Braided
+import Discretion.CategoryTheory.Monoidal.Braided.Basic
 import Discretion.Premonoidal.Predicate.Basic
 import Discretion.Premonoidal.Property.Braided
 import Discretion.Premonoidal.Quant

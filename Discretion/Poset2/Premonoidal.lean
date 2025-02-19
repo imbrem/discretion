@@ -1,5 +1,5 @@
 import Discretion.Poset2.Basic
-import Discretion.Premonoidal.Category
+import Discretion.Monoidal.Category
 
 namespace CategoryTheory
 
@@ -25,13 +25,13 @@ instance MonPoset2.instMk {C : Type u} [Category C] [MonoidalCategoryStruct C]
 instance Disc2.instMonoidalCategoryStruct {C : Type u} [Category C]
   [ℳ : MonoidalCategoryStruct C] : MonoidalCategoryStruct (Disc2 C) := ℳ
 
-instance Disc2.instIsPremonoidal {C : Type u} [Category C] [MonoidalCategoryStruct C]
-  [H : IsPremonoidal C] : IsPremonoidal (Disc2 C) := H
-
-instance Disc2.instIsMonoidal {C : Type u} [Category C] [MonoidalCategoryStruct C]
-  [H : IsMonoidal C] : IsMonoidal (Disc2 C) := H
+instance Disc2.instPremonoidalCategory {C : Type u} [Category C] [MonoidalCategoryStruct C]
+  [ℳ : PremonoidalCategory C] : PremonoidalCategory (Disc2 C) := ℳ
 
 instance Disc2.instMonoidalCategory {C : Type u} [Category C] [ℳ : MonoidalCategory C]
   : MonoidalCategory (Disc2 C) := ℳ
+
+instance Disc2.instMonoidalCategory' {C : Type u} [Category C] [ℳ : MonoidalCategory' C]
+  : MonoidalCategory' (Disc2 C) := ℳ
 
 end CategoryTheory

@@ -4,7 +4,7 @@ import Discretion.Premonoidal.Property.Basic
 
 namespace CategoryTheory.MorphismProperty
 
-open Monoidal
+open MonoidalCategory' DistributiveCategory
 
 variable {C : Type u} [Category C] [MonoidalCategoryStruct C] [CC : ChosenFiniteCoproducts C]
                       [DistributiveCategory C]

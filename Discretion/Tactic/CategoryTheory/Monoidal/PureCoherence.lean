@@ -17,7 +17,8 @@ are equal.
 -/
 
 open Lean Meta Elab Qq
-open CategoryTheory Mathlib.Tactic.BicategoryLike PremonoidalCategory MonoidalCategory MonoidalCategory'
+open CategoryTheory Mathlib.Tactic.BicategoryLike PremonoidalCategory MonoidalCategory'
+open scoped MonoidalCategory
 
 namespace Discretion.Tactic.Monoidal
 

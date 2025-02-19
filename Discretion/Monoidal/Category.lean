@@ -77,16 +77,19 @@ open CategoryTheory.Iso
 
 namespace CategoryTheory
 
-namespace MonoidalCategory
+namespace MonoidalCategory'
 
 export MonoidalCategoryStruct
   (tensorObj whiskerLeft whiskerRight tensorHom tensorUnit associator leftUnitor rightUnitor)
 
-end MonoidalCategory
+end MonoidalCategory'
 
 namespace PremonoidalCategory
 
 open MonoidalCategory
+
+export MonoidalCategoryStruct
+  (tensorObj whiskerLeft whiskerRight tensorHom tensorUnit associator leftUnitor rightUnitor)
 
 variable {C : Type u} [Category.{v} C] [MonoidalCategoryStruct C]
 

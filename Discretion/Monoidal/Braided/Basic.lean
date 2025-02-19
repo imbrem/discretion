@@ -77,6 +77,8 @@ attribute [reassoc (attr := simp)]
   BraidedCategory'.braiding_naturality_right
 attribute [reassoc] BraidedCategory'.hexagon_forward BraidedCategory'.hexagon_reverse
 
+attribute [instance, simp] BraidedCategory'.braiding_central
+
 open BraidedCategory'
 
 namespace BraidedCategory'

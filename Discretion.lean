@@ -28,15 +28,10 @@ import Discretion.Trace.Basic
 import Discretion.Trace.Elgot
 import Discretion.Nonempty.Set
 import Discretion.Pom
-import Discretion.Premonoidal.Category
-import Discretion.Premonoidal.Braided
-import Discretion.Premonoidal.Distributive
-import Discretion.Premonoidal.CopyDrop
 import Discretion.Premonoidal.Property.Basic
 import Discretion.Premonoidal.Property.Braided
 import Discretion.Premonoidal.Property.WideSubcategory
 import Discretion.Premonoidal.Property.Cartesian
-import Discretion.Premonoidal.Property.Coherence
 import Discretion.Distributive.Category
 import Discretion.Distributive.Effectful
 import Discretion.Elgot.Monad
@@ -44,8 +39,6 @@ import Discretion.Elgot.Iterate
 import Discretion.Elgot.Strong
 import Discretion.Elgot.Category
 import Discretion.Resource.Basic
-import Discretion.SEC.Intrinsic
-import Discretion.SEC.Extrinsic
 import Discretion.Monad.Ordered
 import Discretion.Monad.Commutative
 import Discretion.UB.Basic

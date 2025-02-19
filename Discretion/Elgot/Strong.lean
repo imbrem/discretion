@@ -3,9 +3,9 @@ import Discretion.Distributive.Category
 
 namespace CategoryTheory
 
-open MonoidalCategory
+open scoped MonoidalCategory
 
-open Monoidal
+open MonoidalCategory' DistributiveCategory
 
 open ChosenFiniteCoproducts
 
@@ -15,7 +15,7 @@ variable {C : Type u} [Category C] [MonoidalCategoryStruct C] [ChosenFiniteCopro
 class Iterate.Strong (C : Type _)
   [Category C] [MonoidalCategoryStruct C] [ChosenFiniteCoproducts C] [DistributiveCategory C]
   [Iterate C]
-  extends IsPremonoidal C, Iterate.Conway C : Prop
+  extends Iterate.Conway C : Prop
   where
   iterate_whiskerLeft : ∀ {X Y : C} (Z : C) (f : X ⟶ Y ⊕ₒ X),
     iterate ((Z ◁ f) ≫ (∂L Z Y X).inv) = Z ◁ iterate f

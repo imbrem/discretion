@@ -1,12 +1,12 @@
-import Discretion.Premonoidal.Category
+import Discretion.Monoidal.Category
 import Discretion.MorphismProperty.Basic
 import Discretion.MorphismProperty.Mul
 
 namespace CategoryTheory
 
-open MonoidalCategory
+open scoped MonoidalCategory
 
-open Monoidal
+open MonoidalCategory'
 
 -- TODO: IsMonoidal, IsBraided classes?
 
@@ -20,7 +20,11 @@ inductive monoidalStructure (C) [Category C] [MonoidalCategoryStruct C] : Morphi
   | rightUnitor_hom : monoidalStructure C (ρ_ X).hom
   | rightUnitor_inv : monoidalStructure C (ρ_ X).inv
 
-variable {C : Type _} [Category C] [MonoidalCategoryStruct C]
+variable {C : Type _} [Category C]
+
+section MonoidalCategoryStruct
+
+variable [MonoidalCategoryStruct C]
 
 inductive whiskerClosure (W : MorphismProperty C) : MorphismProperty C
   | id : ∀ {X : C}, whiskerClosure W (𝟙 X)
@@ -404,10 +408,10 @@ theorem IsMonoidal.inf {W W' : MorphismProperty C}
 -- TODO: inf lore; monoidal is the smallest ContainsMonoidal
 
 def center (C) [Category C] [MonoidalCategoryStruct C] : MorphismProperty C
-  := λ _ _  f => Monoidal.Central f
+  := λ _ _  f => PremonoidalCategory.Central f
 
 class Central (W : MorphismProperty C) : Prop where
-  central {X Y : C} {f : X ⟶ Y} : W f → Monoidal.Central f
+  central {X Y : C} {f : X ⟶ Y} : W f → PremonoidalCategory.Central f
 
 instance Central.instCenter : Central (center C) where
   central hf := hf
@@ -429,7 +433,7 @@ instance Central.inf_right {W W' : MorphismProperty C} [Central W'] : Central (W
   central hf := central hf.2
 
 theorem mem_central {W : MorphismProperty C} [Central W] {X Y : C} {f : X ⟶ Y}
-  (hf : W f) : Monoidal.Central f := Central.central hf
+  (hf : W f) : PremonoidalCategory.Central f := Central.central hf
 
 class MonoidalHom {X Y : C} (f : X ⟶ Y) where
   prop : monoidal C f
@@ -473,9 +477,11 @@ instance MonoidalHom.rightUnitor_inv {X : C}
   : MonoidalHom (ρ_ X).inv where
   prop := monoidal.rightUnitor_inv
 
-section IsBinoidal
+end MonoidalCategoryStruct
 
-variable [IsBinoidal C]
+section PremonoidalCategory
+
+variable [PremonoidalCategory C]
 
 instance IsStableUnderWhisker.cc {W : MorphismProperty C} [IsStableUnderWhisker W]
   : IsStableUnderWhisker (cc W) where
@@ -491,7 +497,7 @@ theorem IsMonoidal.cc {W : MorphismProperty C} [IsMonoidal W] : IsMonoidal (cc W
 instance Central.cc {W : MorphismProperty C} [Central W] : Central (cc W) where
   central hf := by induction hf with
     | base f hf => exact central hf
-    | comp f g hf hg If Ig => exact Central.comp
+    | comp f g hf hg If Ig => exact PremonoidalCategory.Central.comp
 
 instance IsStableUnderWhisker.mul {W W' : MorphismProperty C}
   [IsStableUnderWhisker W] [IsStableUnderWhisker W'] : IsStableUnderWhisker (W * W') := cc
@@ -504,7 +510,7 @@ instance Central.mul {W W' : MorphismProperty C} [Central W] [Central W'] : Cent
 theorem tensorHom_mem {W : MorphismProperty C}
   [IsStableUnderWhisker W] [IsStableUnderComposition W] {X Y X' Y' : C}
   {f : X ⟶ Y} {g : X' ⟶ Y'} (hf : W f) (hg : W g) : W (f ⊗ g)
-  := by rw [Monoidal.tensorHom_def];
+  := by rw [tensorHom_def];
         apply comp_mem; exact whiskerRight_mem hf; exact whiskerLeft_mem hg
 
 instance MonoidalHom.tensorHom {X Y X' Y' : C} {f : X ⟶ Y} {g : X' ⟶ Y'}
@@ -537,11 +543,11 @@ instance IsStableUnderInverse.instWhiskerClosure {W : MorphismProperty C}
     apply whiskerClosure.comp <;> apply_assumption
   | whiskerLeft hf =>
     have hf' := is_iso hf
-    rw [Monoidal.inv_whiskerLeft]
+    rw [inv_whiskerLeft]
     apply whiskerClosure.whiskerLeft ; apply_assumption
   | whiskerRight hf =>
     have hf' := is_iso hf
-    rw [Monoidal.inv_whiskerRight]
+    rw [inv_whiskerRight]
     apply whiskerClosure.whiskerRight ; apply_assumption
   | base h => exact whiskerClosure.base (inv_mem h)
   )
@@ -559,37 +565,33 @@ instance IsStableUnderInverse.instMonoidal
   := instMonoidalClosure
 
 theorem StableUnderInverse.center : StableUnderInverse (center C)
-  := λ _ _ _ hf => Monoidal.Central.inv_hom (hf := hf)
+  := λ _ _ f hf =>
+  have _ : PremonoidalCategory.Central f.hom := hf; PremonoidalCategory.Central.iso_inv_of_hom
 
 theorem IsStableUnderInverse.instCenter : IsStableUnderInverse (center C) where
   stable_under_inverse := StableUnderInverse.center
-
-end IsBinoidal
-
-section IsPremonoidal
-
-variable [IsPremonoidal C]
 
 instance Central.instMonoidal
   : Central (monoidal C) where
   central hf := by induction hf using monoidal.induction' <;> infer_instance
 
 instance IsMonoidal.instCenter : IsMonoidal (center C) where
-  id_mem _ := Monoidal.Central.id
-  comp_mem _ _ hf hg := Monoidal.Central.comp (hf := hf) (hg := hg)
-  whiskerLeft_mem _ hf := Monoidal.Central.whiskerLeft (hf := hf)
-  whiskerRight_mem _ hf := Monoidal.Central.whiskerRight (hf := hf)
-  associator_hom_mem := associator_central
-  associator_inv_mem := associator_inv_central
-  leftUnitor_hom_mem := leftUnitor_central
-  leftUnitor_inv_mem := leftUnitor_inv_central
-  rightUnitor_hom_mem := rightUnitor_central
-  rightUnitor_inv_mem := rightUnitor_inv_central
+  id_mem _ := PremonoidalCategory.Central.id
+  comp_mem _ _ hf hg := PremonoidalCategory.Central.comp (hf := hf) (hg := hg)
+  whiskerLeft_mem _ hf := PremonoidalCategory.Central.whiskerLeft (hf := hf)
+  whiskerRight_mem _ hf := PremonoidalCategory.Central.whiskerRight (hf := hf)
+  associator_hom_mem := by simp [center]; infer_instance
+  associator_inv_mem := by simp [center]; infer_instance
+  leftUnitor_hom_mem := by simp [center]; infer_instance
+  leftUnitor_inv_mem := by simp [center]; infer_instance
+  rightUnitor_hom_mem := by simp [center]; infer_instance
+  rightUnitor_inv_mem := by simp [center]; infer_instance
 
-instance MonoidalHom.instCentral {X Y : C} {f : X ⟶ Y} [MonoidalHom f] : Monoidal.Central f
+instance MonoidalHom.instCentral {X Y : C} {f : X ⟶ Y} [MonoidalHom f]
+  : PremonoidalCategory.Central f
   := mem_central MonoidalHom.prop
 
-end IsPremonoidal
+end PremonoidalCategory
 
 end MorphismProperty
 

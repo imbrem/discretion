@@ -1,17 +1,22 @@
-import Discretion.Premonoidal.Category
+import Discretion.Monoidal.Category
 import Discretion.ChosenFiniteCoproducts
 
 namespace CategoryTheory
 
-open MonoidalCategory
+open scoped MonoidalCategory
+open MonoidalCategory'
 
-open Monoidal
+open PremonoidalCategory PremonoidalCategory.Central
 
 open ChosenFiniteCoproducts
 
-variable {C : Type u} [Category C] [MonoidalCategoryStruct C] [CC : ChosenFiniteCoproducts C]
+variable {C : Type u} [Category C] [CC : ChosenFiniteCoproducts C]
 
-namespace Monoidal
+section MonoidalCategoryStruct
+
+variable [MonoidalCategoryStruct C]
+
+namespace DistributiveCategory
 
 def distl_hom (X Y Z : C) : (X ⊗ Y) ⊕ₒ (X ⊗ Z) ⟶ X ⊗ (Y ⊕ₒ Z)
   := desc (X ◁ inl _ _) (X ◁ inr _ _)
@@ -35,17 +40,17 @@ theorem inl_distr_hom (X Y Z : C) : inl _ _ ≫ distr_hom X Y Z = inl _ _ ▷ Z 
 theorem inr_distr_hom (X Y Z : C) : inr _ _ ≫ distr_hom X Y Z = inr _ _ ▷ Z := by
   simp [distr_hom, right_exchange]
 
-end Monoidal
+end DistributiveCategory
 
 class DistributiveCategory (C: Type u)
   [Category C] [MonoidalCategoryStruct C] [ChosenFiniteCoproducts C]
   where
   distl_inv : ∀X Y Z: C, X ⊗ (Y ⊕ₒ Z) ⟶ (X ⊗ Y) ⊕ₒ (X ⊗ Z)
   distr_inv : ∀X Y Z: C, (X ⊕ₒ Y) ⊗ Z ⟶ (X ⊗ Z) ⊕ₒ (Y ⊗ Z)
-  distl_comp_distl_inv : ∀X Y Z: C, distl_hom X Y Z ≫ distl_inv X Y Z = 𝟙 _
-  distr_comp_distr_inv : ∀X Y Z: C, distr_hom X Y Z ≫ distr_inv X Y Z = 𝟙 _
-  distl_inv_comp_distl : ∀X Y Z: C, distl_inv X Y Z ≫ distl_hom X Y Z = 𝟙 _
-  distr_inv_comp_distr : ∀X Y Z: C, distr_inv X Y Z ≫ distr_hom X Y Z = 𝟙 _
+  distl_comp_distl_inv : ∀X Y Z: C, DistributiveCategory.distl_hom X Y Z ≫ distl_inv X Y Z = 𝟙 _
+  distr_comp_distr_inv : ∀X Y Z: C, DistributiveCategory.distr_hom X Y Z ≫ distr_inv X Y Z = 𝟙 _
+  distl_inv_comp_distl : ∀X Y Z: C, distl_inv X Y Z ≫ DistributiveCategory.distl_hom X Y Z = 𝟙 _
+  distr_inv_comp_distr : ∀X Y Z: C, distr_inv X Y Z ≫ DistributiveCategory.distr_hom X Y Z = 𝟙 _
   inl_central : ∀{X Y : C}, Central (inl _ _ : X ⟶ X ⊕ₒ Y)
   inr_central : ∀{X Y : C}, Central (inr _ _ : Y ⟶ X ⊕ₒ Y)
 
@@ -71,15 +76,11 @@ def DistributiveCategory.distr [DistributiveCategory C] (X Y Z : C)
   : (X ⊗ Z) ⊕ₒ (Y ⊗ Z) ≅ (X ⊕ₒ Y) ⊗ Z
   := ⟨distr_hom X Y Z, distr_inv X Y Z, distr_comp_distr_inv X Y Z, distr_inv_comp_distr X Y Z⟩
 
-namespace Monoidal
+namespace DistributiveCategory
 
 scoped notation "∂L" => DistributiveCategory.distl
 
 scoped notation "∂R" => DistributiveCategory.distr
-
-open DistributiveCategory
-
-section DistributiveCategory
 
 variable [DistributiveCategory C]
 
@@ -109,12 +110,16 @@ theorem inr_distr (X Y Z : C) : inr _ _ ≫ (∂R X Y Z).hom = inr _ _ ▷ Z := 
 
 end DistributiveCategory
 
-variable [IsPremonoidal C]
+end MonoidalCategoryStruct
+
+namespace DistributiveCategory
+
+variable [PremonoidalCategory C]
 
 @[reassoc]
 theorem distl_hom_naturality_right {X Y Z Y' Z' : C} (f : Y ⟶ Y') (g : Z ⟶ Z')
   : ((X ◁ f) ⊕ₕ (X ◁ g)) ≫ distl_hom X Y' Z' = distl_hom X Y Z ≫ X ◁ (f ⊕ₕ g) := by
-  simp [distl_hom, <-whiskerLeft_comp]
+  simp [distl_hom, <-PremonoidalCategory.whiskerLeft_comp]
 
 variable [DC : DistributiveCategory C]
 
@@ -132,26 +137,26 @@ theorem distl_inv_naturality_right {X Y Z Y' Z' : C} (f : Y ⟶ Y') (g : Z ⟶ Z
 
 instance Central.coprod {X Y Z : C} (f : X ⟶ Z) [Central f] (g : Y ⟶ Z) [Central g]
   : Central (desc f g) where
-  left_sliding h := by
+  left_exchange h := by
     rw [<-cancel_epi (f := distr_hom _ _ _)]
     ext <;> simp [
-        ltimes, left_sliding_assoc, ← whiskerRight_comp,
-        rtimes, ← whiskerRight_comp_assoc, left_sliding
+        PremonoidalCategory.ltimes, left_exchange_assoc, ← comp_whiskerRight,
+        PremonoidalCategory.rtimes, <-comp_whiskerRight_assoc, left_exchange
       ]
-  right_sliding h := by
+  right_exchange h := by
     rw [<-cancel_epi (f := distl_hom _ _ _)]
     ext <;> simp [
-        ltimes, ← right_sliding_assoc, ← whiskerLeft_comp,
-        rtimes, ← whiskerLeft_comp_assoc, right_sliding
+        PremonoidalCategory.ltimes, ← right_exchange_assoc, ← PremonoidalCategory.whiskerLeft_comp,
+        PremonoidalCategory.rtimes, ← PremonoidalCategory.whiskerLeft_comp_assoc, right_exchange
       ]
 
 instance Central.distl_hom {X Y Z : C} : Central (distl_hom X Y Z)
-  := by unfold Monoidal.distl_hom; infer_instance
+  := by unfold DistributiveCategory.distl_hom; infer_instance
 
 instance Central.distl {X Y Z : C} : Central (∂L X Y Z).hom := Central.distl_hom
 
 instance Central.distr_hom {X Y Z : C} : Central (distr_hom X Y Z)
-  := by unfold Monoidal.distr_hom; infer_instance
+  := by unfold DistributiveCategory.distr_hom; infer_instance
 
 instance Central.distr {X Y Z : C} : Central (∂R X Y Z).hom := Central.distr_hom
 
@@ -160,6 +165,6 @@ instance Central.distr {X Y Z : C} : Central (∂R X Y Z).hom := Central.distr_h
 instance Central.addHom {X Y X' Y' : C} (f : X ⟶ Y) [Central f] (g : X' ⟶ Y') [Central g]
   : Central (f ⊕ₕ g) := by rw [ChosenFiniteCoproducts.addHom]; infer_instance
 
-end Monoidal
+end DistributiveCategory
 
 end CategoryTheory
