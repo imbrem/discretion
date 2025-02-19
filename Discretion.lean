@@ -58,3 +58,4 @@ import Discretion.Poset2.ChosenFiniteProducts
 import Discretion.Poset2.Distributive
 import Discretion.Poset2.Effectful
 import Discretion.Poset2.Elgot
+import Discretion.Monoidal.Braided.Basic

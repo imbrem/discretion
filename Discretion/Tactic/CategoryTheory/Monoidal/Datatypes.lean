@@ -16,7 +16,8 @@ widgets.
 -/
 
 open Lean Meta Elab Qq
-open CategoryTheory Mathlib.Tactic.BicategoryLike MonoidalCategory MonoidalCategory'
+open CategoryTheory Mathlib.Tactic.BicategoryLike MonoidalCategory'
+open scoped MonoidalCategory
 
 namespace Discretion.Tactic.Monoidal
 
@@ -59,7 +60,7 @@ structure Context where
   /-- The premonoidal category instance -/
   instPremonoidal? : Option Q(PremonoidalCategory.{level₂, level₁} $C)
   /-- The monoidal category instance. -/
-  instMonoidal? : Option Q(MonoidalCategory.{level₂, level₁} $C)
+  instMonoidal? : Option Q(MonoidalCategory'.{level₂, level₁} $C)
 
 /-- Populate a `context` object for evaluating `e`. -/
 def mkContext? (e : Expr) : MetaM (Option Context) := do
@@ -116,10 +117,10 @@ theorem structuralIsoOfExpr_comp {f g h : C}
     (η' ≪≫ θ').hom  = η ≫ θ := by
   simp [ih_η, ih_θ]
 
-theorem StructuralOfExpr_monoidalComp {f g h i : C} [MonoidalCoherence g h]
+theorem StructuralOfExpr_monoidalComp {f g h i : C} [MonoidalCoherence' g h]
     (η : f ⟶ g) (η' : f ≅ g) (ih_η : η'.hom = η) (θ : h ⟶ i) (θ' : h ≅ i) (ih_θ : θ'.hom = θ) :
     (η' ≪⊗≫ θ').hom = η ⊗≫ θ := by
-  simp [ih_η, ih_θ, monoidalIsoComp, monoidalComp, MonoidalCoherence.iso]
+  simp [ih_η, ih_θ, monoidalIsoComp', monoidalComp', MonoidalCoherence'.iso]
 
 variable [PremonoidalCategory C]
 
@@ -171,10 +172,10 @@ instance : MonadMor₂Iso MonoidalM where
     let .some _monoidal := ctx.instPremonoidal? | synthPremonoidalError
     have f_e : Q($ctx.C) := f.e
     have g_e : Q($ctx.C) := g.e
-    have inst : Q(MonoidalCoherence $f_e $g_e) := inst
+    have inst : Q(MonoidalCoherence' $f_e $g_e) := inst
     match (← whnfI inst).getAppFnArgs with
-    | (``MonoidalCoherence.mk, #[_, _, _, _, α]) =>
-      let e : Q($f_e ≅ $g_e) := q(MonoidalCoherence.iso)
+    | (``MonoidalCoherence'.mk, #[_, _, _, _, α]) =>
+      let e : Q($f_e ≅ $g_e) := q(MonoidalCoherence'.iso)
       return ⟨e, f, g, inst, α⟩
     | _ => throwError m!"failed to unfold {inst}"
   comp₂M η θ := do
@@ -243,7 +244,7 @@ instance : MonadMor₂Iso MonoidalM where
     have g_e : Q($ctx.C) := g.e
     have h_e : Q($ctx.C) := h.e
     have i_e : Q($ctx.C) := i.e
-    have _inst : Q(MonoidalCoherence $g_e $h_e) := α.inst
+    have _inst : Q(MonoidalCoherence' $g_e $h_e) := α.inst
     have η_e : Q($f_e ≅ $g_e) := η.e
     have θ_e : Q($h_e ≅ $i_e) := θ.e
     return .coherenceComp q($η_e ≪⊗≫ $θ_e) f g h i α η θ
@@ -392,7 +393,7 @@ instance : MonadMor₂ MonoidalM where
     have g_e : Q($ctx.C) := g.e
     have h_e : Q($ctx.C) := h.e
     have i_e : Q($ctx.C) := i.e
-    have _inst : Q(MonoidalCoherence $g_e $h_e) := α.inst
+    have _inst : Q(MonoidalCoherence' $g_e $h_e) := α.inst
     have η_e : Q($f_e ⟶ $g_e) := η.e
     have θ_e : Q($h_e ⟶ $i_e) := θ.e
     let iso_lift? ← (match (η.isoLift?, θ.isoLift?) with
@@ -471,10 +472,10 @@ partial def Mor₂IsoOfExpr (e : Expr) : MonoidalM Mor₂Iso := do
     whiskerRightM (← Mor₂IsoOfExpr η) (← MkMor₁.ofExpr h)
   | (``PremonoidalCategory.tensorIso, #[_, _, _, _, _, _, _, η, θ]) =>
     horizontalCompM (← Mor₂IsoOfExpr η) (← Mor₂IsoOfExpr θ)
-  | (``monoidalIsoComp, #[_, _, _, g, h, _, inst, η, θ]) =>
+  | (``monoidalIsoComp', #[_, _, _, g, h, _, inst, η, θ]) =>
     let α ← coherenceHomM (← MkMor₁.ofExpr g) (← MkMor₁.ofExpr h) inst
     coherenceCompM α (← Mor₂IsoOfExpr η) (← Mor₂IsoOfExpr θ)
-  | (``MonoidalCoherence.iso, #[_, _, f, g, inst]) =>
+  | (``MonoidalCoherence'.iso, #[_, _, f, g, inst]) =>
     coherenceHomM' (← MkMor₁.ofExpr f) (← MkMor₁.ofExpr g) inst
   | _ =>
     return .of ⟨e, ← MkMor₁.ofExpr (← srcExprOfIso e), ← MkMor₁.ofExpr (← tgtExprOfIso e)⟩
@@ -497,7 +498,7 @@ partial def Mor₂OfExpr (e : Expr) : MonoidalM Mor₂ := do
       whiskerRightM (← Mor₂OfExpr η) (← MkMor₁.ofExpr h)
     | (``MonoidalCategoryStruct.tensorHom, #[_, _, _, _, _, _, _, η, θ]) =>
       horizontalCompM (← Mor₂OfExpr η) (← Mor₂OfExpr θ)
-    | (``monoidalComp, #[_, _, _, g, h, _, inst, η, θ]) =>
+    | (``monoidalComp', #[_, _, _, g, h, _, inst, η, θ]) =>
       let α ← coherenceHomM (← MkMor₁.ofExpr g) (← MkMor₁.ofExpr h) inst
       coherenceCompM α (← Mor₂OfExpr η) (← Mor₂OfExpr θ)
     | _ => return .of ⟨e, ← MkMor₁.ofExpr (← srcExpr e), ← MkMor₁.ofExpr (← tgtExpr e)⟩

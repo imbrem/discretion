@@ -15,8 +15,8 @@ This file provides the implementation of the normalization given in
 -/
 
 open Lean Meta Elab Qq
-open CategoryTheory Mathlib.Tactic.BicategoryLike PremonoidalCategory
-      MonoidalCategory MonoidalCategory'
+open CategoryTheory Mathlib.Tactic.BicategoryLike PremonoidalCategory MonoidalCategory'
+open scoped MonoidalCategory
 
 namespace Discretion.Tactic.Monoidal
 
@@ -237,7 +237,7 @@ end PremonoidalCategory
 
 section MonoidalCategory
 
-variable [MonoidalCategory C]
+variable [MonoidalCategory' C]
 
 -- NOTE: this is not true in general in a premonoidal category
 
