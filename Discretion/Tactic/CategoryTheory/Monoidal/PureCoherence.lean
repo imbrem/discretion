@@ -282,7 +282,7 @@ example {C : Type} [Category C] [MonoidalCategory C] :
 ```
 -/
 def pureCoherence (mvarId : MVarId) : MetaM (List MVarId) :=
-  Mathlib.Tactic.BicategoryLike.pureCoherence Monoidal.Context `monoidal mvarId
+  Mathlib.Tactic.BicategoryLike.pureCoherence Monoidal.Context `premonoidal mvarId
 
 @[inherit_doc pureCoherence]
 elab "premonoidal_coherence" : tactic => withMainContext do

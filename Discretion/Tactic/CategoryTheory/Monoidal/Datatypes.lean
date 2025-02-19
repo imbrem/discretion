@@ -45,7 +45,7 @@ def tgtExprOfIso (η : Expr) : MetaM Expr := do
   | (``Iso, #[_, _, _, g]) => return g
   | _ => throwError m!"{η} is not a morphism"
 
-initialize registerTraceClass `monoidal
+initialize registerTraceClass `premonoidal
 
 /-- The context for evaluating expressions. -/
 structure Context where

@@ -18,7 +18,9 @@ or if they can be replaced by use of the `coherence` tactic.
 
 open CategoryTheory Category Iso
 
-namespace CategoryTheory.MonoidalCategory
+open scoped MonoidalCategory
+
+namespace CategoryTheory.MonoidalCategory'
 
 variable {C : Type*} [Category C] [PremonoidalCategory C]
 
@@ -69,4 +71,4 @@ theorem pentagon_inv_hom (W X Y Z : C) :
       (α_ W X (Y ⊗ Z)).hom ≫ (𝟙 W ⊗ (α_ X Y Z).inv) ≫ (α_ W (X ⊗ Y) Z).inv := by
   premonoidal_coherence
 
-end CategoryTheory.MonoidalCategory
+end CategoryTheory.MonoidalCategory'

@@ -54,3 +54,4 @@ import Discretion.Poset2.Distributive
 import Discretion.Poset2.Effectful
 import Discretion.Poset2.Elgot
 import Discretion.Monoidal.Braided.Basic
+import Discretion.Monoidal.CoherenceLemmas
