@@ -543,6 +543,8 @@ theorem EQuant.one_le_copy : (1 : EQuant) ≤ .copy := by decide
 @[simp]
 theorem EQuant.one_le_coe {q : Quant} : (1 : EQuant) ≤ q := by simp [LE.le]
 
+theorem EQuant.zero_le_coe_iff {q : Quant} : (0 : EQuant) ≤ q ↔ .del ≤ q := by simp [LE.le]
+
 def EQuant.le.casesLE {motive : ∀{q q' : EQuant}, q ≤ q' → Sort _}
   (top : ∀q, motive (q := q) (q' := ⊤) (by simp))
   (zero : @motive 0 0 (by simp [LE.le]))

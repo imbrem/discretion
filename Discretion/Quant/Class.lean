@@ -12,6 +12,15 @@ attribute [simp] IsAff.del_le_quant
 theorem IsAff.is_aff_iff [HasQuant α] (a : α) : IsAff a ↔ .del ≤ quant a
   := ⟨λ h => h.del_le_quant, λ h => ⟨h⟩⟩
 
+theorem IsAff.is_aff_iff' [HasQuant α] (a : α) : IsAff a ↔ (0 : EQuant) ≤ quant a
+  := by simp only [is_aff_iff, EQuant.zero_le_coe_iff]
+
+theorem IsAff.zero_le_quant [HasQuant α] (a : α) [ha : IsAff a] : (0 : EQuant) ≤ quant a
+  := ha.del_le_quant
+
+theorem IsAff.of_zero_le_quant [HasQuant α] {a : α} (h : (0 : EQuant) ≤ quant a) : IsAff a
+  := ⟨h⟩
+
 class IsRel [HasQuant α] (A : α) : Prop where
   copy_le_quant : .copy ≤ quant A
 
