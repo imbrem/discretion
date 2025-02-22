@@ -369,7 +369,7 @@ theorem Fin.missedBelow_not_hit
     split
     case isTrue hj =>
       apply I
-      simp only [numMissedBefore, hj, ↓reduceIte, zero_add] at hi
+      simp only [numMissedBefore, hj, ↓reduceIte, Nat.zero_add] at hi
       exact hi
     case isFalse hj =>
       split
