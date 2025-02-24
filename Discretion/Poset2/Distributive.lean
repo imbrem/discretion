@@ -20,6 +20,7 @@ variable  {C : Type u}
           [ChosenFiniteCoproducts C]
           {E : Type v} [EffectSystem E] [D2 : Distributive2 C E]
 
+
 instance EffectfulCategory.HasEff.inl {e : E} {X Y : C} : HasEff e (inl X Y) where
   has_eff := (D2.eff_distributive e).inl_mem X Y
 
@@ -30,6 +31,9 @@ instance EffectfulCategory.HasEff.desc
   {e : E} {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
   [hf : HasEff e f] [hg : HasEff e g] : HasEff e (desc f g) where
   has_eff := (D2.eff_distributive e).coprod_desc_mem hf.has_eff hg.has_eff
+
+instance EffectfulCategory.HasEff.fromZero {e : E} {X : C} : HasEff e (fromZero X) where
+  has_eff := (D2.eff_distributive e).initial_mem X
 
 instance EffectfulCategory.HasEff.addHom
   {e : E} {X Y X' Y' : C} (f : X ⟶ X') (g : Y ⟶ Y')
