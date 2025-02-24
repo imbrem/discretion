@@ -32,4 +32,14 @@ class Elgot2 (C : Type u)
   right_mover_right_uniform : ∀{e e' : E}, e ⇀ e' → (eff e).RightUniform (eff e')
   left_mover_left_uniform : ∀{e e' : E}, e ↽ e' → (eff e).LeftUniform (eff e')
 
+variable {C : Type u}
+          [Category C] [PremonoidalCategory C] [BraidedCategory' C]
+          [ChosenFiniteCoproducts C] [IC : Iterate C]
+          {E : Type v} [ES : IterEffectSystem E] [EC : Elgot2 C E]
+
+theorem EffectfulCategory.HasEff.iterate {e : E} {X Y : C} (f : X ⟶ Y ⊕ₒ X) (he : e ∈ ES.iterative)
+  [HasEff e f] : EC.HasEff e (iterate f) where
+  has_eff := (EC.contains_iterates e he).iterate_mem f has_eff
+
+
 end CategoryTheory
