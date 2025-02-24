@@ -58,3 +58,5 @@ class IterEffectSystem (ε : Type u)
   iterative : Set ε
   iterative_is_upper : IsUpperSet iterative
   top_iterative : ⊤ ∈ iterative
+
+attribute [simp] IterEffectSystem.top_iterative
