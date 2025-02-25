@@ -28,7 +28,6 @@ class EffectfulCategory
   eff_braided : ∀e, (eff e).IsBraided
   eff_comm : ∀{e e' : E}, e ⇌ e' → Commutes (eff e) (eff e')
 
-
 variable {C : Type v} [Category C] [PremonoidalCategory C] [BraidedCategory' C]
   {E : Type u} [EffectSystem E] [EC : EffectfulCategory C E]
 
@@ -44,12 +43,19 @@ theorem EffectfulCategory.HasEff.mono {e e' : E} (h : e ≤ e') {X Y : C} {f : X
 theorem EffectfulCategory.HasEff.of_pure {X Y : C} {f : X ⟶ Y} (hf : EC.pure f) : EC.HasEff e f
   := mono bot_le (hf := ⟨hf⟩)
 
+@[simp]
 instance EffectfulCategory.HasEff.top {X Y : C} (f : X ⟶ Y) : EC.HasEff ⊤ f where
   has_eff := by rw [EC.eff_top]; trivial
 
+@[simp]
+theorem EffectfulCategory.mem_eff_top {X Y : C} {f : X ⟶ Y} : EC.eff ⊤ f
+  := by rw [EC.eff_top]; trivial
+
+@[simp]
 instance EffectfulCategory.HasEff.id {e : E} {X : C} : HasEff e (𝟙 X) where
   has_eff := (EC.eff_monoidal e).id_mem X
 
+@[simp]
 instance EffectfulCategory.HasEff.eq_hom {e : E} {X Y : C} (h : X = Y) : HasEff e (eqToHom h)
   := by cases h; exact id
 

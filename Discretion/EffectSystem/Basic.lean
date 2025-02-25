@@ -6,6 +6,8 @@ class HasCommRel (ε : Type u) [PartialOrder ε] [OrderBot ε] : Sort _ where
   right_mover_bot : ∀e, right_mover ⊥ e
   right_mover_rel_bot : ∀e, right_mover e ⊥
 
+attribute [simp] HasCommRel.right_mover_bot
+
 namespace HasCommRel
 
 variable {ε} [PartialOrder ε] [BoundedOrder ε] [HasCommRel ε]
@@ -16,6 +18,7 @@ abbrev left_mover (l r : ε) : Prop := r ⇀ l
 
 scoped infixr:50 " ↽ " => left_mover
 
+@[simp]
 theorem left_mover_bot (e : ε) : ⊥ ↽ e := right_mover_rel_bot e
 
 theorem left_mover_rel_bot (e : ε) : e ↽ ⊥ := right_mover_bot e
@@ -36,8 +39,10 @@ theorem commutes_symm_iff {l r : ε} : l ⇌ r ↔ r ⇌ l := by simp [commutes_
 
 theorem commutes_symm {l r : ε} : l ⇌ r → r ⇌ l := commutes_symm_iff.mp
 
+@[simp]
 theorem commutes_bot_left {r : ε} : (⊥ : ε) ⇌ r := ⟨right_mover_bot r, left_mover_bot r⟩
 
+@[simp]
 theorem commutes_bot_right {l : ε} : l ⇌ (⊥ : ε) := commutes_symm commutes_bot_left
 
 theorem right_mover_self_iff {e : ε} : e ⇀ e ↔ e ⇌ e := by simp [commutes_def]
