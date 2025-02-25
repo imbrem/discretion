@@ -37,6 +37,11 @@ variable {C : Type u}
           [ChosenFiniteCoproducts C] [IC : Iterate C]
           {E : Type v} [ES : IterEffectSystem E] [EC : Elgot2 C E]
 
+theorem Elgot2.comm_uniform {e e' : E} (h : e ⇌ e') : (EC.eff e).Uniform (EC.eff e') where
+  uniform hh hf hg hc := refines_antisymm
+    ((EC.right_mover_right_uniform h.left).right_uniform hh hf hg (refines_of_eq hc))
+    ((EC.left_mover_left_uniform h.right).left_uniform hh hf hg (refines_of_eq hc.symm))
+
 theorem EffectfulCategory.HasEff.iterate {e : E} {X Y : C} (f : X ⟶ Y ⊕ₒ X) (he : e ∈ ES.iterative)
   [HasEff e f] : EC.HasEff e (iterate f) where
   has_eff := (EC.contains_iterates e he).iterate_mem f has_eff
