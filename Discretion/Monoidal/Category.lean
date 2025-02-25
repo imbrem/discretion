@@ -466,6 +466,12 @@ theorem eqToHom_whiskerRight {X Y : C} (f : X = Y) (Z : C) :
   cases f
   simp only [id_whiskerRight, eqToHom_refl]
 
+theorem eqToHom_tensorHom {X₁ Y₁ X₂ Y₂ : C} (f : X₁ = Y₁) (g : X₂ = Y₂) :
+  eqToHom f ⊗ eqToHom g = eqToHom (congr_arg₂ tensorObj f g) := by
+  cases f
+  cases g
+  simp only [tensor_id, eqToHom_refl]
+
 @[reassoc]
 theorem associator_naturality_left {X X' : C} (f : X ⟶ X') (Y Z : C) :
     f ▷ Y ▷ Z ≫ (α_ X' Y Z).hom = (α_ X Y Z).hom ≫ f ▷ (Y ⊗ Z) := by simp
