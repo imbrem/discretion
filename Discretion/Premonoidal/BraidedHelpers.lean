@@ -62,18 +62,22 @@ scoped notation "βi_" => swap_inner
 instance swap_inner_central (X Y Z W : C) : Central (βi_ X Y Z W).hom := by
   simp only [swap_inner]; infer_instance
 
+@[reassoc]
 theorem assoc_inner_swap_inner (X Y Z W : C)
   : (αi_ X Y Z W).inv ≫ (βi_ X Y Z W).hom
   = X ◁ (β'_ Y Z).hom ▷ W ≫ (αi_ X Z Y W).inv := by simp [swap_inner]
 
+@[reassoc]
 theorem assoc_inner_swap_inner_inv (X Y Z W : C)
   : (αi_ X Z Y W).inv ≫ (βi_ X Y Z W).inv
   = X ◁ (β'_ Y Z).inv ▷ W ≫ (αi_ X Y Z W).inv := by simp [swap_inner]
 
+@[reassoc]
 theorem swap_inner_assoc_inner (X Y Z W : C)
   : (βi_ X Y Z W).hom ≫ (αi_ X Z Y W).hom
   = (αi_ X Y Z W).hom ≫ X ◁ (β'_ Y Z).hom ▷ W := by simp [swap_inner]
 
+@[reassoc]
 theorem swap_inner_inv_assoc_inner (X Y Z W : C)
   : (βi_ X Y Z W).inv ≫ (αi_ X Y Z W).hom
   = (αi_ X Z Y W).hom ≫ X ◁ (β'_ Y Z).inv ▷ W := by simp [swap_inner]
@@ -181,12 +185,12 @@ theorem swap_inner_eq_inv
   (X Y Z W : C) : (βi_ X Y Z W).hom = (βi_ X Z Y W).inv := by
   simp [swap_inner, SymmetricCategory'.braiding_swap_eq_inv_braiding]
 
-@[simp]
+@[simp, reassoc (attr := simp)]
 theorem swap_inner_swap_inner
   (X Y Z W : C) : (βi_ X Y Z W).hom ≫ (βi_ X Z Y W).hom = 𝟙 _
   := by rw [swap_inner_eq_inv, Iso.inv_hom_id]
 
-@[simp]
+@[simp, reassoc (attr := simp)]
 theorem swap_inner_swap_inner_inv
   (X Y Z W : C) : (βi_ X Y Z W).inv ≫ (βi_ X Z Y W).inv = 𝟙 _
   := by rw [<-swap_inner_eq_inv, Iso.hom_inv_id]
