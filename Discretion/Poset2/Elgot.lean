@@ -33,6 +33,8 @@ class Elgot2 (C : Type u)
   right_mover_right_uniform : ∀{e e' : E}, e ⇀ e' → (eff e).RightUniform (eff e')
   left_mover_left_uniform : ∀{e e' : E}, e ↽ e' → (eff e).LeftUniform (eff e')
 
+export Elgot2 (refines_iterate)
+
 variable {C : Type u}
           [Category C] [PremonoidalCategory C] [BraidedCategory' C]
           [ChosenFiniteCoproducts C] [IC : Iterate C]
