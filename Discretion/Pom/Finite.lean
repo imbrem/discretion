@@ -153,7 +153,7 @@ def RHom.comp {α β γ : Type u}
   order _ _ h := g.order _ _ (f.order _ _ h)
 
 structure RIso {α β : Type u} (r : Rel α β) (p : GPom α) (q : GPom β)
-  extends Equiv (Fin p.arity) (Fin q.arity) : Type u
+  : Type u extends Equiv (Fin p.arity) (Fin q.arity)
   where
   actions : ∀ i, r (p.actions i) (q.actions (toFun i))
   order : ∀i j, p.order.le i j ↔ q.order.le (toFun i) (toFun j)

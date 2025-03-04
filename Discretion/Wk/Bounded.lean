@@ -23,7 +23,7 @@ theorem BoundedOn.comp (s t u) [BoundedOn s t σ] [BoundedOn t u ρ] : BoundedOn
 theorem BoundedFrom.comp (s t u) [BoundedFrom s t σ] [BoundedFrom t u ρ] : BoundedFrom s u (ρ ∘ σ) where
   bounded_from i h := bounded_from i (bounded_from (s := t) (σ i) h)
 
-class BoundedIff (s : α) (t : α) (ρ : α → α) extends BoundedOn s t ρ, BoundedFrom s t ρ : Prop
+class BoundedIff (s : α) (t : α) (ρ : α → α) : Prop extends BoundedOn s t ρ, BoundedFrom s t ρ
 
 instance BoundedOn.from_bot [OrderBot α] : BoundedOn ⊥ t ρ where
   bounded_on i h := by simp at h

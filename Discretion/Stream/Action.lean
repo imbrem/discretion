@@ -15,8 +15,7 @@ def StreamProd.infOne {α: Type u} {β: Type v} [One α] [StreamProd α β] : β
   := streamProd (λ_ => (1 : α))
 
 class StreamMulAction (α: Type u) (β: Type v) [SMul α β]
-  extends StreamProd α β: Type (max u v)
-  where
+  : Type (max u v) extends StreamProd α β where
   streamProd_cons: ∀a f, streamProd (f.cons a) = a • streamProd f
 
 open StreamProd

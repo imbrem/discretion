@@ -12,10 +12,10 @@ open Limits
 
 variable {C} [Category C]
 
-class IsCartesian (W : MorphismProperty C) extends IsMultiplicative W : Prop where
+class IsCartesian (W : MorphismProperty C) : Prop extends IsMultiplicative W where
   subcategory_has_binary_products : HasFiniteProducts (WideSubcategory W)
 
-class IsCocartesian (W : MorphismProperty C) extends IsMultiplicative W : Prop where
+class IsCocartesian (W : MorphismProperty C) : Prop extends IsMultiplicative W where
   subcategory_has_binary_coproducts : HasFiniteCoproducts (WideSubcategory W)
 
 -- instance ContainsCoproducts.instIsCoCartesian {W : MorphismProperty C} [ContainsCoproducts W]

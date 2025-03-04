@@ -354,10 +354,10 @@ instance ContainsMonoidalStructure.instMonoidalStructure
   rightUnitor_hom_mem := monoidalStructure.rightUnitor_hom
   rightUnitor_inv_mem := monoidalStructure.rightUnitor_inv
 
-class IsMonoidal (W : MorphismProperty C) extends
+class IsMonoidal (W : MorphismProperty C) : Prop extends
   ContainsMonoidalStructure W,
   IsMultiplicative W,
-  IsStableUnderWhisker W : Prop where
+  IsStableUnderWhisker W where
 
 instance {W : MorphismProperty C}
   [ContainsMonoidalStructure W] [IsMultiplicative W] [IsStableUnderWhisker W]

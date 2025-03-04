@@ -30,7 +30,7 @@ theorem coprod_desc_mem {W : MorphismProperty C} [ContainsCoprodDesc W] {X Y Z :
   := ContainsCoprodDesc.coprod_desc_mem hf hg
 
 class Cocartesian (W : MorphismProperty C)
-  extends ContainsInjections W, ContainsCoprodDesc W, IsMultiplicative W : Prop
+  : Prop extends ContainsInjections W, ContainsCoprodDesc W, IsMultiplicative W
 
 theorem addHom_mem {W : MorphismProperty C} [Cocartesian W]
   {X Y X' Y' : C} {f : X ⟶ X'} {g : Y ⟶ Y'}

@@ -157,7 +157,7 @@ theorem Fin.toNatWk_comp {n m k} (ρ : Fin m -> Fin k) (σ : Fin n -> Fin m)
   simp only [Function.comp_apply]
   split
   simp only [is_lt, ↓reduceDIte, Fin.eta]
-  simp_arith [Nat.add_sub_cancel]
+  simp +arith [Nat.add_sub_cancel]
 
 theorem Fin.toNatWk_comp_lower_bound {n m} (ρ : Fin n -> Fin m) (σ : ℕ → ℕ) (hσ : ∀k, n ≤ σ k)
     : toNatWk ρ ∘ σ = (· - n + m) ∘ σ := by
@@ -180,7 +180,7 @@ theorem Fin.toNatWk_comp_liftnWk {n m} (σ : ℕ → ℕ) (ρ : Fin n -> Fin m)
   : Fin.toNatWk ρ ∘ Nat.liftnWk n σ = Nat.liftnWk m σ ∘ Fin.toNatWk ρ := by
   funext i
   simp only [Function.comp_apply, Nat.liftnWk, toNatWk]
-  split <;> simp_arith
+  split <;> simp +arith
 
 theorem Fin.liftnWk_comp_toNatWk {n m} (σ : ℕ → ℕ) (ρ : Fin n -> Fin m)
   : Nat.liftnWk m σ ∘ Fin.toNatWk ρ = Fin.toNatWk ρ ∘ Nat.liftnWk n σ

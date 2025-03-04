@@ -431,7 +431,7 @@ instance List.liftWk_bounded_from_length {A : α} {Γ Δ : List α} {ρ}
   := Nat.liftWk_bounded_from (hρ := hρ)
 
 /-- The function `ρ` sends `Γ` to `Δ` -/
-class List.IsRen (Γ Δ : List α) (ρ : ℕ → ℕ) extends BoundedOn Δ.length Γ.length ρ : Prop where
+class List.IsRen (Γ Δ : List α) (ρ : ℕ → ℕ) : Prop extends BoundedOn Δ.length Γ.length ρ where
   getElem_eq : ∀i, (h : i < Δ.length) → Γ[ρ i]'(bounded_on i h) = Δ[i]
 
 def List.IsRen.toFinWk {ρ : ℕ → ℕ} (h : List.IsRen Γ Δ ρ) : Fin (Δ.length) → Fin (Γ.length)
@@ -703,7 +703,7 @@ theorem Vector'.Var.oneHot_le_iff {qs : Vector' EQuant n} {i : ℕ} (hi : i < n)
   := ⟨Vector'.Var.oneHot_le, Vector'.Var.of_oneHot_le hi⟩
 
 structure List.QVar (Γ : List α) (qs : Vector' EQuant Γ.length) (i) (A : α)
-  extends qs.Var i : Prop where
+  : Prop extends qs.Var i where
   ty_eq : Γ[i] = A
 
 theorem List.QVar.zero_head_ty {A} {Γ : List α} {q : EQuant} {qs : Vector' EQuant Γ.length}

@@ -339,7 +339,7 @@ theorem Nat.liftnWk_succ' (n) : liftnWk (n.succ) = liftWk ∘ liftnWk n := by
       | zero => simp only [liftnWk, Nat.succ_lt_succ_iff, Nat.zero_lt_succ]; rfl
       | succ m =>
         simp only [liftnWk, Nat.succ_lt_succ_iff, Function.comp_apply, liftWk]
-        split <;> simp_arith
+        split <;> simp +arith
 
 theorem Nat.liftnWk_succ_apply' (n) (ρ) : liftnWk (n.succ) ρ = liftWk (liftnWk n ρ) := by
   rw [liftnWk_succ', Function.comp_apply]
@@ -352,7 +352,7 @@ theorem Nat.stepnWk_succ' (n) : stepnWk (n.succ) = stepWk ∘ stepnWk n := by
     funext ρ m
     cases m with
     | zero => rfl
-    | succ m => simp_arith [stepnWk, stepWk]
+    | succ m => simp +arith [stepnWk, stepWk]
 
 theorem Nat.liftnWk_one : liftnWk 1 = liftWk := by simp [liftnWk_succ', liftnWk_zero]
 
@@ -523,7 +523,7 @@ theorem Nat.liftnWk_n_succ (n : ℕ) : liftnWk n succ = wkn n := by
   simp only [liftnWk, wkn]
   split
   case isTrue _ => rfl
-  case isFalse h => simp_arith [Nat.le_of_not_lt h]
+  case isFalse h => simp +arith [Nat.le_of_not_lt h]
 
 theorem Nat.wkn_zero : wkn 0 = succ := rfl
 

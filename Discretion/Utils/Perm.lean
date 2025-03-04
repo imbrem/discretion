@@ -25,7 +25,7 @@ theorem Fin.numMissedBefore_mono (ρ : Fin n → Fin m) : Monotone (numMissedBef
 
 theorem Fin.numMissedBefore_le_succ (ρ : Fin n → Fin m) (k : ℕ)
   : numMissedBefore ρ (k + 1) ≤ numMissedBefore ρ k + 1
-  := by simp only [numMissedBefore]; split <;> simp_arith
+  := by simp only [numMissedBefore]; split <;> simp +arith
 
 def Fin.numMissed (ρ : Fin n → Fin m) : ℕ := numMissedBefore ρ m
 
@@ -55,7 +55,7 @@ theorem Fin.numMissedBefore_add_numHitBefore (ρ : Fin n → Fin m) (k : ℕ)
   | zero => simp [numMissedBefore, numHitBefore]
   | succ n I =>
     simp only [numMissedBefore, numHitBefore]
-    split <;> simp_arith [I]
+    split <;> simp +arith only [Nat.zero_add] <;> rw [Nat.add_comm, I]
 
 theorem Fin.total_sub_numMissedBefore (ρ : Fin n → Fin m) (k : ℕ)
   : k - numMissedBefore ρ k = numHitBefore ρ k := by
@@ -156,7 +156,7 @@ theorem Fin.numMissedBefore_cast_succ_above (ρ : Fin (n + 1) → Fin m) (k : �
     if h : ρ 0 = k then
       cases h
       rw [numMissedBefore_cast_succ_below ρ _ (le_refl _), ite_cond_eq_false, ite_cond_eq_true]
-      · simp_arith
+      · simp +arith
       · rw [eq_iff_iff, iff_true]
         exact ⟨0, rfl⟩
       · simp only [Function.comp_apply, eq_iff_iff, iff_false, not_exists]
@@ -166,7 +166,7 @@ theorem Fin.numMissedBefore_cast_succ_above (ρ : Fin (n + 1) → Fin m) (k : �
       have he : (∃i, ρ i = k) ↔ ∃i : Fin n, ρ i.succ = k := ⟨
         λ⟨i, hi⟩ => ⟨i.pred (λhi' => by simp [<-hi, hi'] at h), by simp [hi]⟩,
         λ⟨i, hi⟩ => ⟨i.succ, hi⟩⟩
-      simp_arith [he, I (Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hk) h)]
+      simp +arith [he, I (Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hk) h)]
 
 theorem Fin.numMissed_cast_succ (ρ : Fin (n + 1) → Fin m) (h : ∀⦃i⦄, ρ 0 = ρ i -> 0 = i)
   : numMissed (ρ ∘ Fin.succ) = numMissed ρ + 1

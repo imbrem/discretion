@@ -15,7 +15,7 @@ open scoped MonoidalCategory
 
 variable {C} [Category C] [PremonoidalCategory C]
 
-class CartesianMonoidal (W : MorphismProperty C) extends IsMonoidal W : Type _ where
+class CartesianMonoidal (W : MorphismProperty C) : Type _ extends IsMonoidal W where
   fst : ∀(X Y : WideSubcategory W), (X ⊗ Y) ⟶ X
   snd : ∀(X Y : WideSubcategory W), (X ⊗ Y) ⟶ Y
   monoidal_product_is_cartesian

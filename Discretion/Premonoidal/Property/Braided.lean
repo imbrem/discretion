@@ -18,7 +18,7 @@ class ContainsBraidings (W : MorphismProperty C) : Prop where
   braiding_hom_mem : ∀ {X Y : C}, W (β'_ X Y).hom
   braiding_inv_mem : ∀ {X Y : C}, W (β'_ X Y).inv
 
-class IsBraided (W : MorphismProperty C) extends ContainsBraidings W, IsMonoidal W : Prop where
+class IsBraided (W : MorphismProperty C) : Prop extends ContainsBraidings W, IsMonoidal W where
 
 instance {W : MorphismProperty C} [ContainsBraidings W] [IsMonoidal W] : IsBraided W := ⟨⟩
 

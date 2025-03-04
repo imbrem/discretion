@@ -111,7 +111,7 @@ theorem Multiset.liftnFv_succ (n) (s : Multiset ℕ) : s.liftnFv n.succ = s.lift
   ext a
   simp only [Nat.succ_eq_add_one]
   rw [Nat.add_comm n 1, Nat.sub_add_eq, and_assoc, and_congr_right_iff]
-  intro hi; cases hi; cases a <;> simp_arith
+  intro hi; cases hi; cases a <;> simp +arith
 
 theorem Multiset.liftnFv_add (n m) (s : Multiset ℕ)
   : s.liftnFv (n + m) = (s.liftnFv m).liftnFv n := by induction m generalizing s with
@@ -130,7 +130,7 @@ theorem Multiset.liftnFv_map_liftnWk (n) (s : Multiset ℕ) (ρ)
   ext a
   simp only [Nat.liftnWk]
   split
-  · simp_arith [*]
+  · simp +arith [*]
   · rename_i h
     simp [le_of_not_lt h]
 

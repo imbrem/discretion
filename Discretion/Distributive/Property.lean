@@ -13,7 +13,7 @@ variable {C : Type u} [Category C] [MonoidalCategoryStruct C] [CC : ChosenFinite
 
 -- If closed under inverses, we get `Distributive` for free
 
-class Distributive (W : MorphismProperty C) extends IsMonoidal W, ContainsCoproducts W : Prop where
+class Distributive (W : MorphismProperty C) : Prop extends IsMonoidal W, ContainsCoproducts W where
   distl_inv_mem : ∀{X Y Z : C}, W ((∂L X Y Z).inv : _ ⟶ _)
   distr_inv_mem : ∀{X Y Z : C}, W ((∂R X Y Z).inv : _ ⟶ _)
 
