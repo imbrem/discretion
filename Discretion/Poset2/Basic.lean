@@ -12,8 +12,9 @@ infix:50 " ↠ "  => Refines.refines
 infix:50 " ↞ " => (λf g => g ↠ f)
 
 class CompMono (C : Type u) [CategoryStruct C] [Refines C] : Prop where
-  comp_mono_right : ∀{X Y Z : C} (f : X ⟶ Y) (g h : Y ⟶ Z), g ↠ h → (f ≫ g) ↠ (f ≫ h)
-  comp_mono_left : ∀{X Y Z : C} (f g : X ⟶ Y) (h : Y ⟶ Z), f ↠ g → (f ≫ h) ↠ (g ≫ h)
+  refines_comp : ∀{X Y Z : C} {f f' : X ⟶ Y} {g g' : Y ⟶ Z}, f ↠ f' → g ↠ g' → f ≫ g ↠ f' ≫ g'
+
+export CompMono (refines_comp)
 
 class RefinesIsDiscrete (C : Type u) [Quiver C] [Refines C] : Prop where
   eq_of_refines {X Y : C} {f g : X ⟶ Y} : f ↠ g -> f = g
@@ -71,7 +72,6 @@ instance Disc2.instCategory {C : Type u} [𝒞 : Category C] : Category (Disc2 C
 instance CompMono.ofDiscrete {C : Type u}
   [CategoryStruct C] [Refines C] [RefinesIsDiscrete C] [RefinesIsPreorder C]
   : CompMono C where
-  comp_mono_right f g h H := by cases (eq_of_refines H); rfl
-  comp_mono_left f g h H := by cases (eq_of_refines H); rfl
+  refines_comp h h' := by cases (eq_of_refines h); cases (eq_of_refines h'); rfl
 
 end CategoryTheory
