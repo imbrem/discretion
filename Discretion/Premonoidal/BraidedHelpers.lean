@@ -175,6 +175,19 @@ theorem swap_inner_naturality_tensor_middle {X₁ X₂ X₃ X₄ Y₁ Y₂ Y₃ 
     congr 3
     apply (Central.left_exchange _).symm
 
+@[simp]
+theorem swap_inner_tensorUnit_right
+  {X Y Z : C}
+  : (βi_ X Y (𝟙_ C) Z).hom = (α_ _ _ _).hom ≫ X ◁ Y ◁ (λ_ Z).hom ≫ (ρ_ X).inv ▷ _
+  := by simp [swap_inner, assoc_inner]; premonoidal_coherence
+
+@[reassoc]
+theorem right_leftUnitor_inv_swap_inner
+  {X Y Z : C} :
+    (X ⊗ Y) ◁ (λ_ Z).inv ≫ (βi_ X Y (𝟙_ C) Z).hom
+    = (α_ X Y Z).hom ≫ (ρ_ X).inv ▷ (Y ⊗ Z)
+  := by simp; premonoidal_coherence
+
 end BraidedCategory
 
 section SymmetricCategory
