@@ -12,6 +12,20 @@ open ChosenFiniteCoproducts
 
 variable {C : Type u} [Category C] [CC : ChosenFiniteCoproducts C]
 
+namespace ChosenFiniteCoproducts
+
+@[reassoc]
+theorem addHom_comp_addHom {X₁ X₂ X₃ Y₁ Y₂ Y₃ : C}
+  (f₁ : X₁ ⟶ X₂) (f₂ : X₂ ⟶ X₃) (g₁ : Y₁ ⟶ Y₂) (g₂ : Y₂ ⟶ Y₃)
+  : (f₁ ⊕ₕ g₁) ≫ (f₂ ⊕ₕ g₂) = (f₁ ≫ f₂) ⊕ₕ (g₁ ≫ g₂)
+  := by simp [addHom, -desc_comp_inl_inr]
+
+@[reassoc]
+theorem addHom_id {X Y : C} : (𝟙 X) ⊕ₕ (𝟙 Y) = 𝟙 (X ⊕ₒ Y) := by
+  simp [addHom, -desc_comp_inl_inr]
+
+end ChosenFiniteCoproducts
+
 section MonoidalCategoryStruct
 
 variable [MonoidalCategoryStruct C]
@@ -87,7 +101,7 @@ variable [DistributiveCategory C]
 @[reassoc]
 theorem distl_naturality_left {X Y Z X' : C} (f : X ⟶ X')
   : ((f ▷ Y) ⊕ₕ (f ▷ Z)) ≫ (∂L X' Y Z).hom = (∂L X Y Z).hom ≫ f ▷ (Y ⊕ₒ Z) := by
-  simp [DistributiveCategory.distl, distl_hom, right_exchange]
+  simp [DistributiveCategory.distl, distl_hom, right_exchange, -desc_comp_inl_inr, addHom]
 
 @[reassoc]
 theorem distl_inv_naturality_left {X Y Z X' : C} (f : X ⟶ X')
@@ -119,7 +133,7 @@ variable [PremonoidalCategory C]
 @[reassoc]
 theorem distl_hom_naturality_right {X Y Z Y' Z' : C} (f : Y ⟶ Y') (g : Z ⟶ Z')
   : ((X ◁ f) ⊕ₕ (X ◁ g)) ≫ distl_hom X Y' Z' = distl_hom X Y Z ≫ X ◁ (f ⊕ₕ g) := by
-  simp [distl_hom, <-PremonoidalCategory.whiskerLeft_comp]
+  simp [addHom, -desc_comp_inl_inr, distl_hom, <-PremonoidalCategory.whiskerLeft_comp]
 
 variable [DC : DistributiveCategory C]
 
@@ -164,6 +178,29 @@ instance Central.distr {X Y Z : C} : Central (∂R X Y Z).hom := Central.distr_h
 
 instance Central.addHom {X Y X' Y' : C} (f : X ⟶ Y) [Central f] (g : X' ⟶ Y') [Central g]
   : Central (f ⊕ₕ g) := by rw [ChosenFiniteCoproducts.addHom]; infer_instance
+
+@[reassoc]
+theorem distl_assoc {X Y Z W : C} :
+  (∂L (W ⊗ X) Y Z).hom ≫ (α_ W X (Y ⊕ₒ Z)).hom
+  = ((α_ W X Y).hom ⊕ₕ (α_ W X Z).hom) ≫ (∂L W (X ⊗ Y) (X ⊗ Z)).hom ≫ W ◁ (∂L X Y Z).hom
+  := by simp [distl, distl_hom, addHom_desc, <-PremonoidalCategory.whiskerLeft_comp]
+
+@[reassoc]
+theorem assoc_inv_distl_inv {X Y Z W : C} :
+  (α_ W X (Y ⊕ₒ Z)).inv ≫ (∂L (W ⊗ X) Y Z).inv
+  = W ◁ (∂L X Y Z).inv ≫ (∂L W (X ⊗ Y) (X ⊗ Z)).inv ≫ ((α_ W X Y).inv ⊕ₕ (α_ W X Z).inv)
+  := by
+  rw [<-cancel_mono (f := (∂L (W ⊗ X) Y Z).hom ≫ (α_ W X (Y ⊕ₒ Z)).hom)]
+  conv =>
+    enter [2, 2]
+    rw [distl_assoc]
+  simp [addHom_comp_addHom_assoc, addHom_id]
+
+@[reassoc]
+theorem distl_inv_distl_inv {X Y Z W : C} :
+  W ◁ (∂L X Y Z).inv ≫ (∂L W (X ⊗ Y) (X ⊗ Z)).inv
+  = (α_ W X (Y ⊕ₒ Z)).inv ≫ (∂L (W ⊗ X) Y Z).inv ≫ ((α_ W X Y).hom ⊕ₕ (α_ W X Z).hom)
+  := by rw [assoc_inv_distl_inv_assoc]; simp [addHom_comp_addHom, addHom_id]
 
 end DistributiveCategory
 

@@ -27,6 +27,7 @@ class Iterate.Uniform (C : Type u) [Category C] [ChosenFiniteCoproducts C] [Iter
     : W h → h ≫ f = g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f = iterate g
 
 -- Part 1 of Lemma 31 of Goncharov and Schröder (2018, Guarded Traced Categories)
+
 theorem Iterate.Uniform.squaring {C : Type u} [Category C] [ChosenFiniteCoproducts C] [Iterate C]
   (W : MorphismProperty C) [W.Cocartesian] [U : Iterate.Uniform C W]
   (codiagonal : ∀{X Y : C} {f : X ⟶ (Y ⊕ₒ X) ⊕ₒ X},
@@ -46,16 +47,18 @@ theorem Iterate.Uniform.squaring {C : Type u} [Category C] [ChosenFiniteCoproduc
       : inr _ _ ≫ iterate w = (f ≫ desc (inl _ _) f) ≫ ((𝟙 Y) ⊕ₕ inr _ _) :=
       calc
       _ = inr _ _ ≫ w ≫ desc (𝟙 _) (iterate w) := by rw [fixpoint]
-      _ = f ≫ desc (inl _ _) (inl _ _ ≫ iterate w) := by simp [<-hw]
+      _ = f ≫ desc (inl _ _) (inl _ _ ≫ iterate w) := by simp only [<- hw, desc_comp,
+        Category.assoc, inl_desc, Category.comp_id, inr_desc, addHom]
       _ = f ≫ desc (inl _ _) (inl _ _ ≫ w ≫ desc (𝟙 _) (iterate w))
         := by rw [fixpoint]
-      _ = f ≫ desc (inl _ _) f ≫ ((𝟙 _) ⊕ₕ inr _ _) := by simp [<-hw]; congr; simp
+      _ = f ≫ desc (inl _ _) f ≫ ((𝟙 _) ⊕ₕ inr _ _) := by simp [<-hw]; congr; simp [addHom]
       _ = _ := by rw [Category.assoc]
       ;
     rw [U.uniform inr_mem u]
   _ = inr _ _ ≫ iterate (w ≫ desc (𝟙 _) (inr _ _)) := by rw [codiagonal]
   _ = inr _ _ ≫ iterate (desc (f ≫ ((𝟙 Y) ⊕ₕ inr _ _)) (f ≫ ((𝟙 Y) ⊕ₕ inl _ _)))
-        := by simp [<-hw]; congr <;> simp
+        := by simp [<-hw]; congr; simp only [desc_comp,
+        Category.assoc, inl_desc, Category.comp_id, inr_desc, addHom, Category.id_comp]
   _ = inr _ _ ≫ desc (𝟙 _) (𝟙 _) ≫ iterate f := by
     have u
       : desc (𝟙 _) (𝟙 _) ≫ f
@@ -63,7 +66,7 @@ theorem Iterate.Uniform.squaring {C : Type u} [Category C] [ChosenFiniteCoproduc
           (f ≫ ((𝟙 Y) ⊕ₕ inr _ _))
           (f ≫ ((𝟙 Y) ⊕ₕ inl _ _))
         ≫ ((𝟙 _) ⊕ₕ (desc (𝟙 _) (𝟙 _)))
-      := by simp
+      := by simp [addHom]
     rw [U.uniform ?c u]
     apply coprod_desc_mem <;> apply id_mem
   _ = _ := by simp
@@ -82,17 +85,17 @@ theorem Iterate.Uniform.dinaturality {C : Type u} [Category C] [ChosenFiniteCopr
     := by
     rw [<-squaring (f := h)]
     apply U.uniform inl_mem
-    simp [<-hh]
+    simp [<-hh, addHom]
   have h2 : inr _ _ ≫ iterate h = iterate (g ≫ desc (inl _ _) f)
     := by
     rw [<-squaring (f := h)]
     apply U.uniform inr_mem
-    simp [<-hh]
+    simp [<-hh, addHom]
   apply Eq.symm
   calc
     _ = inl _ _ ≫ iterate h := h1.symm
     _ = inl _ _ ≫ h ≫ desc (𝟙 _) (iterate h) := by rw [fixpoint]
-    _ = f ≫ desc (𝟙 _) (inr _ _ ≫ iterate h) := by simp [<-hh]
+    _ = f ≫ desc (𝟙 _) (inr _ _ ≫ iterate h) := by simp [<-hh, addHom]
     _ = _ := by rw [h2]
 
 class Iterate.Conway (C : Type u) [Category C] [ChosenFiniteCoproducts C] [Iterate C] : Prop

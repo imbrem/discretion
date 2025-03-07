@@ -125,7 +125,7 @@ lemma desc_inl_comp_inr_comp {X Y Z : C} (f : Y ⊕ₒ Z ⟶ X) :
 -- `ChosenFiniteProducts` uses `tensorHom` from `MonoidalCategory`
 
 /-- The coproduct of two morphisms -/
-abbrev addHom {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') : X ⊕ₒ X' ⟶ Y ⊕ₒ Y' :=
+def addHom {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') : X ⊕ₒ X' ⟶ Y ⊕ₒ Y' :=
   desc (f ≫ inl Y Y') (g ≫ inr Y Y')
 
 /-- Notation for the chosen coproduct of two morphisms -/
@@ -133,15 +133,16 @@ scoped infixr:70 " ⊕ₕ " => addHom
 
 @[reassoc]
 lemma inl_addHom {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') :
-    inl X X' ≫ (f ⊕ₕ g) = f ≫ inl Y Y' := by simp
+    inl X X' ≫ (f ⊕ₕ g) = f ≫ inl Y Y' := by simp [addHom]
 
 @[reassoc]
 lemma inr_addHom {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y') :
-    inr X X' ≫ (f ⊕ₕ g) = g ≫ inr Y Y' := by simp
+    inr X X' ≫ (f ⊕ₕ g) = g ≫ inr Y Y' := by simp [addHom]
 
 @[reassoc]
-lemma map_desc {S T U V W : C} (f : U ⟶ S) (g : W ⟶ S) (h : T ⟶ U) (k : V ⟶ W) :
-    (h ⊕ₕ k) ≫ desc f g = desc (h ≫ f) (k ≫ g) := by simp
+lemma addHom_desc {S T U V W : C} (f : U ⟶ S) (g : W ⟶ S) (h : T ⟶ U) (k : V ⟶ W) :
+    (h ⊕ₕ k) ≫ desc f g = desc (h ≫ f) (k ≫ g) := by simp [addHom]
+
 
 @[simp]
 lemma desc_comp_inl_inr {W X Y Z : C} (g : X ⟶ W) (g' : Z ⟶ Y) :
