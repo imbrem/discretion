@@ -202,6 +202,16 @@ theorem distl_inv_distl_inv {X Y Z W : C} :
   = (α_ W X (Y ⊕ₒ Z)).inv ≫ (∂L (W ⊗ X) Y Z).inv ≫ ((α_ W X Y).hom ⊕ₕ (α_ W X Z).hom)
   := by rw [assoc_inv_distl_inv_assoc]; simp [addHom_comp_addHom, addHom_id]
 
+@[reassoc]
+theorem whiskerLeft_distl_desc {X Y Z W O : C} (f : X ⊗ Y ⟶ O) (g : X ⊗ Z ⟶ O) :
+  W ◁ (∂L X Y Z).inv ≫ W ◁ (desc f g)
+  = (α_ _ _ _).inv ≫ (∂L _ Y Z).inv ≫ desc ((α_ _ _ _).hom ≫ W ◁ f) ((α_ _ _ _).hom ≫ W ◁ g)
+  := by
+  rw [assoc_inv_distl_inv_assoc]
+  congr 1
+  rw [<-cancel_epi (f := (∂L _ _ _).hom), Iso.hom_inv_id_assoc]
+  simp [distl, distl_hom, addHom_desc, <-PremonoidalCategory.whiskerLeft_comp]
+
 end DistributiveCategory
 
 end CategoryTheory
