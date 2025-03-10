@@ -181,6 +181,12 @@ theorem swap_inner_tensorUnit_right
   : (βi_ X Y (𝟙_ C) Z).hom = (α_ _ _ _).hom ≫ X ◁ Y ◁ (λ_ Z).hom ≫ (ρ_ X).inv ▷ _
   := by simp [swap_inner, assoc_inner]; premonoidal_coherence
 
+@[simp]
+theorem swap_inner_tensorUnit_left
+  {X Y Z : C}
+  : (βi_ X (𝟙_ C) Y Z).hom = (ρ_ _).hom ▷ _ ≫ (α_ _ _ _).inv ≫ _ ◁ (λ_ _).inv
+  := by simp [swap_inner, assoc_inner]; premonoidal_coherence
+
 @[reassoc]
 theorem right_leftUnitor_inv_swap_inner
   {X Y Z : C} :
