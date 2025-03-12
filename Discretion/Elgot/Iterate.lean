@@ -18,8 +18,7 @@ class Iterate (C : Type u) [Category C] [ChosenFiniteCoproducts C] where
   fixpoint {X Y : C} {f : X ⟶ Y ⊕ₒ X}
     : f ≫ desc (𝟙 Y) (iterate f) = iterate f
 
-def iterate {C : Type u} [Category C] [ChosenFiniteCoproducts C] [Iterate C] {X Y : C}
-  : (X ⟶ Y ⊕ₒ X) → (X ⟶ Y) := Iterate.iterate
+export Iterate (iterate)
 
 class Iterate.Uniform (C : Type u) [Category C] [ChosenFiniteCoproducts C] [Iterate C]
   (W : MorphismProperty C) : Prop where
