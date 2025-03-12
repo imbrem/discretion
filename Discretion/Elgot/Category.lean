@@ -12,6 +12,6 @@ open HasCommRel
 class ElgotCategory (C : Type u)
   [Category C] [PremonoidalCategory C] [BraidedCategory' C] [ChosenFiniteCoproducts C]
   [Iterate C] (E : Type v) [ES : IterEffectSystem E]
-  extends DistributiveEffectful C E where
+  extends DistributiveEffectful C E, Iterate.Strong C where
   contains_iterates : ∀e ∈ ES.iterative, (eff e).ContainsIterates
   commutative_uniform : ∀{e e' : E}, e ⇌ e' → (eff e).Uniform (eff e')

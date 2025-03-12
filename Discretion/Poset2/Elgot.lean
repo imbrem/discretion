@@ -27,7 +27,7 @@ open HasCommRel
 class Elgot2 (C : Type u)
   [Category C] [PremonoidalCategory C] [BraidedCategory' C] [ChosenFiniteCoproducts C]
   [Iterate C] (E : Type v) [ES : IterEffectSystem E]
-  extends Distributive2 C E where
+  extends Distributive2 C E, Iterate.Strong C where
   refines_iterate : ∀{X Y : C} {f f' : X ⟶ Y ⊕ₒ X}, f ↠ f' → iterate f ↠ iterate f'
   contains_iterates : ∀e ∈ ES.iterative, (eff e).ContainsIterates
   right_mover_right_uniform : ∀{e e' : E}, e ⇀ e' → (eff e).RightUniform (eff e')
