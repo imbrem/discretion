@@ -212,6 +212,34 @@ theorem whiskerLeft_distl_desc {X Y Z W O : C} (f : X ⊗ Y ⟶ O) (g : X ⊗ Z 
   rw [<-cancel_epi (f := (∂L _ _ _).hom), Iso.hom_inv_id_assoc]
   simp [distl, distl_hom, addHom_desc, <-PremonoidalCategory.whiskerLeft_comp]
 
+theorem inl_tensor_zero_eq_inr_tensor_zero {X : C}
+  : inl (X ⊗ 𝟘_ C) (X ⊗ 𝟘_ C) = inr (X ⊗ 𝟘_ C) (X ⊗ 𝟘_ C)
+  := by
+  rw [<-cancel_mono (f := (∂L _ _ _).hom)]
+  simp only [inl_distl, inr_distl]
+  congr
+  apply fromZero_unique
+
+theorem fromTensorZero_unique {X Y : C} (f g : X ⊗ 𝟘_ C ⟶ Y)
+  : f = g := calc
+  _ = inl _ _ ≫ desc f g := by simp
+  _ = inr _ _ ≫ desc f g := by rw [inl_tensor_zero_eq_inr_tensor_zero]
+  _ = _ := by simp
+
+theorem inl_zero_tensor_eq_inr_zero_tensor {X : C}
+  : inl (𝟘_ C ⊗ X) (𝟘_ C ⊗ X) = inr (𝟘_ C ⊗ X) (𝟘_ C ⊗ X)
+  := by
+  rw [<-cancel_mono (f := (∂R _ _ _).hom)]
+  simp only [inl_distr, inr_distr]
+  congr
+  apply fromZero_unique
+
+theorem fromZeroTensor_unique {X Y : C} (f g : 𝟘_ C ⊗ X ⟶ Y)
+  : f = g := calc
+  _ = inl _ _ ≫ desc f g := by simp
+  _ = inr _ _ ≫ desc f g := by rw [inl_zero_tensor_eq_inr_zero_tensor]
+  _ = _ := by simp
+
 end DistributiveCategory
 
 end CategoryTheory
