@@ -212,6 +212,7 @@ theorem whiskerLeft_distl_desc {X Y Z W O : C} (f : X ⊗ Y ⟶ O) (g : X ⊗ Z 
   rw [<-cancel_epi (f := (∂L _ _ _).hom), Iso.hom_inv_id_assoc]
   simp [distl, distl_hom, addHom_desc, <-PremonoidalCategory.whiskerLeft_comp]
 
+@[reassoc]
 theorem leftUnitor_inv_distl {Y Z : C}
   : (λ_ _).inv ≫ (∂L (𝟙_ C) Y Z).inv = (λ_ _).inv ⊕ₕ (λ_ _).inv := by
   rw [<-cancel_mono (f := (∂L _ _ _).hom)]
