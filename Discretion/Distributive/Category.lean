@@ -212,6 +212,12 @@ theorem whiskerLeft_distl_desc {X Y Z W O : C} (f : X ⊗ Y ⟶ O) (g : X ⊗ Z 
   rw [<-cancel_epi (f := (∂L _ _ _).hom), Iso.hom_inv_id_assoc]
   simp [distl, distl_hom, addHom_desc, <-PremonoidalCategory.whiskerLeft_comp]
 
+theorem leftUnitor_inv_distl {Y Z : C}
+  : (λ_ _).inv ≫ (∂L (𝟙_ C) Y Z).inv = (λ_ _).inv ⊕ₕ (λ_ _).inv := by
+  rw [<-cancel_mono (f := (∂L _ _ _).hom)]
+  simp only [Category.assoc, Iso.inv_hom_id, Category.comp_id]
+  simp [distl, distl_hom, addHom_desc]
+
 theorem inl_tensor_zero_eq_inr_tensor_zero {X : C}
   : inl (X ⊗ 𝟘_ C) (X ⊗ 𝟘_ C) = inr (X ⊗ 𝟘_ C) (X ⊗ 𝟘_ C)
   := by
