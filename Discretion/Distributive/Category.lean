@@ -247,6 +247,26 @@ theorem fromZeroTensor_unique {X Y : C} (f g : 𝟘_ C ⊗ X ⟶ Y)
   _ = inr _ _ ≫ desc f g := by rw [inl_zero_tensor_eq_inr_zero_tensor]
   _ = _ := by simp
 
-end DistributiveCategory
+@[reassoc]
+theorem inl_distl_inv {X Y Z : C} : _ ◁ inl _ _ ≫ (∂L X Y Z).inv = inl _ _
+  := by
+  rw [<-cancel_mono (f := (∂L _ _ _).hom)]
+  simp
 
-end CategoryTheory
+@[reassoc]
+theorem inr_distl_inv {X Y Z : C} : _ ◁ inr _ _ ≫ (∂L X Y Z).inv = inr _ _
+  := by
+  rw [<-cancel_mono (f := (∂L _ _ _).hom)]
+  simp
+
+@[reassoc]
+theorem inl_distr_inv {X Y Z : C} : inl _ _ ▷ _ ≫ (∂R X Y Z).inv = inl _ _
+  := by
+  rw [<-cancel_mono (f := (∂R _ _ _).hom)]
+  simp
+
+@[reassoc]
+theorem inr_distr_inv {X Y Z : C} : inr _ _ ▷ _ ≫ (∂R X Y Z).inv = inr _ _
+  := by
+  rw [<-cancel_mono (f := (∂R _ _ _).hom)]
+  simp
