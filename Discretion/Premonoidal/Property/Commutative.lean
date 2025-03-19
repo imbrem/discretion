@@ -18,6 +18,8 @@ class Commutes (L R : MorphismProperty C) where
   left_exchange : ∀ {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y'), L f → R g → f ⋉ g = f ⋊ g
   right_exchange : ∀ {X Y X' Y' : C} (f : X ⟶ Y) (g : X' ⟶ Y'), L f → R g → g ⋉ f = g ⋊ f
 
+attribute [reassoc] Commutes.left_exchange Commutes.right_exchange
+
 theorem Commutes.symm {W W' : MorphismProperty C} [h : Commutes W W'] : Commutes W' W where
   left_exchange f g hf hg := right_exchange g f hg hf
   right_exchange f g hf hg := left_exchange g f hg hf

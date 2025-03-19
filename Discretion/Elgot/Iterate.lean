@@ -27,7 +27,9 @@ class Iterate.Uniform (C : Type u) [Category C] [ChosenFiniteCoproducts C] [Iter
 
 -- Part 1 of Lemma 31 of Goncharov and Schröder (2018, Guarded Traced Categories)
 
-theorem Iterate.Uniform.squaring {C : Type u} [Category C] [ChosenFiniteCoproducts C] [Iterate C]
+variable {C : Type u} [Category C] [ChosenFiniteCoproducts C] [IC : Iterate C]
+
+theorem Iterate.Uniform.squaring
   (W : MorphismProperty C) [W.Cocartesian] [U : Iterate.Uniform C W]
   (codiagonal : ∀{X Y : C} {f : X ⟶ (Y ⊕ₒ X) ⊕ₒ X},
     iterate (iterate f) = iterate (f ≫ desc (𝟙 (Y ⊕ₒ X)) (inr _ _)))
@@ -71,7 +73,7 @@ theorem Iterate.Uniform.squaring {C : Type u} [Category C] [ChosenFiniteCoproduc
   _ = _ := by simp
 
 -- Part 2 of Lemma 32 of Goncharov and Schröder (2018, Guarded Traced Categories)
-theorem Iterate.Uniform.dinaturality {C : Type u} [Category C] [ChosenFiniteCoproducts C] [Iterate C]
+theorem Iterate.Uniform.dinaturality
   (W : MorphismProperty C) [W.Cocartesian] [U : Iterate.Uniform C W]
   (squaring : ∀{X Y : C} {f : X ⟶ Y ⊕ₒ X}, iterate (f ≫ desc (inl _ _) f) = iterate f)
   {X Y Z : C} {f : X ⟶ Y ⊕ₒ Z} {g : Z ⟶ Y ⊕ₒ X}
@@ -107,8 +109,7 @@ class Iterate.Conway (C : Type u) [Category C] [ChosenFiniteCoproducts C] [Itera
   codiagonal {X Y : C} {f : X ⟶ (Y ⊕ₒ X) ⊕ₒ X}
     : iterate (iterate f) = iterate (f ≫ desc (𝟙 (Y ⊕ₒ X)) (inr _ _))
 
-theorem Iterate.Uniform.conway {C : Type u} [Category C] [ChosenFiniteCoproducts C] [Iterate C]
-  (W : MorphismProperty C) [W.Cocartesian] [U : Iterate.Uniform C W]
+theorem Iterate.Uniform.conway (W : MorphismProperty C) [W.Cocartesian] [U : Iterate.Uniform C W]
   (naturality : ∀{X Y Z : C} {f : X ⟶ Y ⊕ₒ X} {g : Y ⟶ Z},
     iterate (f ≫ (g ⊕ₕ (𝟙 X))) = (iterate f) ≫ g)
   (codiagonal : ∀{X Y : C} {f : X ⟶ (Y ⊕ₒ X) ⊕ₒ X},
@@ -117,5 +118,24 @@ theorem Iterate.Uniform.conway {C : Type u} [Category C] [ChosenFiniteCoproducts
   naturality := naturality
   codiagonal := codiagonal
   dinaturality := dinaturality W (squaring W codiagonal)
+
+variable [hC : Iterate.Conway C]
+
+theorem iterate_comp  {X Y Z : C} {f : X ⟶ Y} {g : Y ⟶ Z ⊕ₒ X}
+  : iterate (f ≫ g) = f ≫ iterate (g ≫ (𝟙 _ ⊕ₕ f))
+  := by
+  rw [addHom, Category.id_comp, <-hC.dinaturality, <-IC.fixpoint]
+  simp
+
+theorem codiag_comp {X Y Z : C} {f : X ⟶ Y} {g : Y ⟶ (Z ⊕ₒ X) ⊕ₒ Y}
+  : iterate (f ≫ iterate g) = f ≫ iterate (g ≫ desc (𝟙 _ ⊕ₕ f) (inr _ _))
+  := by
+  rw [iterate_comp, <-hC.naturality, hC.codiagonal]
+  simp [addHom_desc]
+
+-- theorem iso_uniform {W : MorphismProperty C} [W.Cocartesian] [U : Iterate.Uniform C W]
+--   {X Y Z : C} {f : X ⟶ Y} [fIso : IsIso f] (hf : W f) {g : Y ⟶ Z ⊕ₒ Y}
+--   : f ≫ iterate g = iterate (f ≫ g ≫ (𝟙 _ ⊕ₕ (inv f)))
+--   := sorry
 
 end CategoryTheory
