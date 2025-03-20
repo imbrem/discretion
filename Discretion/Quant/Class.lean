@@ -40,7 +40,7 @@ class IsRem [HasPQuant α] (a : α) : Prop where
 attribute [simp] IsRem.rem_le_pquant
 
 class IsDup [HasPQuant α] (a : α) : Prop where
-  dup_le_pquant : .copy ≤ pquant a
+  dup_le_pquant : .dup ≤ pquant a
 
 attribute [simp] IsDup.dup_le_pquant
 
@@ -80,3 +80,15 @@ instance IsAff.instBot [LE α] [Bot α] [OrderedPQuant α] : IsAff (⊥ : α)
 
 instance IsRel.instBot [LE α] [Bot α] [OrderedPQuant α] : IsRel (⊥ : α)
   := ⟨by simp only [quant, OrderedPQuant.pquant_bot]; decide⟩
+
+theorem IsRem.of_del_le_pos [HasPQuant α] {a : α} (h : .del ≤ (pquant a).pos) : IsRem a
+  := ⟨⟨h, bot_le⟩⟩
+
+theorem IsAdd.of_del_le_neg [HasPQuant α] {a : α} (h : .del ≤ (pquant a).neg) : IsAdd a
+  := ⟨⟨bot_le, h⟩⟩
+
+theorem IsDup.of_copy_le_pos [HasPQuant α] {a : α} (h : .copy ≤ (pquant a).pos) : IsDup a
+  := ⟨⟨h, bot_le⟩⟩
+
+theorem IsFuse.of_copy_le_neg [HasPQuant α] {a : α} (h : .copy ≤ (pquant a).neg) : IsFuse a
+  := ⟨⟨bot_le, h⟩⟩
