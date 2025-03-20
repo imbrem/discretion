@@ -24,10 +24,11 @@ export RefinesIsDiscrete (eq_of_refines)
 class RefinesIsPreorder (C : Type u) [Quiver C] [Refines C] : Prop where
   refines_is_preorder : ∀{X Y : C}, IsPreorder (X ⟶ Y) Refines.refines
 
-@[refl]
+@[simp, refl]
 theorem refines_refl {C : Type u} [Quiver C] [Refines C] [RefinesIsPreorder C]
   {X Y : C} (f : X ⟶ Y) : f ↠ f := RefinesIsPreorder.refines_is_preorder.refl f
 
+@[simp]
 theorem refines_of_eq {C : Type u} [Quiver C] [Refines C] [RefinesIsPreorder C]
   {X Y : C} {f g : X ⟶ Y} (h : f = g) : f ↠ g := by cases h; rfl
 
