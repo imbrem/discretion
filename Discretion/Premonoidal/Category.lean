@@ -29,3 +29,9 @@ theorem tensorHom_def_of_left {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g :
 @[reassoc]
 theorem tensorHom_def_of_right {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [Central g] :
     f ⊗ g = X₁ ◁ g ≫ f ▷ Y₂ := by simp [tensorHom_def, Central.right_exchange]
+
+theorem left_exchange {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [Central f] :
+    f ▷ X₂ ≫ Y₁ ◁ g = X₁ ◁ g ≫ f ▷ Y₂ := by simp [Central.left_exchange]
+
+theorem right_exchange {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [Central g] :
+    f ▷ X₂ ≫ Y₁ ◁ g = X₁ ◁ g ≫ f ▷ Y₂ := by simp [Central.right_exchange]
