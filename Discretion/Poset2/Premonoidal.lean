@@ -12,6 +12,18 @@ class WhiskerMono (C : Type u) [Category C] [MonoidalCategoryStruct C] [Refines 
 
 export WhiskerMono (refines_whiskerRight refines_whiskerLeft)
 
+@[simp]
+theorem refines_tensorHom {C : Type u} [Category C] [PremonoidalCategory C]
+  [Refines C] [WhiskerMono C] [CompMono C] {X Y Z W : C}
+  {f g : X ⟶ Y} {h k : Z ⟶ W} : f ↠ g → h ↠ k → (f ⊗ h) ↠ (g ⊗ k) := by
+  intros
+  simp only [PremonoidalCategory.tensorHom_def]
+  apply refines_comp
+  apply refines_whiskerRight
+  assumption
+  apply refines_whiskerLeft
+  assumption
+
 instance WhiskeringMono.ofDiscrete {C : Type u}
   [Category C] [MonoidalCategoryStruct C] [Poset2 C] [RefinesIsDiscrete C]
   : WhiskerMono C where
