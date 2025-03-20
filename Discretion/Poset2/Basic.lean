@@ -35,6 +35,9 @@ theorem refines_trans {C : Type u} [Quiver C] [Refines C] [RefinesIsPreorder C]
   {X Y : C} {f g h : X ⟶ Y} : f ↠ g -> g ↠ h -> f ↠ h
   := RefinesIsPreorder.refines_is_preorder.trans f g h
 
+instance Refines.instTrans {C : Type u} [Quiver C] [Refines C] [RefinesIsPreorder C] {X Y : C}
+  : Trans (α := X ⟶ Y) (· ↠ ·) (· ↠ ·) (· ↠ ·) where trans := refines_trans
+
 class RefinesIsPartialOrder (C : Type u) [Quiver C] [Refines C] : Prop extends RefinesIsPreorder C
   where
   refines_is_partial_order : ∀{X Y : C}, IsPartialOrder (X ⟶ Y) Refines.refines
