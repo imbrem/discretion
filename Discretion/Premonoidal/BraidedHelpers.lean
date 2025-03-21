@@ -194,6 +194,56 @@ theorem right_leftUnitor_inv_swap_inner
     = (α_ X Y Z).hom ≫ (ρ_ X).inv ▷ (Y ⊗ Z)
   := by simp; premonoidal_coherence
 
+@[reassoc]
+theorem whiskerRight_swap_of_swap {X₁ Y₁ X₂ Y₂ Z : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂)
+    (hfg : f ▷ X₂ ≫ Y₁ ◁ g = X₁ ◁ g ≫ f ▷ Y₂)
+  : (f ▷ Z) ▷ X₂ ≫ (Y₁ ⊗ Z) ◁ g = (X₁ ⊗ Z) ◁ g ≫ (f ▷ Z) ▷ Y₂ := by
+  rw [<-cancel_mono (f := (β'_ _ _).hom ▷ _)]
+  simp only [
+    Category.assoc, <-left_exchange, <-comp_whiskerRight_assoc, <-comp_whiskerRight,
+    BraidedCategory'.braiding_naturality_left
+  ]
+  simp only [
+    comp_whiskerRight_assoc, comp_whiskerRight, <-left_exchange_assoc, Category.assoc,
+    whiskerLeft_swap_of_swap _ _ hfg]
+
+@[reassoc]
+theorem swap_whiskerLeft_of_swap {X₁ Y₁ X₂ Y₂ Z : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂)
+    (hfg : f ▷ X₂ ≫ Y₁ ◁ g = X₁ ◁ g ≫ f ▷ Y₂)
+  : f ▷ (Z ⊗ X₂) ≫ Y₁ ◁ (Z ◁ g) = X₁ ◁ (Z ◁ g) ≫ f ▷ (Z ⊗ Y₂) := by
+  rw [<-cancel_mono (f := _ ◁ (β'_ _ _).hom)]
+  simp only [
+    Category.assoc, right_exchange, <-whiskerLeft_comp_assoc,
+    BraidedCategory'.braiding_naturality_right
+  ]
+  rw [<-PremonoidalCategory.whiskerLeft_comp, BraidedCategory'.braiding_naturality_right]
+  simp only [
+    PremonoidalCategory.whiskerLeft_comp, whiskerLeft_comp_assoc, right_exchange_assoc,
+    Category.assoc, swap_whiskerRight_of_swap _ _ hfg
+  ]
+
+@[reassoc]
+theorem tensor_swap_of_swap {X₁ Y₁ X₂ Y₂ X₃ Y₃ : C} (f₁ : X₁ ⟶ Y₁) (f₂ : X₂ ⟶ Y₂) (g : X₃ ⟶ Y₃)
+    (hfg₁ : f₁ ▷ _ ≫ _ ◁ g = _ ◁ g ≫ f₁ ▷ _)
+    (hfg₂ : f₂ ▷ _ ≫ _ ◁ g = _ ◁ g ≫ f₂ ▷ _)
+  : (f₁ ⊗ f₂) ▷ _ ≫ _ ◁ g = _ ◁ g ≫ (f₁ ⊗ f₂) ▷ _ := by
+  simp only [
+    tensorHom_def, comp_whiskerRight_assoc, whiskerLeft_swap_of_swap _ _ hfg₂,
+    whiskerRight_swap_of_swap_assoc _ _ hfg₁,
+  ]
+  rw [comp_whiskerRight]
+
+@[reassoc]
+theorem swap_tensor_of_swap {X₁ Y₁ X₂ Y₂ X₃ Y₃ : C} (f : X₁ ⟶ Y₁) (g₁ : X₂ ⟶ Y₂) (g₂ : X₃ ⟶ Y₃)
+    (hfg₁ : f ▷ _ ≫ Y₁ ◁ g₁ = X₁ ◁ g₁ ≫ f ▷ _)
+    (hfg₂ : f ▷ _ ≫ Y₁ ◁ g₂ = X₁ ◁ g₂ ≫ f ▷ _)
+  : f ▷ _ ≫ _ ◁ (g₁ ⊗ g₂) = _ ◁ (g₁ ⊗ g₂) ≫ f ▷ _ := by
+  simp only [
+    tensorHom_def, whiskerLeft_comp_assoc, <-swap_whiskerLeft_of_swap _ _ hfg₂,
+    <-swap_whiskerRight_of_swap_assoc _ _ hfg₁
+  ]
+  rw [whiskerLeft_comp]
+
 end BraidedCategory
 
 section SymmetricCategory

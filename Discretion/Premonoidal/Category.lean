@@ -37,3 +37,29 @@ theorem left_exchange {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ �
 @[reassoc]
 theorem right_exchange {X₁ Y₁ X₂ Y₂ : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂) [Central g] :
     f ▷ X₂ ≫ Y₁ ◁ g = X₁ ◁ g ≫ f ▷ Y₂ := by simp [Central.right_exchange]
+
+@[reassoc]
+theorem whiskerLeft_swap_of_swap {X₁ Y₁ X₂ Y₂ Z : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂)
+    (hfg : f ▷ X₂ ≫ Y₁ ◁ g = X₁ ◁ g ≫ f ▷ Y₂)
+    : (Z ◁ f) ▷ X₂ ≫ (Z ⊗ Y₁) ◁ g = (Z ⊗ X₁) ◁ g ≫ (Z ◁ f) ▷ Y₂ := by
+    rw [<-cancel_mono (f := (α_ _ _ _).hom)]
+    simp only [whisker_assoc, tensor_whiskerLeft, Category.assoc, Iso.inv_hom_id_assoc,
+      Iso.inv_hom_id, Category.comp_id, Iso.cancel_iso_hom_left]
+    simp only [<-PremonoidalCategory.whiskerLeft_comp, hfg]
+
+@[reassoc]
+theorem swap_whiskerRight_of_swap {X₁ Y₁ X₂ Y₂ Z : C} (f : X₁ ⟶ Y₁) (g : X₂ ⟶ Y₂)
+    (hfg : f ▷ X₂ ≫ Y₁ ◁ g = X₁ ◁ g ≫ f ▷ Y₂)
+    : f ▷ (X₂ ⊗ Z) ≫ Y₁ ◁ (g ▷ Z) = X₁ ◁ (g ▷ Z) ≫ f ▷ (Y₂ ⊗ Z) := by
+    rw [<-cancel_mono (f := (α_ _ _ _).inv)]
+    simp only [
+        Category.assoc, associator_inv_naturality_left, associator_inv_naturality_middle,
+        associator_inv_naturality_left_assoc, associator_inv_naturality_middle_assoc,
+        <-comp_whiskerRight, hfg
+    ]
+
+end PremonoidalCategory
+
+end CategoryTheory
+
+--TODO: swap_whiskerRight_of_swap
