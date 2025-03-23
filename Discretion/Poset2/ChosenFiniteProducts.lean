@@ -39,7 +39,7 @@ instance Disc2.instChosenFiniteCoproducts {C : Type u} [Category C] [ℳ : Chose
 
 theorem refines_addHom {C : Type u} [Category C] [ChosenFiniteCoproducts C]
   [Poset2 C] [DescMono C]
-  {X Y Z : C} {f f' : X ⟶ Z} {g g' : Y ⟶ Z} (ff' : f ↠ f') (gg' : g ↠ g')
+  {X Y X' Y' : C} {f f' : X ⟶ X'} {g g' : Y ⟶ Y'} (ff' : f ↠ f') (gg' : g ↠ g')
   : addHom f g ↠ addHom f' g' := by
   unfold addHom
   apply refines_desc
