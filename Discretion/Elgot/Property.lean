@@ -12,6 +12,6 @@ class ContainsIterates (W : MorphismProperty C) where
 class Uniform
   (L R : MorphismProperty C) : Prop where
   uniform {X Y : C} {f : Y ⟶ Z ⊕ₒ Y} {g : X ⟶ Z ⊕ₒ X} {h : X ⟶ Y}
-    : L h → R f → R g → h ≫ f = g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f = iterate g
+    : L h → R f → h ≫ f = g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f = iterate g
 
 end CategoryTheory.MorphismProperty

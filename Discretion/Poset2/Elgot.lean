@@ -13,12 +13,12 @@ variable {C : Type u} [Category C] [ChosenFiniteCoproducts C] [Iterate C]
 class RightUniform
   [Refines C] (L R : MorphismProperty C) : Prop where
   right_uniform {X Y : C} {f : Y ⟶ Z ⊕ₒ Y} {g : X ⟶ Z ⊕ₒ X} {h : X ⟶ Y}
-    : L h → R f → R g → h ≫ f ↠ g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f ↠ iterate g
+    : L h → R f → h ≫ f ↠ g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f ↠ iterate g
 
 class LeftUniform
   [Refines C] (L R : MorphismProperty C) : Prop where
   left_uniform {X Y : C} {f : Y ⟶ Z ⊕ₒ Y} {g : X ⟶ Z ⊕ₒ X} {h : X ⟶ Y}
-    : L h → R f → R g → h ≫ f ↞ g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f ↞ iterate g
+    : L h → R f → h ≫ f ↞ g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f ↞ iterate g
 
 end MorphismProperty
 
@@ -41,13 +41,13 @@ variable {C : Type u}
           {E : Type v} [ES : IterEffectSystem E] [EC : Elgot2 C E]
 
 theorem Elgot2.comm_uniform {e e' : E} (h : e ⇌ e') : (EC.eff e).Uniform (EC.eff e') where
-  uniform hh hf hg hc := refines_antisymm
-    ((EC.right_mover_right_uniform h.left).right_uniform hh hf hg (refines_of_eq hc))
-    ((EC.left_mover_left_uniform h.right).left_uniform hh hf hg (refines_of_eq hc.symm))
+  uniform hh hf hc := refines_antisymm
+    ((EC.right_mover_right_uniform h.left).right_uniform hh hf (refines_of_eq hc))
+    ((EC.left_mover_left_uniform h.right).left_uniform hh hf (refines_of_eq hc.symm))
 
 theorem Elgot2.pure_uniform {X Y : C} {f : Y ⟶ Z ⊕ₒ Y} {g : X ⟶ Z ⊕ₒ X} {h : X ⟶ Y}
   [hh : EC.HasEff ⊥ h] : h ≫ f = g ≫ ((𝟙 Z) ⊕ₕ h) → h ≫ iterate f = iterate g
-  := (EC.comm_uniform (e := ⊥) (e' := ⊤) commutes_bot_left).uniform hh.has_eff (by simp) (by simp)
+  := (EC.comm_uniform (e := ⊥) (e' := ⊤) commutes_bot_left).uniform hh.has_eff (by simp)
 
 theorem EffectfulCategory.HasEff.iterate {e : E} {X Y : C} (f : X ⟶ Y ⊕ₒ X) (he : e ∈ ES.iterative)
   [HasEff e f] : EC.HasEff e (iterate f) where
