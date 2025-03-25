@@ -122,116 +122,116 @@ def UB?.liftSet (f : Set α → Set β) : UB? α → UB? β
 
 open Classical
 
-noncomputable instance UB?.instCompleteLattice : CompleteLattice (UB? α)
-  := (inferInstance : CompleteLattice (WithTop _))
-
-@[simp]
-theorem UB?.freeze_top' : UB?.freeze (Top.top (α := WithTop (Set α))) = Set.univ
-  := rfl
-
-@[simp]
-theorem UB?.coe_ne_top' (as : Set α) : (as : UB? α) ≠ (Top.top (α := WithTop (Set α))) := by
-  intro h; cases h
-
-@[simp]
-theorem UB?.top_ne_coe' (as : Set α) : (Top.top (α := WithTop (Set α))) ≠ (as : UB? α) := by
-  intro h; cases h
-
-@[simp]
-theorem UB?.singleton_ne_top' (a : α) : ({a} : UB? α) ≠ (Top.top (α := WithTop (Set α))) := by
-  intro h; cases h
-
-@[simp]
-theorem UB?.freeze_sSup (as : Set (UB? α)) : UB?.freeze (sSup as) = ⋃as' ∈ as, UB?.freeze as' := by
-  simp only [sSup, Set.mem_preimage]; split
-  case isTrue h =>
-    ext k
-    simp only [freeze_top', Set.mem_univ, Set.mem_iUnion, exists_prop, true_iff]
-    exact ⟨⊤, h, by simp⟩
-  case isFalse h =>
-    ext k
-    simp only [freeze_coe, Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
-    constructor
-    · intro ⟨a, ha, hk⟩; exact ⟨a, ha, hk⟩
-    · intro ⟨a, ha, hk⟩; cases a; contradiction; exact ⟨_, ha, hk⟩
-
-@[simp]
-theorem UB?.freeze_sInf (as : Set (UB? α)) : UB?.freeze (sInf as) = ⋂as' ∈ as, UB?.freeze as' := by
-  simp only [sInf, Set.mem_preimage]; split
-  case isTrue h =>
-    rw [Set.subset_singleton_iff_eq] at h
-    cases h <;> simp [*]
-  case isFalse h =>
-    ext k
-    simp only [freeze_coe, Set.mem_setOf_eq, Set.mem_iInter]
-    constructor
-    · intro h' as' has'; cases as'; simp; simp [h' _ has']
-    · intro h' as' has'; exact h' _ has'
-
-@[simp]
-theorem UB?.freeze_iSup (as : ι → UB? α) : UB?.freeze (iSup as) = ⋃i : ι, UB?.freeze (as i)
-  := by simp [iSup]
-
-@[simp]
-theorem UB?.freeze_iInf (as : ι → UB? α) : UB?.freeze (iInf as) = ⋂i : ι, UB?.freeze (as i)
-  := by simp [iInf]
-
-theorem UB?.mem_sSup_iff (a : α) (as : Set (UB? α)) : a ∈ sSup as ↔ ∃as' ∈ as, a ∈ as'
-  := by simp
-
-theorem UB?.mem_sInf_iff (a : α) (as : Set (UB? α)) : a ∈ sInf as ↔ ∀as' ∈ as, a ∈ as'
-  := by simp
-
-noncomputable instance UB?.instMonad : Monad UB? where
-  pure a := {a}
-  bind a f := bindSet (λa => ⨆ i ∈ a, f i) a
-
-@[simp]
-theorem UB?.bind_top (f : α → UB? β) : bind ⊤ f = ⊤ := rfl
-
-@[simp]
-theorem UB?.map_top (f : α → β) : f <$> (⊤ : UB? α) = (⊤ : UB? β) := rfl
-
-@[simp]
-theorem UB?.bind_coe (f : α → UB? β) (as : Set α)
-  : bind (as : UB? α) f = ⨆ i ∈ as, f i := rfl
-
-@[simp]
-theorem UB?.bind_empty (f : α → UB? β) : bind ∅ f = ∅ := by simp [bind, bindSet]; rfl
-
-@[simp]
-theorem UB?.map_empty (f : α → β) : f <$> (∅ : UB? α) = ∅ := by simp [Functor.map, bindSet]; rfl
+-- noncomputable instance UB?.instCompleteLattice : CompleteLattice (UB? α)
+--   := (inferInstance : CompleteLattice (WithTop _))
 
 -- @[simp]
--- theorem UB?.map_coe (f : α → β) (as : Set α)
---   : Functor.map (f := UB?) f (as : UB? α) = f '' as
---   := by
---   simp [Functor.map, bindSet]
---   stop
---   split
---   case isTrue h => have ⟨y, hy, hy'⟩ := h; exact (UB?.singleton_ne_top _ hy').elim
+-- theorem UB?.freeze_top' : UB?.freeze (Top.top (α := WithTop (Set α))) = Set.univ
+--   := rfl
+
+-- @[simp]
+-- theorem UB?.coe_ne_top' (as : Set α) : (as : UB? α) ≠ (Top.top (α := WithTop (Set α))) := by
+--   intro h; cases h
+
+-- @[simp]
+-- theorem UB?.top_ne_coe' (as : Set α) : (Top.top (α := WithTop (Set α))) ≠ (as : UB? α) := by
+--   intro h; cases h
+
+-- @[simp]
+-- theorem UB?.singleton_ne_top' (a : α) : ({a} : UB? α) ≠ (Top.top (α := WithTop (Set α))) := by
+--   intro h; cases h
+
+-- @[simp]
+-- theorem UB?.freeze_sSup (as : Set (UB? α)) : UB?.freeze (sSup as) = ⋃as' ∈ as, UB?.freeze as' := by
+--   simp only [sSup, Set.mem_preimage]; split
+--   case isTrue h =>
+--     ext k
+--     simp only [freeze_top', Set.mem_univ, Set.mem_iUnion, exists_prop, true_iff]
+--     exact ⟨⊤, h, by simp⟩
 --   case isFalse h =>
---   simp only [coe_eq_coe]
---   ext k
---   simp only [Set.mem_setOf_eq, Set.mem_image]
---   constructor
---   · sorry
---   · sorry
+--     ext k
+--     simp only [freeze_coe, Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
+--     constructor
+--     · intro ⟨a, ha, hk⟩; exact ⟨a, ha, hk⟩
+--     · intro ⟨a, ha, hk⟩; cases a; contradiction; exact ⟨_, ha, hk⟩
 
--- instance UB?.instLawfulMonad : LawfulMonad UB? := LawfulMonad.mk' UB?
---   (id_map := λx => by cases x <;> simp)
---   (pure_bind := λx f => by simp [pure, bind, bindSet])
---   (bind_assoc := λx f g => by
---     cases x with
---     | top => simp
---     | coe a => sorry)
+-- @[simp]
+-- theorem UB?.freeze_sInf (as : Set (UB? α)) : UB?.freeze (sInf as) = ⋂as' ∈ as, UB?.freeze as' := by
+--   simp only [sInf, Set.mem_preimage]; split
+--   case isTrue h =>
+--     rw [Set.subset_singleton_iff_eq] at h
+--     cases h <;> simp [*]
+--   case isFalse h =>
+--     ext k
+--     simp only [freeze_coe, Set.mem_setOf_eq, Set.mem_iInter]
+--     constructor
+--     · intro h' as' has'; cases as'; simp; simp [h' _ has']
+--     · intro h' as' has'; exact h' _ has'
 
--- -- NOTE: setTerm is _not_ monotonic! Which... makes _some_ sense... but points at a need for a
--- -- disjoint ∅
--- noncomputable def UB?.setTerm (as : Set α) : UB? α := if as = ∅ then ⊤ else as
+-- @[simp]
+-- theorem UB?.freeze_iSup (as : ι → UB? α) : UB?.freeze (iSup as) = ⋃i : ι, UB?.freeze (as i)
+--   := by simp [iSup]
 
--- noncomputable def UB?.assertTerm : UB? α → UB? α := bindSet setTerm
+-- @[simp]
+-- theorem UB?.freeze_iInf (as : ι → UB? α) : UB?.freeze (iInf as) = ⋂i : ι, UB?.freeze (as i)
+--   := by simp [iInf]
 
--- noncomputable def UB?.setDet (as : Set α) : UB? α := if as.Nontrivial then ⊤ else as
+-- theorem UB?.mem_sSup_iff (a : α) (as : Set (UB? α)) : a ∈ sSup as ↔ ∃as' ∈ as, a ∈ as'
+--   := by simp
 
--- noncomputable def UB?.assertDet : UB? α → UB? α := bindSet setDet
+-- theorem UB?.mem_sInf_iff (a : α) (as : Set (UB? α)) : a ∈ sInf as ↔ ∀as' ∈ as, a ∈ as'
+--   := by simp
+
+-- noncomputable instance UB?.instMonad : Monad UB? where
+--   pure a := {a}
+--   bind a f := bindSet (λa => ⨆ i ∈ a, f i) a
+
+-- @[simp]
+-- theorem UB?.bind_top (f : α → UB? β) : bind ⊤ f = ⊤ := rfl
+
+-- @[simp]
+-- theorem UB?.map_top (f : α → β) : f <$> (⊤ : UB? α) = (⊤ : UB? β) := rfl
+
+-- @[simp]
+-- theorem UB?.bind_coe (f : α → UB? β) (as : Set α)
+--   : bind (as : UB? α) f = ⨆ i ∈ as, f i := rfl
+
+-- @[simp]
+-- theorem UB?.bind_empty (f : α → UB? β) : bind ∅ f = ∅ := by simp [bind, bindSet]; rfl
+
+-- @[simp]
+-- theorem UB?.map_empty (f : α → β) : f <$> (∅ : UB? α) = ∅ := by simp [Functor.map, bindSet]; rfl
+
+-- -- @[simp]
+-- -- theorem UB?.map_coe (f : α → β) (as : Set α)
+-- --   : Functor.map (f := UB?) f (as : UB? α) = f '' as
+-- --   := by
+-- --   simp [Functor.map, bindSet]
+-- --   stop
+-- --   split
+-- --   case isTrue h => have ⟨y, hy, hy'⟩ := h; exact (UB?.singleton_ne_top _ hy').elim
+-- --   case isFalse h =>
+-- --   simp only [coe_eq_coe]
+-- --   ext k
+-- --   simp only [Set.mem_setOf_eq, Set.mem_image]
+-- --   constructor
+-- --   · sorry
+-- --   · sorry
+
+-- -- instance UB?.instLawfulMonad : LawfulMonad UB? := LawfulMonad.mk' UB?
+-- --   (id_map := λx => by cases x <;> simp)
+-- --   (pure_bind := λx f => by simp [pure, bind, bindSet])
+-- --   (bind_assoc := λx f g => by
+-- --     cases x with
+-- --     | top => simp
+-- --     | coe a => sorry)
+
+-- -- -- NOTE: setTerm is _not_ monotonic! Which... makes _some_ sense... but points at a need for a
+-- -- -- disjoint ∅
+-- -- noncomputable def UB?.setTerm (as : Set α) : UB? α := if as = ∅ then ⊤ else as
+
+-- -- noncomputable def UB?.assertTerm : UB? α → UB? α := bindSet setTerm
+
+-- -- noncomputable def UB?.setDet (as : Set α) : UB? α := if as.Nontrivial then ⊤ else as
+
+-- -- noncomputable def UB?.assertDet : UB? α → UB? α := bindSet setDet
