@@ -23,7 +23,7 @@ def List.Wk.comp {α} {Γ Δ Ξ : List α} : Wk Γ Δ → Wk Δ Ξ → Wk Γ Ξ
   | .step A ρ, σ | .lift A ρ, .step _ σ => .step A (ρ.comp σ)
   | .lift A ρ, .lift _ σ => .lift A (ρ.comp σ)
 
-def List.Wk.nw {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Nat.Wk Γ.length Δ.length
+def List.Wk.nw {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Nat.Wk' Γ.length Δ.length
   | _, _, .nil => .nil
   | _, _, .step _ ρ => ρ.nw.step
   | _, _, .lift _ ρ => ρ.nw.lift
@@ -40,18 +40,18 @@ theorem List.Wk.nw_lift {α} {Γ Δ : List α} (A) (ρ : Wk Γ Δ)
   : List.Wk.nw (ρ.lift A) = ρ.nw.lift := rfl
 
 @[simp]
-theorem List.Wk.nw_id {α} {Γ : List α} : List.Wk.nw (List.Wk.id Γ) = Nat.Wk.id Γ.length
-  := by induction Γ <;> simp only [nw, id, Nat.Wk.id, *] <;> rfl
+theorem List.Wk.nw_id {α} {Γ : List α} : List.Wk.nw (List.Wk.id Γ) = Nat.Wk'.id Γ.length
+  := by induction Γ <;> simp only [nw, id, Nat.Wk'.id, *] <;> rfl
 
 @[simp]
 theorem List.Wk.nw_comp {α} {Γ Δ Ξ : List α} (ρ : Wk Γ Δ) (σ : Wk Δ Ξ)
   : List.Wk.nw (ρ.comp σ) = (List.Wk.nw ρ).comp (List.Wk.nw σ) := by
-  induction ρ generalizing Ξ <;> cases σ <;> simp only [nw, comp, Nat.Wk.comp, *]
+  induction ρ generalizing Ξ <;> cases σ <;> simp only [nw, comp, Nat.Wk'.comp, *]
 
 theorem List.Wk.nw_injective {α} {Γ Δ : List α} : Function.Injective (@List.Wk.nw α Γ Δ)
   := λ ρ σ h => by
   induction ρ <;> cases σ
-  <;> simp only [length_cons, nw, Nat.Wk.lift.injEq, Nat.Wk.step.injEq, reduceCtorEq] at h
+  <;> simp only [length_cons, nw, Nat.Wk'.lift.injEq, Nat.Wk'.step.injEq, reduceCtorEq] at h
   <;> congr
   <;> apply_assumption
   <;> rw [h]
@@ -66,7 +66,7 @@ theorem List.Wk.id_comp {α} {Γ Δ : List α} (ρ : Wk Γ Δ) : (Wk.id Γ).comp
 
 theorem List.Wk.comp_assoc {α} {Γ Δ Ξ Ω : List α} (ρ : Wk Γ Δ) (σ : Wk Δ Ξ) (τ : Wk Ξ Ω)
   : (ρ.comp σ).comp τ = ρ.comp (σ.comp τ)
-  := List.Wk.nw_injective (by simp [Nat.Wk.comp_assoc])
+  := List.Wk.nw_injective (by simp [Nat.Wk'.comp_assoc])
 
 theorem List.Wk.nw_inj {α} {Γ Δ : List α} {ρ σ : Wk Γ Δ} : List.Wk.nw ρ = List.Wk.nw σ ↔ ρ = σ
   := nw_injective.eq_iff
@@ -77,13 +77,13 @@ def List.Wk.ix {α} : ∀{Γ Δ : List α}, Wk Γ Δ → ℕ → ℕ
   | _, _, .lift A ρ => Nat.liftWk ρ.ix
 
 theorem List.Wk.ix_nw {α} {Γ Δ : List α} (ρ : Wk Γ Δ) : ρ.nw.ix = ρ.ix := by
-  induction ρ <;> simp only [nw, ix, Nat.Wk.ix, *]
+  induction ρ <;> simp only [nw, ix, Nat.Wk'.ix, *]
 
-theorem List.Wk.ix_comp_nw {α Γ Δ} : Nat.Wk.ix ∘ nw = ix (α := α) (Γ := Γ) (Δ := Δ)
+theorem List.Wk.ix_comp_nw {α Γ Δ} : Nat.Wk'.ix ∘ nw = ix (α := α) (Γ := Γ) (Δ := Δ)
   := funext ix_nw
 
 theorem List.Wk.ix_injective {α} {Γ Δ : List α} : Function.Injective (@List.Wk.ix α Γ Δ) := by
-  rw [<-ix_comp_nw]; apply Function.Injective.comp; apply Nat.Wk.ix_injective; apply nw_injective
+  rw [<-ix_comp_nw]; apply Function.Injective.comp; apply Nat.Wk'.ix_injective; apply nw_injective
 
 theorem List.Wk.ix_inj {α} {Γ Δ : List α} {ρ σ : Wk Γ Δ} : List.Wk.ix ρ = List.Wk.ix σ ↔ ρ = σ
   := ix_injective.eq_iff
@@ -96,13 +96,13 @@ def List.Wk.ixf {α} : ∀{Γ Δ : List α}, Wk Γ Δ → Fin Δ.length → Fin 
 theorem List.Wk.ixf_nw {α} {Γ Δ : List α} (ρ : Wk Γ Δ) : ρ.nw.ixf = ρ.ixf := by
   induction ρ with
   | nil => funext i; exact i.elim0
-  | _ => simp only [nw, ixf, Nat.Wk.ixf, *]
+  | _ => simp only [nw, ixf, Nat.Wk'.ixf, *]
 
-theorem List.Wk.ixf_comp_nw {α Γ Δ} : Nat.Wk.ixf ∘ nw = ixf (α := α) (Γ := Γ) (Δ := Δ)
+theorem List.Wk.ixf_comp_nw {α Γ Δ} : Nat.Wk'.ixf ∘ nw = ixf (α := α) (Γ := Γ) (Δ := Δ)
   := funext ixf_nw
 
 theorem List.Wk.ixf_injective {α} {Γ Δ : List α} : Function.Injective (@ixf α Γ Δ) := by
-  rw [<-ixf_comp_nw]; apply Function.Injective.comp; apply Nat.Wk.ixf_injective; apply nw_injective
+  rw [<-ixf_comp_nw]; apply Function.Injective.comp; apply Nat.Wk'.ixf_injective; apply nw_injective
 
 theorem List.Wk.ixf_inj {α} {Γ Δ : List α} {ρ σ : Wk Γ Δ} : List.Wk.ixf ρ = List.Wk.ixf σ ↔ ρ = σ
   := ixf_injective.eq_iff
@@ -193,7 +193,7 @@ inductive List.QWk {α} : (Γ Δ : List α) →
   | lift (A lo hi) (h : lo ≤ hi) {Γ Δ qΓ qΔ}
     : QWk Γ Δ qΓ qΔ → QWk (A :: Γ) (A :: Δ) (qΓ.cons hi) (qΔ.cons lo)
 
-def List.QWk.nw {α} {Γ Δ : List α} {qΓ qΔ} : QWk Γ Δ qΓ qΔ → Nat.Wk Γ.length Δ.length
+def List.QWk.nw {α} {Γ Δ : List α} {qΓ qΔ} : QWk Γ Δ qΓ qΔ → Nat.Wk' Γ.length Δ.length
   | .nil => .nil
   | .step _ _ _ ρ => ρ.nw.step
   | .lift _ _ _ _ ρ => ρ.nw.lift
