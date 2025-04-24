@@ -243,8 +243,8 @@ instance instOrderBotDiscreteBotOrderSemilatticeInf
   {α} [DecidableEq α] [PartialOrder α] [OrderBot α] [DiscreteBotOrder α]
   : SemilatticeInf α where
   inf a b := if a = b then a else ⊥
-  inf_le_left a b := by simp only; split <;> simp
-  inf_le_right a b := by simp only; split <;> simp [*]
+  inf_le_left a b := by split <;> simp
+  inf_le_right a b := by split <;> simp [*]
   le_inf a b c ha hb := by
     cases DiscreteBotOrder.le_bot_or_eq _ _ ha with
     | inl ha => cases ha; simp
@@ -254,8 +254,8 @@ instance instOrderTopDiscreteTopOrderSemilatticeSup
   {α} [DecidableEq α] [PartialOrder α] [OrderTop α] [DiscreteTopOrder α]
   : SemilatticeSup α where
   sup a b := if a = b then a else ⊤
-  le_sup_left a b := by simp only; split <;> simp
-  le_sup_right a b := by simp only; split <;> simp [*]
+  le_sup_left a b := by split <;> simp
+  le_sup_right a b := by split <;> simp [*]
   sup_le a b c ha hb := by
     cases DiscreteTopOrder.le_top_or_eq _ _ hb with
     | inl hb => cases hb; simp
@@ -265,8 +265,8 @@ instance instDiscreteBoundedOrderLattice
   {α} [DecidableEq α] [PartialOrder α] [BoundedOrder α] [DiscreteBoundedOrder α]
   : Lattice α where
   inf a b := if a = b then a else if a = ⊤ then b else if b = ⊤ then a else ⊥
-  inf_le_left a b := by simp only; split_ifs <;> simp [*]
-  inf_le_right a b := by simp only; split_ifs <;> simp [*]
+  inf_le_left a b := by split_ifs <;> simp [*]
+  inf_le_right a b := by split_ifs <;> simp [*]
   le_inf a b c ha hb := by
     cases DiscreteBoundedOrder.le_bot_or_top_or_eq _ _ ha with
     | inl ha => cases ha; simp
@@ -282,8 +282,8 @@ instance instDiscreteBoundedOrderLattice
           | inl hb => cases hb; simp only; split <;> simp
           | inr hb => cases hb; simp only; split_ifs <;> simp
   sup a b := if a = b then a else if a = ⊥ then b else if b = ⊥ then a else ⊤
-  le_sup_left a b := by simp only; split_ifs <;> simp [*]
-  le_sup_right a b := by simp only; split_ifs <;> simp [*]
+  le_sup_left a b := by split_ifs <;> simp [*]
+  le_sup_right a b := by split_ifs <;> simp [*]
   sup_le a b c ha hb := by
     cases DiscreteBoundedOrder.le_bot_or_top_or_eq _ _ hb with
     | inl hb => cases hb; simp only; split <;> simp [ha]

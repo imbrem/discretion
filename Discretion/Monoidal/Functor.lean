@@ -605,11 +605,9 @@ def toOplaxMonoidal : F.OplaxMonoidal' where
     rw [← cancel_epi (h.μIso _ _).hom, Iso.hom_inv_id_assoc,
       ← h.μIso_hom_natural_left_assoc, Iso.hom_inv_id, comp_id]
   δ'_natural_right _ _ := by
-    dsimp
     rw [← cancel_epi (h.μIso _ _).hom, Iso.hom_inv_id_assoc,
       ← h.μIso_hom_natural_right_assoc, Iso.hom_inv_id, comp_id]
   oplax_associativity' X Y Z := by
-    dsimp
     rw [← cancel_epi (h.μIso (X ⊗ Y) Z).hom, Iso.hom_inv_id_assoc,
       ← cancel_epi ((h.μIso X Y).hom ▷ F.obj Z), MonoidalCategory'.hom_inv_whiskerRight_assoc,
       associativity_assoc, Iso.hom_inv_id_assoc, MonoidalCategory'.whiskerLeft_hom_inv, comp_id]
@@ -901,7 +899,6 @@ def rightAdjointLaxMonoidal' : G.LaxMonoidal' where
     erw [NatTrans.whiskerLeft_app_tensor_app' adj.counit adj.counit]
     dsimp
   associativity' X Y Z := (adj.homEquiv _ _).symm.injective (by
-    dsimp
     simp only [homEquiv_unit, homEquiv_counit, map_comp, assoc, MonoidalCategory'.comp_whiskerRight,
       counit_naturality, counit_naturality_assoc, left_triangle_components_assoc,
       MonoidalCategory'.whiskerLeft_comp]
@@ -925,7 +922,6 @@ def rightAdjointLaxMonoidal' : G.LaxMonoidal' where
       MonoidalCategory'.whiskerLeft_comp, assoc, MonoidalCategory'.tensorHom_def,
       MonoidalCategory'.whisker_exchange])
   left_unitality' X := (adj.homEquiv _ _).symm.injective (by
-    dsimp
     rw [homEquiv_counit, homEquiv_counit, homEquiv_unit, homEquiv_unit,
       MonoidalCategory'.comp_whiskerRight,
       map_comp, map_comp, map_comp, map_comp, map_comp, map_comp, assoc, assoc, assoc, assoc,
@@ -937,7 +933,6 @@ def rightAdjointLaxMonoidal' : G.LaxMonoidal' where
       Iso.inv_hom_id, comp_id,
       left_unitality_hom_assoc])
   right_unitality' X := (adj.homEquiv _ _).symm.injective (by
-    dsimp
     rw [homEquiv_counit, homEquiv_unit, MonoidalCategory'.whiskerLeft_comp, homEquiv_unit,
       homEquiv_counit, map_comp, map_comp, map_comp, map_comp, map_comp, map_comp,
       assoc, assoc, assoc, assoc, assoc, counit_naturality, counit_naturality_assoc,

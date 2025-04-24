@@ -1058,7 +1058,7 @@ theorem tensor_inv_hom_id' {V W X Y Z : C} (f : V ⟶ W) [IsIso f] (g : X ⟶ Y)
 A constructor for monoidal categories that requires `tensorHom` instead of `whiskerLeft` and
 `whiskerRight`.
 -/
-abbrev ofTensorHom [MonoidalCategoryStruct C]
+abbrev ofTensorHom [MC : MonoidalCategoryStruct C]
     (tensor_id : ∀ X₁ X₂ : C, tensorHom (𝟙 X₁) (𝟙 X₂) = 𝟙 (tensorObj X₁ X₂) := by
       aesop_cat)
     (id_tensorHom : ∀ (X : C) {Y₁ Y₂ : C} (f : Y₁ ⟶ Y₂), tensorHom (𝟙 X) f = whiskerLeft X f := by
@@ -1076,11 +1076,11 @@ abbrev ofTensorHom [MonoidalCategoryStruct C]
             aesop_cat)
     (leftUnitor_naturality :
       ∀ {X Y : C} (f : X ⟶ Y),
-        tensorHom (𝟙 tensorUnit) f ≫ (leftUnitor Y).hom = (leftUnitor X).hom ≫ f := by
+        MC.tensorHom (𝟙 MC.tensorUnit) f ≫ (leftUnitor Y).hom = (leftUnitor X).hom ≫ f := by
           aesop_cat)
     (rightUnitor_naturality :
       ∀ {X Y : C} (f : X ⟶ Y),
-        tensorHom f (𝟙 tensorUnit) ≫ (rightUnitor Y).hom = (rightUnitor X).hom ≫ f := by
+        tensorHom f (𝟙 MC.tensorUnit) ≫ (rightUnitor Y).hom = (rightUnitor X).hom ≫ f := by
           aesop_cat)
     (pentagon :
       ∀ W X Y Z : C,
@@ -1090,7 +1090,7 @@ abbrev ofTensorHom [MonoidalCategoryStruct C]
             aesop_cat)
     (triangle :
       ∀ X Y : C,
-        (associator X tensorUnit Y).hom ≫ tensorHom (𝟙 X) (leftUnitor Y).hom =
+        (associator X MC.tensorUnit Y).hom ≫ tensorHom (𝟙 X) (leftUnitor Y).hom =
           tensorHom (rightUnitor X).hom (𝟙 Y) := by
             aesop_cat) :
       MonoidalCategory' C :=

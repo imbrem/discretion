@@ -479,8 +479,8 @@ instance instBooleanAlgebra [BooleanAlgebra α] : BooleanAlgebra (Vector' α n) 
   sdiff_eq a b := get_injective (by simp [BooleanAlgebra.sdiff_eq])
   himp_eq a b := get_injective (by simp [BooleanAlgebra.himp_eq])
 
-instance instOrderedAddCommMonoid [OrderedAddCommMonoid α]
-  : OrderedAddCommMonoid (Vector' α n) where
-  add_le_add_left a b h c := by induction h <;> cases c <;> simp [add_le_add_left, *]
+-- instance instOrderedAddCommMonoid [OrderedAddCommMonoid α]
+--   : OrderedAddCommMonoid (Vector' α n) where
+--   add_le_add_left a b h c := by induction h <;> cases c <;> simp [add_le_add_left, *]
 
 end Vector'

@@ -136,7 +136,7 @@ end AddCommMonoid
 
 section OrderedAddCommMonoid
 
-variable [OrderedAddCommMonoid γ]
+variable [AddCommMonoid γ] [PartialOrder γ] [IsOrderedAddMonoid γ]
 
 theorem Fintype.preSum_mono (f : α → β) {lo hi : α → γ} (h : lo ≤ hi) : preSum f lo ≤ preSum f hi
   := by

@@ -385,15 +385,15 @@ theorem pvSum_lift (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ] (v : V
 
 end AddCommMonoid
 
-section OrderedAddCommMonoid
+-- section OrderedAddCommMonoid
 
-variable [OrderedAddCommMonoid α]
+-- variable [OrderedAddCommMonoid α]
 
-theorem le_pvSum_of_le_sum (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ]
-  (q : Vector' α t) (l r s : Vector' α s) (hlr : l + r ≤ s) (hq : pvSum ρ s ≤ q)
-  : pvSum ρ l + pvSum ρ r ≤ q
-  := le_trans (by rw [<-pvSum_add]; apply pvSum_mono; exact hlr) hq
+-- theorem le_pvSum_of_le_sum (s t : ℕ) (ρ : ℕ -> ℕ) [hρ : BoundedOn s t ρ]
+--   (q : Vector' α t) (l r s : Vector' α s) (hlr : l + r ≤ s) (hq : pvSum ρ s ≤ q)
+--   : pvSum ρ l + pvSum ρ r ≤ q
+--   := le_trans (by rw [<-pvSum_add]; apply pvSum_mono; exact hlr) hq
 
-end OrderedAddCommMonoid
+-- end OrderedAddCommMonoid
 
 end BoundedOn

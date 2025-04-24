@@ -257,7 +257,8 @@ theorem Fin.addCases_comp_addCases_natAdd_castAdd (l: Fin n → α) (r : Fin m �
     rw [dite_cond_eq_true]
     simp
     rw [Nat.sub_lt_iff_lt_add (Nat.le_of_not_lt h)]
-    exact i.prop
+    have _ := i.prop
+    omega
 
 theorem Fin.addCases_natAdd_castAdd_nil {n m}
   : addCases (natAdd n) (castAdd m) ∘ addCases (natAdd m) (castAdd n) = id := by

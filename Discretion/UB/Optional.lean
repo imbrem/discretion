@@ -70,7 +70,7 @@ theorem UB?.freeze_insert (a : α) (as : UB? α) : UB?.freeze (insert a as) = in
   cases as <;> simp
 
 instance UB?.instLawfulSingleton : LawfulSingleton α (UB? α) where
-  insert_emptyc_eq x := by simp [<-UB?.some_empty]
+  insert_empty_eq x := by simp [<-UB?.some_empty]
 
 instance UB?.instLattice : Lattice (UB? α)
   := (inferInstance : Lattice (WithTop _))

@@ -246,22 +246,22 @@ theorem pvSum_cons {s t : ℕ} [hρ : BoundedOn (s + 1) t ρ] {a : α} {v : Vect
 
 end AddCommMonoid
 
-section OrderedAddCommMonoid
+-- section OrderedAddCommMonoid
 
-variable [OrderedAddCommMonoid α]
+-- variable [OrderedAddCommMonoid α]
 
-theorem finSum_mono {s t : ℕ} [hρ : BoundedOn s t ρ] {v w : Fin s → α} (h : v ≤ w)
-  : hρ.finSum ρ v ≤ hρ.finSum ρ w
-  := Fintype.preSum_mono (toFin ρ) h
+-- theorem finSum_mono {s t : ℕ} [hρ : BoundedOn s t ρ] {v w : Fin s → α} (h : v ≤ w)
+--   : hρ.finSum ρ v ≤ hρ.finSum ρ w
+--   := Fintype.preSum_mono (toFin ρ) h
 
-theorem finVSum_mono {s t : ℕ} [hρ : BoundedOn s t ρ] {v w : Vector' α s} (h : v ≤ w)
-  : hρ.finVSum ρ v ≤ hρ.finVSum ρ w
-  := finSum_mono (hρ := hρ) (Vector'.get_le_of_le h)
+-- theorem finVSum_mono {s t : ℕ} [hρ : BoundedOn s t ρ] {v w : Vector' α s} (h : v ≤ w)
+--   : hρ.finVSum ρ v ≤ hρ.finVSum ρ w
+--   := finSum_mono (hρ := hρ) (Vector'.get_le_of_le h)
 
-theorem pvSum_mono {s t : ℕ} [hρ : BoundedOn s t ρ] {v w : Vector' α s} (h : v ≤ w)
-  : hρ.pvSum ρ v ≤ hρ.pvSum ρ w
-  := by simp [pvSum, <-Vector'.get_le_iff, finVSum_mono h]
+-- theorem pvSum_mono {s t : ℕ} [hρ : BoundedOn s t ρ] {v w : Vector' α s} (h : v ≤ w)
+--   : hρ.pvSum ρ v ≤ hρ.pvSum ρ w
+--   := by simp [pvSum, <-Vector'.get_le_iff, finVSum_mono h]
 
-end OrderedAddCommMonoid
+-- end OrderedAddCommMonoid
 
 end BoundedOn
