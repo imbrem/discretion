@@ -1024,8 +1024,7 @@ theorem induction {motive : (α →ᶠ[[Zf]] M) -> Prop}
   (update : ∀f : α →ᶠ[[Zf]] M, ∀a m, a ∉ f.support → m ∉ Zf a → motive f → motive (f.update a m))
   : ∀f, motive f := λ⟨s, f, h⟩ => by induction s using Finset.induction generalizing f with
   | empty => exact dalways f (by simp at h; exact h)
-  | insert ha I =>
-    rename_i a s
+  | insert a s ha I =>
     have ha' : f a ∉ Zf a := by apply (h _).mp; simp
     let g := FinExcept.update ⟨insert a s, f, h⟩ a (Classical.choice (hZ a)).val
     have hgs : g.support = s := by ext k; simp only [g, FinExcept.update]; simp [ha]

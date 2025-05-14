@@ -9,7 +9,7 @@ open Classical in
 theorem Finset.sum_nat_eq_zero (s : Finset α) (f : α → ℕ)
   : s.sum f = 0 ↔ ∀a ∈ s, f a = 0 := by induction s using Finset.induction with
     | empty => simp
-    | insert ha I => simp [sum_insert ha, I]
+    | insert a ha I => simp [sum_insert, I]
 
 theorem Finset.sum_nat_univ_eq_zero [Fintype α] (f : α → ℕ)
   : Finset.univ.sum f = 0 ↔ ∀a, f a = 0 := by
