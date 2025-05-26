@@ -37,7 +37,7 @@ theorem Set.liftnFv_empty (n : ℕ) : (∅ : Set ℕ).liftnFv n = ∅ := by simp
 @[simp]
 theorem Set.liftnFv_insert_lt {s : Set ℕ} {k n} (h : k < n) : (insert k s).liftnFv n = s.liftnFv n
   := by
-  rw [liftnFv, insert_inter_of_not_mem]
+  rw [liftnFv, insert_inter_of_notMem]
   rfl
   simp [h]
 

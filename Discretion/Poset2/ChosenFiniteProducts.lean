@@ -3,16 +3,7 @@ import Discretion.ChosenFiniteCoproducts
 
 namespace CategoryTheory
 
-open ChosenFiniteProducts
-
 open ChosenFiniteCoproducts
-
-class LiftMono (C : Type u) [Category C] [ChosenFiniteProducts C] [Refines C]
-  : Prop where
-  refines_lift : ∀{X Y Z : C} {f f' : Z ⟶ X} {g g' : Z ⟶ Y},
-    f ↠ f' → g ↠ g' → lift f g ↠ lift f' g'
-
-export LiftMono (refines_lift)
 
 class DescMono (C : Type u) [Category C] [ChosenFiniteCoproducts C] [Refines C]
   : Prop where
@@ -21,18 +12,10 @@ class DescMono (C : Type u) [Category C] [ChosenFiniteCoproducts C] [Refines C]
 
 export DescMono (refines_desc)
 
-instance LiftMono.ofDiscrete {C : Type u}
-  [Category C] [ChosenFiniteProducts C] [Poset2 C] [RefinesIsDiscrete C]
-  : LiftMono C where
-  refines_lift ff' gg' := by cases (eq_of_refines ff'); cases (eq_of_refines gg'); rfl
-
 instance DescMono.ofDiscrete {C : Type u}
   [Category C] [ChosenFiniteCoproducts C] [Poset2 C] [RefinesIsDiscrete C]
   : DescMono C where
   refines_desc ff' gg' := by cases (eq_of_refines ff'); cases (eq_of_refines gg'); rfl
-
-instance Disc2.instChosenFiniteProducts {C : Type u} [Category C] [ℳ : ChosenFiniteProducts C]
-  : ChosenFiniteProducts (Disc2 C) := ℳ
 
 instance Disc2.instChosenFiniteCoproducts {C : Type u} [Category C] [ℳ : ChosenFiniteCoproducts C]
   : ChosenFiniteCoproducts (Disc2 C) := ℳ

@@ -57,7 +57,7 @@ theorem Finset.eq_of_preimageF (f : α → β) (a : α) (b c : β)
 theorem Finset.preimageF_empty_of_disjoint
   (f : α → β) (bs : Finset β) (hb : Disjoint bs (rangeF f)) : preimageF f bs = ∅ := by
   ext k
-  simp only [mem_preimageF_iff, not_mem_empty, iff_false]
+  simp only [mem_preimageF_iff, notMem_empty, iff_false]
   simp only [disjoint_iff_ne, mem_rangeF_iff, ne_eq, forall_exists_index,
     forall_apply_eq_imp_iff] at hb
   exact λhk => hb _ hk _ rfl
